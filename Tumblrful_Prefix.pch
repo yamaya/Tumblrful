@@ -1,0 +1,8 @@
+//
+// Prefix header for all source files of the 'tumblerful' target in the 'tumblerful' project.
+//
+
+#ifdef __OBJC__
+    #import <Cocoa/Cocoa.h>
+	#import <WebKit/WebKit.h>
+#endif

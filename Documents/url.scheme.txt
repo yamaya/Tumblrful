@@ -1,0 +1,23 @@
+NSURL*url =
+	[NSURL URLWithString:@"file.htm;param1;param2?something=other&andmore=more#fragments"
+				 relativeToURL:[NSURL URLWithString:@"scheme://user:password@host.domain.org:888/path/absfile.htm"]];
+
+description: file.htm;param1;param2?something=other&andmore=more#fragments -- scheme://user:password@host.domain.org:888/path/absfile.htm
+absoluteString: scheme://user:password@host.domain.org:888/path/file.htm;param1;param2?something=other&andmore=more#fragments
+absoluteURL: scheme://user:password@host.domain.org:888/path/file.htm;param1;param2?something=other&andmore=more#fragments
+baseURL: scheme://user:password@host.domain.org:888/path/absfile.htm
+fragment: fragments
+host: host.domain.org
+parameterString: param1;param2
+password: password
+path: /path/file.htm
+port: 888
+query: something=other&andmore=more
+relativePath: file.htm
+relativeString: file.htm;param1;param2?something=other&andmore=more#fragments
+resourceSpecifier: file.htm;param1;param2?something=other&andmore=more#fragments
+scheme: scheme
+standardizedURL: file.htm;param1;param2?something=other&andmore=more#fragments -- scheme://user:password@host.domain.org:888/path/absfile.htm
+user: user
+
+vim: set ft=objc:

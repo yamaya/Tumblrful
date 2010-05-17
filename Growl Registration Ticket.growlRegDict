@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+   Growl Registration Ticket.growlRegDict
+   Tumblrful
+
+   Created by Masayuki Yamaya on 6/8/08.
+-->
+<plist version="1.0">
+	<dict>
+		<key>AllNotifications</key>
+		<array>
+			<string>NotifyPostToTumblr</string>
+		</array>
+		<key>DefaultNotifications</key>
+		<array>
+			<string>NotifyPostToTumblr</string>
+		</array>
+		<key>TicketVersion</key>
+		<integer>1</integer>
+	</dict>
+</plist>

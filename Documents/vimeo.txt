@@ -1,0 +1,38 @@
+* signature の作り方
+  api_secret, api_key, method, video_id のキーと値を文字列連結して MD5 を求める。
+	この時、キーをalphabetical ソートする。
+
+* vimeo.videos.getInfo REST APIのレスポンス
+
+<?xml version="1.0" encoding="utf-8"?>
+<rsp stat="ok" generated_in="0.0210">
+	<video id="1237052" privacy="anybody" is_uploading="0" is_transcoding="0" is_hd="1" is_favorite="0">
+		<title>SimpleTODO</title>
+		<caption>Manage your Tasks in a minimalistic TODO-List. Add Tasks, Check Tasks, Remove the checked Tasks. After you are cool with this concept, you can optionally categorize your task with labels and colors. It is OpenSource and you can download it at http://www.julius-eckert.com</caption>
+		<upload_date>2008-06-26 08:50:41</upload_date>
+		<number_of_likes>0</number_of_likes>
+		<number_of_plays>944</number_of_plays>
+		<number_of_comments>0</number_of_comments>
+		<width>504</width>
+		<height>284</height>
+		<owner nsid="552893" id="552893" username="user552893" fullname="Julius Eckert" />
+		<tags>
+			<tag id="2200113" author="" raw="SimpleTODO">SimpleTODO</tag>
+			<tag id="2200114" author="" raw="Mono">Mono</tag>
+			<tag id="2200115" author="" raw="task">task</tag>
+			<tag id="2200116" author="" raw="minimalistic">minimalistic</tag>
+			<tag id="2200117" author="" raw="desktop">desktop</tag>
+			<tag id="2200118" author="" raw="osx">osx</tag>
+			<tag id="2200119" author="" raw="leopard">leopard</tag>
+			<tag id="2290620" author="" raw="screencast">screencast</tag>
+		</tags>
+		<urls>
+			<url type="videopage">http://www.vimeo.com/1237052/l:app-600</url>
+		</urls>
+		<thumbnails>
+			<thumbnail width="96" height="72">http://images.vimeo.com/87/64/37/87643709/87643709_96x72.jpg</thumbnail>
+			<thumbnail width="200" height="150">http://images.vimeo.com/87/64/37/87643709/87643709_200x150.jpg</thumbnail>
+			<thumbnail width="460" height="259">http://images.vimeo.com/87/64/37/87643709/87643709_460x259.jpg</thumbnail>
+		</thumbnails>
+	</video>
+</rsp>
