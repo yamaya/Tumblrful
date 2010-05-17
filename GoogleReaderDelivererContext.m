@@ -41,10 +41,10 @@
 	V(@"getEntryMain: target: %@", SafetyDescription(targetNode));
 	DOMXPathResult* result;
 	result = [document evaluate:xpath
-									contextNode:targetNode
-										 resolver:nil /* nil for HTML document */
-												 type:DOM_ANY_TYPE
-										 inResult:nil];
+					contextNode:targetNode
+					   resolver:nil /* nil for HTML document */
+						   type:DOM_ANY_TYPE
+						inResult:nil];
 
 	[self dumpXPathResult:result withPrefix:@"getEntryMain"];
 
@@ -71,8 +71,8 @@
  * TODO: なんでこのメソッド必要なんだっけ？
  */
 - (NSString*) stringForXPath:(NSString*)xpath
-											target:(DOMNode*)targetNode
-											 debug:(NSString*)message
+					  target:(DOMNode*)targetNode
+					   debug:(NSString*)message
 {
 	V(@"%@: targetNode: %@", message, SafetyDescription(targetNode));
 	if ([targetNode respondsToSelector:@selector(idName)]) {

@@ -52,7 +52,7 @@ static NSString* BUNDLE_ID = @"com.tumblr.do-nothing.Tumblrful.bundle";
 	
 	BOOL isNotEntered = NO;
 	NSString* s;
-	BOOL private = NO;
+	BOOL private = NO, queuing = NO;
 	s = [defaults stringForKey:@"TumblrfulEmail"];
 	if (s == nil) {
 		Log(@"TumblrfulEmail is nul");
@@ -75,6 +75,9 @@ static NSString* BUNDLE_ID = @"com.tumblr.do-nothing.Tumblrful.bundle";
 
 	private = [defaults boolForKey:@"TumblrfulPrivate"];
 	[privateCheckBox setState:(private ? NSOnState : NSOffState)];
+
+	queuing = [defaults boolForKey:@"TumblrfulQueuing"];
+	[queuingCheckBox setState:(queuing ? NSOnState : NSOffState)];
 
 	/*
 	 * del.icio.us
@@ -195,6 +198,7 @@ static NSString* BUNDLE_ID = @"com.tumblr.do-nothing.Tumblrful.bundle";
 	[defaults setObject:[emailTextField stringValue] forKey:@"TumblrfulEmail"];
 	[defaults setObject:[passwordTextField stringValue] forKey:@"TumblrfulPassword"];
 	[defaults setBool:[privateCheckBox state] forKey:@"TumblrfulPrivate"];
+	[defaults setBool:[queuingCheckBox state] forKey:@"TumblrfulQueuing"];
 	// del.icio.us
 	[defaults setBool:[deliciousCheckBox state] forKey:@"TumblrfulWithDelicious"];
 	[defaults setObject:[deliciousUsernameTextField stringValue] forKey:@"TumblrfulDeliciousUsername"];
@@ -205,6 +209,7 @@ static NSString* BUNDLE_ID = @"com.tumblr.do-nothing.Tumblrful.bundle";
 	[defaults setObject:[otherURLTextField stringValue] forKey:@"TumblrfulOtherTumblogSiteURL"];
 	[defaults setObject:[otherLoginTextField stringValue] forKey:@"TumblrfulOtherTumblogLogin"];
 	[defaults setObject:[otherPasswordTextField stringValue] forKey:@"TumblrfulOtherTumblogPassword"];
+
 	[defaults synchronize];
 
 	Log(@"saveChanges");

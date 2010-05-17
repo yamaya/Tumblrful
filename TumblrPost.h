@@ -12,6 +12,7 @@
 @interface TumblrPost : NSObject<Post>
 {
 	BOOL private_;	/**< private post */
+	BOOL queuing_;	/**< queuing post */
 	NSMutableData* responseData_;	/**< for NSURLConnection */
 	NSObject<PostCallback>* callback_; /**< for Deliverer */
 }

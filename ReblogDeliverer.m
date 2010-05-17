@@ -86,11 +86,10 @@ static NSString* TYPE = @"Reblog";
 				V(@"XPath: %@", xpath);
 
 				result = [document evaluate:xpath
-												contextNode:clickedNode
-													 resolver:nil /* nil for HTML document */
-															 type:DOM_ANY_TYPE
-													 inResult:nil];
-
+								contextNode:clickedNode
+								   resolver:nil /* nil for HTML document */
+									   type:DOM_ANY_TYPE
+								   inResult:nil];
 				if (result != nil) {
 					V(@"invalidIteratorState=%d", [result invalidIteratorState]);
 					if (![result invalidIteratorState]) {

@@ -13,6 +13,7 @@
 	IBOutlet NSTextField* emailTextField;
 	IBOutlet NSTextField* passwordTextField;
 	IBOutlet NSButton* privateCheckBox;
+	IBOutlet NSButton * queuingCheckBox;
 
 	IBOutlet NSButton* deliciousCheckBox;
 	IBOutlet NSBox* deliciousBox;

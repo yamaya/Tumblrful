@@ -199,8 +199,7 @@ static NSString* TUMBLR_URL = @"http://www.tumblr.com";
 	[obj setValue:type forKey:@"type"];
 	[obj addEntriesFromDictionary:fields];
 
-	[continuation_ performSelectorOnMainThread:@selector(extract:)
-																	withObject:obj waitUntilDone:NO];
+	[continuation_ performSelectorOnMainThread:@selector(extract:) withObject:obj waitUntilDone:NO];
 }
 
 /**

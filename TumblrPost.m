@@ -70,8 +70,7 @@ static float TIMEOUT = 60.0;
 	TumblrPost*	continuation_;
 	NSMutableData* responseData_;	/**< for NSURLConnection */
 }
-- (id) initWithEndpoint:(NSString*)endpoint
-					 continuation:(TumblrPost*)continuation;
+- (id) initWithEndpoint:(NSString*)endpoint continuation:(TumblrPost*)continuation;
 - (void) dealloc;
 @end
 #define FIX_20080702
@@ -445,7 +444,8 @@ static float TIMEOUT = 60.0;
 
 		NSMutableDictionary* params = [[[NSMutableDictionary alloc] init] autorelease];
 		[params setValue:type forKey:@"type"];
-		[params setValue:@"2" forKey:@"post[state]"];	// queuing post
+		if (queuing_)
+			[params setValue:@"2" forKey:@"post[state]"];	// queuing post
 		[params addEntriesFromDictionary:fields];
 
 		/* Tumblrへポストする */
@@ -561,7 +561,10 @@ static float TIMEOUT = 60.0;
 {
 	if ((self = [super init]) != nil) {
 		callback_ = [callback retain];
-		private_ = [[NSUserDefaults standardUserDefaults] boolForKey:@"TumblrfulPrivate"];
+
+		NSUserDefaults * defaults = [NSUserDefaults standardUserDefaults];
+		private_ = [defaults boolForKey:@"TumblrfulPrivate"];
+		queuing_ = [defaults boolForKey:@"TumblrfulQueuing"];
 		responseData_ = nil;
 	}
 	return self;
