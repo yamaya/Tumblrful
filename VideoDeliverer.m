@@ -117,9 +117,9 @@ static NSString* TYPE = @"Video";
  */
 - (NSString*) makeCaption
 {
-	static NSString* XPathForTitle = @"//div[@id=\"watch-vid-title\"]/h1";
-	static NSString* XPathForURL = @"//input[@name=\"video_link\"]";
-	static NSString* XPathForUserName = @"//div[@id=\"watch-channel-stats\"]/a";
+	static NSString* XPathForTitle = @"//div[@id='watch-headline']/h1[@id='watch-headline-title']";
+	static NSString* XPathForURL = @"//input[@class='watch-actions-share-input']";
+	static NSString* XPathForUserName = @"//div[@id='watch-headline-user-info']/a[@id='watch-username']";
 
 	DOMNode* clickedNode = [clickedElement_ objectForKey:WebElementDOMNodeKey];
 	if (clickedNode == nil) {
