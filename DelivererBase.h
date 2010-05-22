@@ -8,10 +8,6 @@
 #import "DelivererContext.h"
 #import "PostCallback.h"
 
-#ifndef FIX20080412
-#define FIX20080412
-#endif
-
 /**
  * DeliverBase abstract class
  */
@@ -36,11 +32,7 @@
 - (void) postQuote:(NSString*)text;
 - (void) postPhoto:(NSString*)imageURL caption:(NSString*)caption through:(NSString*)url;
 - (void) postVideo:(NSString*)embed title:(NSString*)title caption:(NSString*)caption;
-#ifdef FIX20080412
 - (NSObject*) postEntry:(NSDictionary*)params;
-#else
-- (NSObject*) postEntry:(NSString*)entryID;
-#endif
 
 /* PostCallback overrides */
 - (void) successed:(NSString*)response;

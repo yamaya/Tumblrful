@@ -7,7 +7,8 @@
 // /System/Library/Frameworks/Foundation.framework/Headers/NSXMLDocument.h
 // /System/Library/Frameworks/Foundation.framework/Headers/NSXMLNode.h
 #import "UmesuePost.h"
-#import "Log.h"
+#import "UserSettings.h"
+#import "DebugLog.h"
 #import "NSDataBase64.h"
 #import <Foundation/NSXMLDocument.h>
 
@@ -34,7 +35,7 @@
  */
 + (NSString*) username
 {
-	return [[NSUserDefaults standardUserDefaults] stringForKey:@"TumblrfulOtherTumblogLogin"];
+	return [[UserSettings sharedInstance] stringForKey:@"otherTumblogLoginName"];
 }
 
 /**
@@ -42,7 +43,7 @@
  */
 + (NSString*) password
 {
-	return [[NSUserDefaults standardUserDefaults] stringForKey:@"TumblrfulOtherTumblogPassword"];
+	return [[UserSettings sharedInstance] stringForKey:@"otherTumblogPassword"];
 }
 
 /**
@@ -50,11 +51,9 @@
  */
 + (NSString*) endpoint
 {
-	NSString* uri = [[NSUserDefaults standardUserDefaults] stringForKey:@"TumblrfulOtherTumblogSiteURL"];
-	V(@"endpoint for URI=%@", uri);
+	NSString* uri = [[UserSettings sharedInstance] stringForKey:@"otherTumblogSiteURL"];
 	/* 行末の '/' を取り除いて */
 	NSString* endpoint = [NSString stringWithFormat:@"%@/posts.xml", [uri stringByDeletingPathExtension]];
-	V(@"endpoint=%@", endpoint);
 	return endpoint;
 }
 
@@ -63,7 +62,7 @@
  */
 + (BOOL) isEnabled
 {
-	return [[NSUserDefaults standardUserDefaults] boolForKey:@"TumblrfulUseOtherTumblog"];
+	return [[UserSettings sharedInstance] boolForKey:@"otherTumblogEnabled"];
 }
 
 /**

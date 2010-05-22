@@ -15,9 +15,5 @@
 - (void) postQuote:(Anchor*)anchor quote:(NSString*)quote;
 - (void) postPhoto:(Anchor*)anchor image:(NSString*)imageURL caption:(NSString*)caption;
 - (void) postVideo:(Anchor*)anchor embed:(NSString*)embed caption:(NSString*)caption;
-#ifdef FIX20080412
 - (NSObject*) postEntry:(NSDictionary*)params;
-#else
-- (NSObject*) postEntry:(NSString*)entryID;
-#endif
 @end

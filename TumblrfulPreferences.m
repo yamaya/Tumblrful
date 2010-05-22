@@ -6,29 +6,25 @@
  */
 #import "TumblrfulPreferences.h"
 #import "GrowlSupport.h"
-#import "Log.h"
-
-#define V(format, ...)	Log(format, __VA_ARGS__)
-//#define V(format, ...)
-
-static NSString* BUNDLE_ID = @"com.tumblr.do-nothing.Tumblrful.bundle";
+#import "TumblrfulConstants.h"
+#import "UserSettings.h"
+#import "DebugLog.h"
 
 @implementation TumblrfulPreferences
 /**
  * preloadImage
  */
-+ (NSImage*) preloadImage:(NSString*)name
++ (NSImage*)preloadImage:(NSString*)name
 {
-	NSString* imagePath = [[NSBundle bundleWithIdentifier:BUNDLE_ID] pathForImageResource:name];
-	V(@"imagePath=%@", imagePath);
+	NSString* imagePath = [[NSBundle bundleWithIdentifier:TUMBLRFUL_BUNDLE_ID] pathForImageResource:name];
 	if (imagePath == nil) {
-		NSLog(@"imagePath for %@ is nil", name);
+		D(@"imagePath for %@ is nil", name);
 		return nil;
 	}
 
 	NSImage* image = [[NSImage alloc] initByReferencingFile:imagePath];
 	if (image == nil) {
-		NSLog(@"image for %@ is nil", name);
+		D(@"image for %@ is nil", name);
 		return nil;
 	}
 
@@ -39,31 +35,32 @@ static NSString* BUNDLE_ID = @"com.tumblr.do-nothing.Tumblrful.bundle";
 /**
  * awakeFromNib
  */
-- (void) awakeFromNib
+- (void)awakeFromNib
 {
-	NSDictionary* infoDictionary = [[NSBundle bundleWithIdentifier:BUNDLE_ID] infoDictionary];
+	NSDictionary* info = [[NSBundle bundleWithIdentifier:TUMBLRFUL_BUNDLE_ID] infoDictionary];
+	D0([info description]);
 
 	[authorTextField setStringValue:
 		[NSString stringWithFormat:[authorTextField stringValue],
-			[infoDictionary objectForKey:@"CFBundleShortVersionString"],
-			[infoDictionary objectForKey:@"CFBundleVersion"]]];
+			[info objectForKey:@"CFBundleShortVersionString"],
+			[info objectForKey:@"CFBundleVersion"]]];
 
-	NSUserDefaults* defaults = [[NSUserDefaultsController sharedUserDefaultsController] defaults];
-	
+	UserSettings* settings = [UserSettings sharedInstance];
+
 	BOOL isNotEntered = NO;
 	NSString* s;
 	BOOL private = NO, queuing = NO;
-	s = [defaults stringForKey:@"TumblrfulEmail"];
+	s = [settings stringForKey:@"tumblrEmail"];
 	if (s == nil) {
-		Log(@"TumblrfulEmail is nul");
+		D0(@"tumblrEmail is nul");
 		s = @"";
 		isNotEntered = YES;
 	}
 	[emailTextField setStringValue:s];
 
-	s = [defaults stringForKey:@"TumblrfulPassword"];
+	s = [settings stringForKey:@"tumblrPassword"];
 	if (s == nil) {
-		Log(@"TumblrfulPassword is nul");
+		D0(@"tumblrPassword is nul");
 		s = @"";
 		isNotEntered = YES;
 	}
@@ -73,33 +70,33 @@ static NSString* BUNDLE_ID = @"com.tumblr.do-nothing.Tumblrful.bundle";
 		[GrowlSupport notify:@"Tumblrful" description:@"Email or Password not entered."];
 	}
 
-	private = [defaults boolForKey:@"TumblrfulPrivate"];
+	private = [settings boolForKey:@"tumblrPrivateEnabled"];
 	[privateCheckBox setState:(private ? NSOnState : NSOffState)];
 
-	queuing = [defaults boolForKey:@"TumblrfulQueuing"];
+	queuing = [settings boolForKey:@"tumblrQueuingEnabled"];
 	[queuingCheckBox setState:(queuing ? NSOnState : NSOffState)];
 
 	/*
 	 * del.icio.us
 	 */
-	BOOL withDelicious = [defaults boolForKey:@"TumblrfulWithDelicious"];
+	BOOL withDelicious = [settings boolForKey:@"deliciousEnabled"];
 	[deliciousCheckBox setState:(withDelicious ? NSOnState : NSOffState)];
 
 	isNotEntered = NO;
 
-	s = [defaults stringForKey:@"TumblrfulDeliciousUsername"];
+	s = [settings stringForKey:@"deliciousUsername"];
 	if (s == nil) {
-		Log(@"TumblrfulDeliciousUsername is nul");
+		D0(@"deliciousUsername is nul");
 		s = @"";
-		if (withDelicious) isNotEntered = YES;		
+		if (withDelicious) isNotEntered = YES;
 	}
 	[deliciousUsernameTextField setStringValue:s];
 
-	s = [defaults stringForKey:@"TumblrfulDeliciousPassword"];
+	s = [settings stringForKey:@"deliciousPassword"];
 	if (s == nil) {
-		Log(@"TumblrfulDeliciousPassword is nul");
+		D0(@"deliciousPassword is nul");
 		s = @"";
-		if (withDelicious) isNotEntered = YES;		
+		if (withDelicious) isNotEntered = YES;
 	}
 	[deliciousPasswordTextField setStringValue:s];
 
@@ -107,7 +104,7 @@ static NSString* BUNDLE_ID = @"com.tumblr.do-nothing.Tumblrful.bundle";
 		[GrowlSupport notify:@"Tumblrful" description:@"Username or Password not entered for del.icio.us."];
 	}
 
-	private = [defaults boolForKey:@"TumblrfulDeliciousPrivate"];
+	private = [settings boolForKey:@"deliciousPrivateEnabled"];
 	[deliciousPrivateCheckBox setState:(private ? NSOnState : NSOffState)];
 
 	[self checkWithDelicious:deliciousCheckBox];
@@ -115,35 +112,39 @@ static NSString* BUNDLE_ID = @"com.tumblr.do-nothing.Tumblrful.bundle";
 	/*
 	 * other
 	 */
-	BOOL useOther = [defaults boolForKey:@"TumblrfulUseOtherTumblog"];
+	BOOL useOther = [settings boolForKey:@"otherTumblogEnabled"];
 	[otherCheckBox setState:(useOther ? NSOnState : NSOffState)];
 
 	isNotEntered = NO;
-	s = [defaults stringForKey:@"TumblrfulOtherTumblogSiteURL"];
+	s = [settings stringForKey:@"otherTumblogSiteURL"];
 	if (s == nil) {
-		Log(@"TumblrfulOtherTumblogSiteURL is nul");
+		D0(@"otherTumblogSiteURL is nul");
 		s = @"";
-		if (useOther) isNotEntered = YES;		
+		if (useOther) isNotEntered = YES;
 	}
 	[otherURLTextField setStringValue:s];
 
-	s = [defaults stringForKey:@"TumblrfulOtherTumblogLogin"];
+	s = [settings stringForKey:@"otherTumblogLoginName"];
 	if (s == nil) {
-		Log(@"TumblrfulOtherTumblogLogin is nul");
+		D0(@"otherTumblogLoginName is nul");
 		s = @"";
-		if (useOther) isNotEntered = YES;		
+		if (useOther) isNotEntered = YES;
 	}
 	[otherLoginTextField setStringValue:s];
 
-	s = [defaults stringForKey:@"TumblrfulOtherTumblogPassword"];
+	s = [settings stringForKey:@"otherTumblogPassword"];
 	if (s == nil) {
-		Log(@"TumblrfulOtherTumblogPassword is nul");
+		D0(@"otherTumblogPassword is nul");
 		s = @"";
-		if (useOther) isNotEntered = YES;		
+		if (useOther) isNotEntered = YES;
 	}
 	[otherPasswordTextField setStringValue:s];
 
 	[self checkUseOtherTumblog:otherCheckBox];
+
+	// openInBackgroundTab
+	BOOL boolValue = [settings boolForKey:@"openInBackgroundTab"];
+	[openInBackgroundTab setState:(boolValue ? NSOnState : NSOffState)];
 }
 
 /**
@@ -155,7 +156,7 @@ static NSString* BUNDLE_ID = @"com.tumblr.do-nothing.Tumblrful.bundle";
 	if (image == nil)
 		image = [TumblrfulPreferences preloadImage:@"Tumblrful.png"];
 
-	V(@"image: %@", [image description]);
+	D(@"image: %@", [image description]);
 	return image;
 }
 
@@ -193,26 +194,26 @@ static NSString* BUNDLE_ID = @"com.tumblr.do-nothing.Tumblrful.bundle";
  */
 - (void) saveChanges
 {
-	NSUserDefaults* defaults = [[NSUserDefaultsController sharedUserDefaultsController] defaults];
+	UserSettings * settings = [UserSettings sharedInstance];
 
-	[defaults setObject:[emailTextField stringValue] forKey:@"TumblrfulEmail"];
-	[defaults setObject:[passwordTextField stringValue] forKey:@"TumblrfulPassword"];
-	[defaults setBool:[privateCheckBox state] forKey:@"TumblrfulPrivate"];
-	[defaults setBool:[queuingCheckBox state] forKey:@"TumblrfulQueuing"];
+	[settings setObject:[emailTextField stringValue] forKey:@"tumblrEmail"];
+	[settings setObject:[passwordTextField stringValue] forKey:@"tumblrPassword"];
+	[settings setBool:[privateCheckBox state] forKey:@"tumblrPrivateEnabled"];
+	[settings setBool:[queuingCheckBox state] forKey:@"tumblrQueuingEnabled"];
 	// del.icio.us
-	[defaults setBool:[deliciousCheckBox state] forKey:@"TumblrfulWithDelicious"];
-	[defaults setObject:[deliciousUsernameTextField stringValue] forKey:@"TumblrfulDeliciousUsername"];
-	[defaults setObject:[deliciousPasswordTextField stringValue] forKey:@"TumblrfulDeliciousPassword"];
-	[defaults setBool:[deliciousPrivateCheckBox state] forKey:@"TumblrfulDeliciousPrivate"];
+	[settings setBool:[deliciousCheckBox state] forKey:@"deliciousEnabled"];
+	[settings setObject:[deliciousUsernameTextField stringValue] forKey:@"deliciousUsername"];
+	[settings setObject:[deliciousPasswordTextField stringValue] forKey:@"deliciousPassword"];
+	[settings setBool:[deliciousPrivateCheckBox state] forKey:@"deliciousPrivateEnabled"];
 	// other
-	[defaults setBool:[otherCheckBox state] forKey:@"TumblrfulUseOtherTumblog"];
-	[defaults setObject:[otherURLTextField stringValue] forKey:@"TumblrfulOtherTumblogSiteURL"];
-	[defaults setObject:[otherLoginTextField stringValue] forKey:@"TumblrfulOtherTumblogLogin"];
-	[defaults setObject:[otherPasswordTextField stringValue] forKey:@"TumblrfulOtherTumblogPassword"];
+	[settings setBool:[otherCheckBox state] forKey:@"otherTumblogEnabled"];
+	[settings setObject:[otherURLTextField stringValue] forKey:@"otherTumblogSiteURL"];
+	[settings setObject:[otherLoginTextField stringValue] forKey:@"otherTumblogLoginName"];
+	[settings setObject:[otherPasswordTextField stringValue] forKey:@"otherTumblogPassword"];
 
-	[defaults synchronize];
+	[settings setBool:[openInBackgroundTab state] forKey:@"openInBackgroundTab"];
 
-	Log(@"saveChanges");
+	[settings synchronize];
 }
 
 /**

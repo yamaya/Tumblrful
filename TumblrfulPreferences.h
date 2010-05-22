@@ -26,6 +26,8 @@
 	IBOutlet NSTextField* otherURLTextField;
 	IBOutlet NSTextField* otherLoginTextField;
 	IBOutlet NSTextField* otherPasswordTextField;
+	
+	IBOutlet NSButton * openInBackgroundTab;
 }
 - (IBAction)checkWithDelicious:(id)sender;
 - (IBAction)checkUseOtherTumblog:(id)sender;

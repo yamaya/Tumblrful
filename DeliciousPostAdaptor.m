@@ -70,11 +70,7 @@
 	[self postLink:anchor description:caption];
 }
 
-#ifdef FIX20080412
 - (NSObject*) postEntry:(NSDictionary*)params
-#else
-- (NSObject*) postEntry:(NSString*)postID
-#endif
 {
 	return nil; // do-nothing
 }

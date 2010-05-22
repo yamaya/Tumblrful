@@ -1,11 +1,8 @@
-Tumblrful
-
 # What is this?
 
 Tumblrful is Safari [SIMBL](http://www.culater.net/software/SIMBL/SIMBL.php) Plugin for [Tumblr](www.tumblr.com).
 
 - Do *not* support Dashbord reblogging and liking.
-- Do *not* disable "Single Window Mode". all page open on Tab.
 
 # Requirement
 
@@ -44,5 +41,4 @@ Tumblrful is Safari [SIMBL](http://www.culater.net/software/SIMBL/SIMBL.php) Plu
 # TODO
 
 - Support Dashboard Reblogging and Liking.
-- Fix Broken Youtube support.
 - Fix(Fix, Fix...) Memory leaks.

@@ -23,13 +23,10 @@
 #import "TumblrPostAdaptor.h"
 #import "DeliciousPostAdaptor.h"
 #import "UmesuePostAdaptor.h"
-#import "Log.h"
+#import "DebugLog.h"
 #import "GoogleReaderDelivererContext.h"
 #import "LDRDelivererContext.h"
 #import <WebKit/DOMHTML.h>
-
-#define V(format, ...)	Log(format, __VA_ARGS__)
-//#define V(format, ...)
 
 /* POST先のサービスを識別するマスク値 */
 static const NSUInteger POST_MASK_NONE = 0x0;
@@ -162,7 +159,6 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 		if ([target isKindOfClass:[DOMHTMLImageElement class]]) {
 			[elements setObject:[(DOMHTMLImageElement*)target src] forKey:WebElementImageURLKey];
 		}
-		V(@"elements: %@", SafetyDescription(elements));
 
 		for (Class clazz in [[self sharedDelivererClasses] objectEnumerator]) {
 			id<Deliverer> maybeDeliver = [clazz create:document element:elements];
@@ -175,7 +171,6 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 			DelivererBase* deliverer = (DelivererBase*) maybeDeliver;
 			if ([deliverer respondsToSelector:sel] && ([deliverer isKindOfClass:photoClass] || [deliverer isKindOfClass:reblogClass])) {
 				NSBeep();
-				V(@"deliverer: %@", [deliverer className]);
 
 				// セレクタに渡す引数を作成して実行する
 				NSArray* param = [NSArray arrayWithObjects:
@@ -185,13 +180,12 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 				[deliverer performSelectorOnMainThread:sel withObject:param waitUntilDone:YES];
 
 				[deliverer release];
-				V(@"deliverer: %@", @"done");
 				return YES;
 			}
 		}
 	}
 	@catch (NSException* e) {
-		V(@"Exception: %@", [e description]);
+		D0([e description]);
 	}
 
 	return NO;
@@ -237,10 +231,8 @@ static const NSUInteger POST_MASK_ALL = 0x7;
  * @param event NSEvent object for Event.
  * @return イベントに応答した場合 YES。
  */
-- (BOOL) performKeyEquivalent_SwizzledByTumblrful:(NSEvent*)event
+- (BOOL)performKeyEquivalent_SwizzledByTumblrful:(NSEvent*)event
 {
-	V(@"performKeyEquivalent_SwizzledByTumblrful: %@", [event description]);
-
 	// キー入力に対応するエンドポイントを得る。
 	NSUInteger endpoint = [self endpointByKeyPress:event];
 	if ((endpoint & POST_MASK_ALL) == 0) {

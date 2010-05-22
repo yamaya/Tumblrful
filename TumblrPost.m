@@ -5,12 +5,10 @@
  * @date 2008-03-07
  */
 #import "TumblrPost.h"
-#import "Log.h"
+#import "UserSettings.h"
+#import "DebugLog.h"
 #import <WebKit/WebKit.h>
 #import <Foundation/NSXMLDocument.h>
-
-//#define V(format, ...)	Log(format, __VA_ARGS__)
-#define V(format, ...)
 
 static NSString* WRITE_URL = @"http://www.tumblr.com/api/write";
 static NSString* TUMBLR_URL = @"http://www.tumblr.com";
@@ -73,7 +71,7 @@ static float TIMEOUT = 60.0;
 - (id) initWithEndpoint:(NSString*)endpoint continuation:(TumblrPost*)continuation;
 - (void) dealloc;
 @end
-#define FIX_20080702
+
 #pragma mark -
 @interface TumblrPost (Private)
 - (void) invokeCallback:(SEL)selector withObject:(NSObject*)param;
@@ -84,9 +82,7 @@ static float TIMEOUT = 60.0;
 - (NSMutableDictionary*) collectInputFieldsAsRegular:(NSArray*)elements;
 - (NSMutableDictionary*) collectInputFieldsAsChat:(NSArray*)elements;
 - (NSMutableDictionary*) collectInputFieldsAsVideo:(NSArray*)elements;
-#ifdef FIX_20080702 
 - (void) addElementIfFormKey:(NSXMLElement*)element fields:(NSMutableDictionary*)fields;
-#endif
 // TODO: support "audio"
 - (NSArray*) collectInputFields:(NSData*)form;
 - (void) reblogPost:(NSString*)endpoint form:(NSData*)formData;
@@ -99,7 +95,6 @@ static float TIMEOUT = 60.0;
 - (void) invokeCallback:(SEL)selector withObject:(NSObject*)param
 {
 	if (callback_) {
-		V(@"TumblrPost.callback_ respondsToSelector: %d", [callback_ respondsToSelector:selector]);
 		if ([callback_ respondsToSelector:selector]) {
 			[callback_ performSelectorOnMainThread:selector withObject:param waitUntilDone:NO];
 		}
@@ -117,7 +112,6 @@ static float TIMEOUT = 60.0;
 
 	/* UTF-8 文字列にしないと後の [attribute stringValue] で日本語がコードポイント表記になってしまう */
 	NSString* html = [[[NSString alloc] initWithData:formData encoding:NSUTF8StringEncoding] autorelease];
-	//V(@"form: %@", html);
 
 	/* DOMにする */
 	NSError* error = nil;
@@ -182,14 +176,11 @@ static float TIMEOUT = 60.0;
 		else if (!NSEqualRanges([name rangeOfString:@"post[three]"], empty)) {
 			[fields setValue:[element stringValue] forKey:@"post[three]"];
 		}
-#ifdef FIX_20080702
 		else {
 			[self addElementIfFormKey:element fields:fields];
 		}
-#endif
 	}
 
-	V(@"fields(Link): %@", [fields description]);
 	return fields;
 }
 
@@ -220,14 +211,11 @@ static float TIMEOUT = 60.0;
 			attribute = [element attributeForName:@"value"];
 			[fields setValue:[attribute stringValue] forKey:@"post[three]"];
 		}
-#ifdef FIX_20080702
 		else {
 			[self addElementIfFormKey:element fields:fields];
 		}
-#endif
 	}
 
-	V(@"fields(Photo): %@", [fields description]);
 	return fields;
 }
 
@@ -256,14 +244,11 @@ static float TIMEOUT = 60.0;
 			/* three は出現しない？ */
 			Log(@"post[three] is not implemented in Reblog(Quote).");
 		}
-#ifdef FIX_20080702
 		else {
 			[self addElementIfFormKey:element fields:fields];
 		}
-#endif
 	}
 
-	V(@"fields(Quote): %@", [fields description]);
 	return fields;
 }
 
@@ -294,14 +279,11 @@ static float TIMEOUT = 60.0;
 			/* three は出現しない？ */
 			Log(@"post[three] is not implemented in Reblog(Quote).");
 		}
-#ifdef FIX_20080702
 		else {
 			[self addElementIfFormKey:element fields:fields];
 		}
-#endif
 	}
 
-	V(@"fields(Regular): %@", [fields description]);
 	return fields;
 }
 
@@ -331,14 +313,11 @@ static float TIMEOUT = 60.0;
 			/* three は出現しない？ */
 			Log(@"post[three] is not implemented in Reblog(Conversation).");
 		}
-#ifdef FIX_20080702
 		else {
 			[self addElementIfFormKey:element fields:fields];
 		}
-#endif
 	}
 
-	V(@"fields(Chat): %@", [fields description]);
 	return fields;
 }
 
@@ -367,18 +346,14 @@ static float TIMEOUT = 60.0;
 			/* three は出現しない？ */
 			Log(@"post[three] is not implemented in Reblog(Video).");
 		}
-#ifdef FIX_20080702
 		else {
 			[self addElementIfFormKey:element fields:fields];
 		}
-#endif
 	}
 
-	V(@"fields(Video): %@", [fields description]);
 	return fields;
 }
 
-#ifdef FIX_20080702 
 /**
  * elementの要素名がformKeyであれば fields に追加する.
  */
@@ -389,11 +364,9 @@ static float TIMEOUT = 60.0;
 
 	if (!NSEqualRanges([name rangeOfString:@"form_key"], empty)) {
 		NSXMLNode* attribute = [element attributeForName:@"value"];
-		V(@"form_key=%@", [attribute stringValue]);
 		[fields setValue:[attribute stringValue] forKey:@"form_key"];
 	}
 }
-#endif /* FIX_20080702 */
 
 /**
  * reblogPost.
@@ -404,9 +377,6 @@ static float TIMEOUT = 60.0;
 {
 	NSArray* inputs = [self collectInputFields:formData];
 	NSString* type = [self detectPostType:inputs];
-
-	V(@"reblogPost: inputs: %@", [inputs description]);
-	V(@"reblogPost: type: %@", type);
 
 	if (type != nil) {
 		NSMutableDictionary* fields = nil;
@@ -499,8 +469,6 @@ static float TIMEOUT = 60.0;
 	/* この cast は正しい */
 	NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
 
-	V(@"didReceiveResponse: statusCode=%d", [httpResponse statusCode]);
-
 	if ([httpResponse statusCode] == 200) {
 		responseData_ = [[NSMutableData data] retain];
 	}
@@ -515,7 +483,6 @@ static float TIMEOUT = 60.0;
 		 didReceiveData:(NSData*)data
 {
 	if (responseData_ != nil) {
-		V(@"didReceiveData: append length=%d", [data length]);
 		[responseData_ appendData:data];
 	}
 }
@@ -526,8 +493,6 @@ static float TIMEOUT = 60.0;
  */
 - (void) connectionDidFinishLoading:(NSURLConnection*)connection
 {
-	V(@"didReceiveData: connectionDidFinishLoading length=%d", [responseData_ length]);
-
 	if (continuation_ != nil) {
 		[continuation_ reblogPost:endpoint_ form:responseData_];
 	}
@@ -547,7 +512,6 @@ static float TIMEOUT = 60.0;
  */
 - (void) connection:(NSURLConnection*)connection didFailWithError:(NSError*)error
 {
-	V(@"didFailWithError: %@", [error description]);
 	[self release];
 }
 @end // TumblrReblogDelegate
@@ -562,9 +526,9 @@ static float TIMEOUT = 60.0;
 	if ((self = [super init]) != nil) {
 		callback_ = [callback retain];
 
-		NSUserDefaults * defaults = [NSUserDefaults standardUserDefaults];
-		private_ = [defaults boolForKey:@"TumblrfulPrivate"];
-		queuing_ = [defaults boolForKey:@"TumblrfulQueuing"];
+		UserSettings * defaults = [UserSettings sharedInstance];
+		private_ = [defaults boolForKey:@"tumblrPrivateEnabled"];
+		queuing_ = [defaults boolForKey:@"tumblrQueuingEnabled"];
 		responseData_ = nil;
 	}
 	return self;
@@ -607,25 +571,17 @@ static float TIMEOUT = 60.0;
 /**
  * get mail address of account on tumblr.
  */
-+ (NSString*) username
++ (NSString*)username
 {
-	CFPropertyListRef value = CFPreferencesCopyAppValue(CFSTR("TumblrfulEmail"), kCFPreferencesCurrentApplication);
-	if (value != nil) {
-		return [NSString stringWithFormat:@"%@", value];
-	}
-	return nil;
+	return [[UserSettings sharedInstance] stringForKey:@"tumblrEmail"];
 }
 
 /**
  * get passowrd of account on tumblr
  */
-+ (NSString*) password
++ (NSString*)password
 {
-	CFPropertyListRef value = CFPreferencesCopyAppValue(CFSTR("TumblrfulPassword"), kCFPreferencesCurrentApplication);
-	if (value != nil) {
-		return [NSString stringWithFormat:@"%@", value];
-	}
-	return nil;
+	return [[UserSettings sharedInstance] stringForKey:@"tumblrPassword"];
 }
 
 /**
@@ -673,7 +629,6 @@ static float TIMEOUT = 60.0;
 							timeoutInterval:TIMEOUT];
 	[request setHTTPMethod:@"POST"];
 	[request setHTTPBody:[escaped dataUsingEncoding:NSUTF8StringEncoding]];
-	V(@"body: %@", escaped);
 
 	return request;
 }
@@ -739,7 +694,6 @@ static float TIMEOUT = 60.0;
 	responseData_ = [[NSMutableData data] retain];
 
 	NSURLRequest* request = [self createRequest:url params:params]; /* request は connection に指定した時点で reatin upする */ 
-	//V(@"TumblrPost.postTo: %@", [request description]);
 
 	NSURLConnection* connection = [NSURLConnection connectionWithRequest:request delegate:self];
 	[connection retain];
@@ -756,18 +710,9 @@ static float TIMEOUT = 60.0;
  * reblog
  *	@param postID ポストのID(整数値)
  */
-#ifdef FIX20080412
 - (NSObject*) reblog:(NSString*)postID key:(NSString*)reblogKey
-#else
-- (NSObject*) reblog:(NSString*)postID
-#endif
 {
-#ifdef FIX20080412
 	NSString* endpoint = [NSString stringWithFormat:@"%@/reblog/%@/%@", TUMBLR_URL, postID, reblogKey];
-#else
-	NSString* endpoint = [NSString stringWithFormat:@"%@/reblog/%@", TUMBLR_URL, postID];
-#endif
-	V(@"Reblog form URL: %@", endpoint);
 
 	NSURLRequest* request =
 		[NSURLRequest requestWithURL:[NSURL URLWithString:endpoint]];
@@ -779,7 +724,6 @@ static float TIMEOUT = 60.0;
 	NSURLConnection* connection =
 		[NSURLConnection connectionWithRequest:request delegate:delegate];
 
-	V(@"connection: %p", connection);
 	if (connection == nil) {
 		[NSException raise:EXCEPTION_NAME format:@"Couldn't get Reblog form. endpoint: %@", endpoint];
 	}
@@ -814,7 +758,6 @@ static float TIMEOUT = 60.0;
  */
 - (void) connection:(NSURLConnection*)connection didReceiveData:(NSData*)data
 {
-	//V(@"TumblrPost.didReceiveData data=%@", [data description]);
 	[responseData_ appendData:data]; // append data to receive buffer
 }
 
@@ -824,8 +767,6 @@ static float TIMEOUT = 60.0;
  */
 - (void) connectionDidFinishLoading:(NSURLConnection*)connection
 {
-	V(@"TumblrPost.DidFinishLoading succeeded to load %d bytes", [responseData_ length]);
-
 	[connection release];
 
 	if (callback_ != nil) {
@@ -846,8 +787,6 @@ static float TIMEOUT = 60.0;
  */
 - (void) connection:(NSURLConnection*)connection didFailWithError:(NSError*)error
 {
-	V(@"TumblrPost.didFailWithError: NSError:@%", [error description]);
-
 	[connection release];
 
 	[responseData_ release];	/* release receive buffer */

@@ -1,14 +1,20 @@
+/**
+ * @file SafariSingleWindow.m
+ * @brief SafariSingleWindow class implementation
+ */
 #import "SafariSingleWindow.h"
-#import "Log.h"
-
-#define V(format, ...)	Log(format, __VA_ARGS__)
-//#define V(format, ...)
+#import "UserSettings.h"
+#import "DebugLog.h"
 
 @implementation WebView (SafariSingleWindow)
 
-- (WebView *) webView_SwizzledBySafariSingleWindow:(WebView *)sender createWebViewWithRequest:(NSURLRequest *)request
+- (WebView *)webView_SwizzledBySafariSingleWindow:(WebView *)sender createWebViewWithRequest:(NSURLRequest *)request
 {
-	V(@"%@", @"webView_SwizzledBySafariSingleWindow:createWebViewWithRequest");
+	D0(@"webView_SwizzledBySafariSingleWindow:createWebViewWithRequest");
+
+	if (![[UserSettings sharedInstance] boolForKey:@"openInBackgroundTab"])
+		goto failed;
+
 	NSWindow * window = [self window];
 	if (!window)
 		goto failed;
@@ -23,7 +29,7 @@
 
 	WebFrame * frame = [tab mainFrame];
 	if (!frame) {
-		V(@"%@", @"[SafariSingleWindow] Got nil mainFrame for createTab, attempting closeTab");
+		D0(@"[SafariSingleWindow] Got nil mainFrame for createTab, attempting closeTab");
 		[controller closeTab: tab];
 		goto failed;
 	}
@@ -33,12 +39,15 @@ succeeded:
 	return tab;
 
 failed:
-	return [self webView_SwizzledBySafariSingleWindow: sender createWebViewWithRequest: request];
+	return [self webView_SwizzledBySafariSingleWindow:sender createWebViewWithRequest:request];
 }
 
-- (WebView *) webView_SwizzledBySafariSingleWindow:(WebView *)sender createWebViewWithRequest:(NSURLRequest *)request windowFeatures:(NSDictionary *)features
+- (WebView *)webView_SwizzledBySafariSingleWindow:(WebView *)sender createWebViewWithRequest:(NSURLRequest *)request windowFeatures:(NSDictionary *)features
 {
-	V(@"%@", @"webView_SwizzledBySafariSingleWindow:createWebViewWithRequest:windowFeatures");
+	D0(@"webView_SwizzledBySafariSingleWindow:createWebViewWithRequest:windowFeatures");
+
+	if (![[UserSettings sharedInstance] boolForKey:@"openInBackgroundTab"])
+		goto failed;
 
 	NSWindow * window = [self window];
 	if (!window)
@@ -54,35 +63,43 @@ failed:
 
 	WebFrame * frame = [tab mainFrame];
 	if (!frame) {
-		V(@"%@", @"[SafariSingleWindow] Got nil mainFrame for createTab, attempting closeTab");
+		D0(@"Got nil mainFrame for createTab, attempting closeTab");
 		[controller closeTab: tab];
 		goto failed;
 	}
 
 succeeded:
-	V(@"%@", @"succeeded");
+	D0(@"succeeded");
 	[frame loadRequest:request];
 	return tab;
 
 failed:
-	V(@"%@", @"failed");
 	return [self webView_SwizzledBySafariSingleWindow: sender createWebViewWithRequest: request windowFeatures: features];
 }
 
-- (WebView *) webView_SwizzledBySafariSingleWindow:(WebView *)sender setFrame:(NSRect)frameRect
+- (WebView *)webView_SwizzledBySafariSingleWindow:(WebView *)sender setFrame:(NSRect)frameRect
 {
+	if (![[UserSettings sharedInstance] boolForKey:@"openInBackgroundTab"])
+		return [self webView_SwizzledBySafariSingleWindow:sender setFrame:frameRect];
+
 	// nop
 	return nil;
 }
 
-- (WebView *) webView_SwizzledBySafariSingleWindow:(WebView *)sender setToolbarsVisible:(BOOL)toggle
+- (WebView *)webView_SwizzledBySafariSingleWindow:(WebView *)sender setToolbarsVisible:(BOOL)toggle
 {
+	if (![[UserSettings sharedInstance] boolForKey:@"openInBackgroundTab"])
+		return [self webView_SwizzledBySafariSingleWindow:sender setToolbarsVisible:toggle];
+
 	// nop
 	return nil;
 }
 
-- (WebView *) webView_SwizzledBySafariSingleWindow:(WebView *)sender setStatusBarVisible:(BOOL)toggle
+- (WebView *)webView_SwizzledBySafariSingleWindow:(WebView *)sender setStatusBarVisible:(BOOL)toggle
 {
+	if (![[UserSettings sharedInstance] boolForKey:@"openInBackgroundTab"])
+		return [self webView_SwizzledBySafariSingleWindow:sender setStatusBarVisible:toggle];
+
 	// nop
 	return nil;
 }

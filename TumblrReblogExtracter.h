@@ -12,7 +12,7 @@
 	NSMutableData* responseData_;
 	NSString* endpoint_;
 }
-- (id) initWith:(id)continuation;
-- (void) dealloc;
-- (void) extract:(NSString*)pid key:(NSString*)rk;
+- (id)initWith:(id)continuation;
+- (void)dealloc;
+- (void)extract:(NSString*)pid key:(NSString*)rk;
 @end

@@ -14,7 +14,7 @@
 #define V(format, ...)
 
 /* for Vimeo API */
-#define API_KEY			(@"b83e12234274c5e3c307a83aa84a8176")
+#define API_KEY		(@"b83e12234274c5e3c307a83aa84a8176")
 #define API_SECRET	(@"c9afd3ef0")
 
 @interface VimeoVideoDeliverer(Private)

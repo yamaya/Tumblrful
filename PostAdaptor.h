@@ -9,10 +9,6 @@
 #import "PostCallback.h"
 #import <Foundation/Foundation.h>
 
-#ifndef FIX20080412
-#define FIX20080412
-#endif
-
 /**
  * PostAdaptor abstract class
  */
@@ -41,9 +37,5 @@
 /* througURL は [anchor URL] を想定 */
 - (void) postPhoto:(Anchor*)anchor image:(NSString*)imageURL caption:(NSString*)caption;
 - (void) postVideo:(Anchor*)anchor embed:(NSString*)embed caption:(NSString*)caption;
-#ifdef FIX20080412
 - (NSObject*) postEntry:(NSDictionary*)params;
-#else
-- (NSObject*) postEntry:(NSString*)entryID;
-#endif
 @end

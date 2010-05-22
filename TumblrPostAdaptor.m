@@ -68,7 +68,6 @@
 /**
  * エントリのポスト(Reblog等)
  */
-#ifdef FIX20080412
 - (NSObject*) postEntry:(NSDictionary*)params
 {
 	@try {
@@ -83,22 +82,6 @@
 	}
 	return nil;
 }
-#else
-- (NSObject*) postEntry:(NSString*)entryID
-{
-	@try {
-		/* Tumblrへポストするオブジェクトを生成する */
-		TumblrPost* tumblr = [[TumblrPost alloc] initWithCallback:callback_];
-
-		/* Reblog する */
-		return [tumblr reblog:[params objectForKey:@"pid"] key:[params objectForKey:@"rk"]];
-	}
-	@catch (NSException* exception) {
-		[self callbackWithException:exception];
-	}
-	return nil;
-}
-#endif
 @end
 
 #pragma mark -

@@ -8,12 +8,11 @@
 #import "TumblrfulBrowserWebView.h"
 #import "SafariSingleWindow.h"
 #import "GrowlSupport.h"
-#import "Log.h"
+#import "UserSettings.h"
+#import "TumblrfulConstants.h"
+#import "DebugLog.h"
 #import <objc/objc-runtime.h>
 
-#define VERSION_MAJOR		(1)
-#define VERSION_MINOR		(1)
-#define VERSION_FIX			(0)
 #ifdef DEBUG
 #define DEBUG_LOG_SWITCH	true
 #else
@@ -74,8 +73,10 @@ static BOOL jr_swizzleClassMethod(Class klass, SEL origSel, SEL altSel)
  */
 + (void) load
 {
+	NSString * bundleInfoString = [[[NSBundle bundleWithIdentifier:TUMBLRFUL_BUNDLE_ID] infoDictionary] objectForKey:@"CFBundleGetInfoString"];
 	LogEnable(DEBUG_LOG_SWITCH);
-	Log(@"Tumblrful version %d.%d.%d loading", VERSION_MAJOR, VERSION_MINOR, VERSION_FIX);
+	NSLog(bundleInfoString);
+	D0(bundleInfoString);
 
 	Tumblrful* plugin = [Tumblrful sharedInstance];
 	plugin = plugin;
@@ -86,13 +87,16 @@ static BOOL jr_swizzleClassMethod(Class klass, SEL origSel, SEL altSel)
 	jr_swizzleMethod(clazz, @selector(performKeyEquivalent:), @selector(performKeyEquivalent_SwizzledByTumblrful:));
 
 	// Single Window
-	clazz = NSClassFromString(@"BrowserWebView");
-	jr_swizzleMethod(clazz, @selector(webView:createWebViewWithRequest:windowFeatures:), @selector(webView_SwizzledBySafariSingleWindow:createWebViewWithRequest:windowFeatures:));
-	jr_swizzleMethod(clazz, @selector(webView:createWebViewWithRequest:), @selector(webView_SwizzledBySafariSingleWindow:createWebViewWithRequest:));
-	jr_swizzleMethod(clazz, @selector(webView:setFrame:), @selector(webView_SwizzledBySafariSingleWindow:setFrame:));
-	jr_swizzleMethod(clazz, @selector(webView:setToolbarsVisible:), @selector(webView_SwizzledBySafariSingleWindow:setToolbarsVisible:));
-	jr_swizzleMethod(clazz, @selector(webView:setStatusBarVisible:), @selector(webView_SwizzledBySafariSingleWindow:setStatusBarVisible:));
+	if ([[UserSettings sharedInstance] boolForKey:@"openInBackgroundTab"]) {
+		clazz = NSClassFromString(@"BrowserWebView");
+		jr_swizzleMethod(clazz, @selector(webView:createWebViewWithRequest:windowFeatures:), @selector(webView_SwizzledBySafariSingleWindow:createWebViewWithRequest:windowFeatures:));
+		jr_swizzleMethod(clazz, @selector(webView:createWebViewWithRequest:), @selector(webView_SwizzledBySafariSingleWindow:createWebViewWithRequest:));
+		jr_swizzleMethod(clazz, @selector(webView:setFrame:), @selector(webView_SwizzledBySafariSingleWindow:setFrame:));
+		jr_swizzleMethod(clazz, @selector(webView:setToolbarsVisible:), @selector(webView_SwizzledBySafariSingleWindow:setToolbarsVisible:));
+		jr_swizzleMethod(clazz, @selector(webView:setStatusBarVisible:), @selector(webView_SwizzledBySafariSingleWindow:setStatusBarVisible:));
+	}
 
+	// Preferences Pange
 	clazz = NSClassFromString(@"NSPreferences");
 	jr_swizzleClassMethod(
 			  clazz

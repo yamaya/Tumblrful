@@ -7,8 +7,9 @@
 // /System/Library/Frameworks/Foundation.framework/Headers/NSXMLDocument.h
 // /System/Library/Frameworks/Foundation.framework/Headers/NSXMLNode.h
 #import "DeliciousPost.h"
-#import "Log.h"
 #import "NSDataBase64.h"
+#import "UserSettings.h"
+#import "DebugLog.h"
 #import <Foundation/NSXMLDocument.h>
 
 //#define V(format, ...)	Log(format, __VA_ARGS__)
@@ -31,7 +32,7 @@ static NSString* API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
  */
 + (NSString*) username
 {
-	return [[NSUserDefaults standardUserDefaults] stringForKey:@"TumblrfulDeliciousUsername"];
+	return [[UserSettings sharedInstance] stringForKey:@"deliciousUsername"];
 }
 
 /**
@@ -39,7 +40,7 @@ static NSString* API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
  */
 + (NSString*) password
 {
-	return [[NSUserDefaults standardUserDefaults] stringForKey:@"TumblrfulDeliciousPassword"];
+	return [[UserSettings sharedInstance] stringForKey:@"deliciousPassword"];
 }
 
 /**
@@ -47,7 +48,7 @@ static NSString* API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
  */
 + (BOOL) isEnabled
 {
-	return [[NSUserDefaults standardUserDefaults] boolForKey:@"TumblrfulWithDelicious"];
+	return [[UserSettings sharedInstance] boolForKey:@"deliciousEnabled"];
 }
 
 - (id) initWithCallback:(NSObject<PostCallback>*)callback
@@ -55,7 +56,7 @@ static NSString* API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
 	if ((self = [super init]) != nil) {
 		callback_ = [callback retain];
 		responseData_ = nil;
-		private_ = [[NSUserDefaults standardUserDefaults] boolForKey:@"TumblrfulDeliciousPrivate"];
+		private_ = [[UserSettings standardUserDefaults] boolForKey:@"deliciousPrivateEnabled"];
 	}
 	return self;
 }

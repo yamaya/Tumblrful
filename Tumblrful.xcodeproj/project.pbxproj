@@ -45,6 +45,8 @@
 		546A0751105A7E57009DE2D1 /* Growl.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 546A0750105A7E57009DE2D1 /* Growl.framework */; };
 		546A0759105A7E60009DE2D1 /* Growl.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 546A0750105A7E57009DE2D1 /* Growl.framework */; };
 		546A07AC105A8A4B009DE2D1 /* SafariSingleWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 546A07AB105A8A4B009DE2D1 /* SafariSingleWindow.m */; };
+		54A0537A11A82A4000D5502E /* TumblrfulConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = 54A0537911A82A4000D5502E /* TumblrfulConstants.m */; };
+		54E2540D11A81DB60048C02F /* UserSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = 54E2540C11A81DB60048C02F /* UserSettings.m */; };
 		54EA05690ED066ED001116D7 /* GoogleReaderDelivererContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 54EA05660ED066ED001116D7 /* GoogleReaderDelivererContext.m */; };
 		54EA056A0ED066ED001116D7 /* GoogleReaderReblogDeliverer.m in Sources */ = {isa = PBXBuildFile; fileRef = 54EA05680ED066ED001116D7 /* GoogleReaderReblogDeliverer.m */; };
 		8D5B49B0048680CD000E48DA /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C167DFE841241C02AAC07 /* InfoPlist.strings */; };
@@ -143,6 +145,11 @@
 		546A0750105A7E57009DE2D1 /* Growl.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Growl.framework; path = Frameworks/Growl.framework; sourceTree = "<group>"; };
 		546A07AA105A8A4B009DE2D1 /* SafariSingleWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SafariSingleWindow.h; sourceTree = "<group>"; };
 		546A07AB105A8A4B009DE2D1 /* SafariSingleWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SafariSingleWindow.m; sourceTree = "<group>"; };
+		54A0537811A82A4000D5502E /* TumblrfulConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TumblrfulConstants.h; sourceTree = "<group>"; };
+		54A0537911A82A4000D5502E /* TumblrfulConstants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TumblrfulConstants.m; sourceTree = "<group>"; };
+		54E2540A11A81DB60048C02F /* DebugLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DebugLog.h; sourceTree = "<group>"; };
+		54E2540B11A81DB60048C02F /* UserSettings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UserSettings.h; sourceTree = "<group>"; };
+		54E2540C11A81DB60048C02F /* UserSettings.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UserSettings.m; sourceTree = "<group>"; };
 		54EA05650ED066ED001116D7 /* GoogleReaderDelivererContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GoogleReaderDelivererContext.h; sourceTree = "<group>"; };
 		54EA05660ED066ED001116D7 /* GoogleReaderDelivererContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GoogleReaderDelivererContext.m; sourceTree = "<group>"; };
 		54EA05670ED066ED001116D7 /* GoogleReaderReblogDeliverer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GoogleReaderReblogDeliverer.h; sourceTree = "<group>"; };
@@ -202,6 +209,11 @@
 		08FB77AFFE84173DC02AAC07 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				54A0537811A82A4000D5502E /* TumblrfulConstants.h */,
+				54A0537911A82A4000D5502E /* TumblrfulConstants.m */,
+				54E2540A11A81DB60048C02F /* DebugLog.h */,
+				54E2540B11A81DB60048C02F /* UserSettings.h */,
+				54E2540C11A81DB60048C02F /* UserSettings.m */,
 				546A07AA105A8A4B009DE2D1 /* SafariSingleWindow.h */,
 				546A07AB105A8A4B009DE2D1 /* SafariSingleWindow.m */,
 				54EA05650ED066ED001116D7 /* GoogleReaderDelivererContext.h */,
@@ -324,6 +336,7 @@
 				8D5B49B3048680CD000E48DA /* Frameworks */,
 				3B4F9D8E0DFBB68000CF81FA /* CopyFiles */,
 				54DD8FB3105948DF007CEC19 /* ShellScript */,
+				54E2542D11A81E8D0048C02F /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -379,7 +392,21 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "install_name_tool -change \"@executable_path/../Frameworks/Growl.framework/Versions/A/Growl\" \"@loader_path/../Frameworks/Growl.framework/Versions/A/Growl\"  ${TARGET_BUILD_DIR}/Tumblrful.bundle/Contents/MacOS/Tumblrful";
+			shellScript = "install_name_tool -change \"@executable_path/../Frameworks/Growl.framework/Versions/A/Growl\" \"@loader_path/../Frameworks/Growl.framework/Versions/A/Growl\"  ${TARGET_BUILD_DIR}/Tumblrful.bundle/Contents/MacOS/Tumblrful\n";
+			showEnvVarsInLog = 0;
+		};
+		54E2542D11A81E8D0048C02F /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "GIT_=/opt/local/bin/git\nPLISTBUDDY_=/usr/libexec/PlistBuddy\n\nPLIST_PATH_=\"${TARGET_BUILD_DIR}\"/${INFOPLIST_PATH}\n\nBUILD_VERSION_=`$GIT_ rev-list HEAD | wc -l |sed \"s/^[[:blank:]]\\{1,\\}//\"`\nRELEASE_VERSION_=`$GIT_ describe --tags`\nYEAR_=`date \"+%Y\"`\nGETINFOSTRING_=\"$PRODUCT_NAME version $RELEASE_VERSION_ ($BUILD_VERSION_) Copyright 2008-$YEAR_ Masayuki Yamaya\"\n\n$PLISTBUDDY_ -c \"Set :CFBundleVersion $BUILD_VERSION_\" $PLIST_PATH_\n$PLISTBUDDY_ -c \"Set :CFBundleShortVersionString $RELEASE_VERSION_\" $PLIST_PATH_\n$PLISTBUDDY_ -c \"Set :CFBundleGetInfoString $GETINFOSTRING_\" $PLIST_PATH_\n$PLISTBUDDY_ -c \"Set :NSHumanReadableCopyright $GETINFOSTRING_\" $PLIST_PATH_";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -422,6 +449,8 @@
 				54EA05690ED066ED001116D7 /* GoogleReaderDelivererContext.m in Sources */,
 				54EA056A0ED066ED001116D7 /* GoogleReaderReblogDeliverer.m in Sources */,
 				546A07AC105A8A4B009DE2D1 /* SafariSingleWindow.m in Sources */,
+				54E2540D11A81DB60048C02F /* UserSettings.m in Sources */,
+				54A0537A11A82A4000D5502E /* TumblrfulConstants.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

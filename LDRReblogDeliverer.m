@@ -11,13 +11,9 @@
 #import <WebKit/WebKit.h>
 #import <Foundation/NSXMLDocument.h>
 
-//#define V(format, ...)	Log(format, __VA_ARGS__)
-#define V(format, ...)
-
 static NSString* TUMBLR_DOMAIN = @".tumblr.com";
 static NSString* TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 
-#ifdef FIX20080412
 #pragma mark -
 /**
  * Reblog Key を得るための NSURLConnection で使う Delegateクラス.
@@ -31,7 +27,6 @@ static NSString* TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 - (id) initWithEndpoint:(NSString*)endpoint continuation:(LDRReblogDeliverer*)continuation;
 - (void) dealloc;
 @end
-#endif // FIX20080412
 
 #pragma mark -
 @implementation LDRReblogDeliverer
@@ -67,14 +62,12 @@ static NSString* TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 		DOMHTMLImageElement* img = (DOMHTMLImageElement*)node;
 		range = [[img src] rangeOfString:TUMBLR_DATA_URI];
 		if (!(range.location == 0 && range.length >= [TUMBLR_DATA_URI length])) {
-			V(@"LDRReblogDeliverer: type is Photo but On %@", TUMBLR_DATA_URI);
 			return nil;
 		}
 	}
 	else {
 		range = [[url host] rangeOfString:TUMBLR_DOMAIN];
 		if (!(range.location > 0 && range.length == [TUMBLR_DOMAIN length])) {
-			V(@"LDRReblogDeliverer: Not in %@", TUMBLR_DOMAIN);
 			return nil;
 		}
 	}
@@ -83,7 +76,6 @@ static NSString* TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 
 	NSString* postID = [[context documentURL] lastPathComponent];
 	if (postID == nil) {
-		V(@"Could not get PostID. element:%@", [clickedElement description]);
 		return nil;
 	}
 
@@ -101,7 +93,7 @@ static NSString* TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 	}
 	return deliverer;
 }
-#ifdef FIX20080412
+
 /**
  * メニューのアクション
  *	@param sender アクションを起こしたオブジェクト
@@ -112,8 +104,6 @@ static NSString* TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 - (void) action:(id)sender
 {
 	NSString* endpoint = [context_ documentURL];
-
-	V(@"endpoint: %@", endpoint);
 
 	DelegateForReblogKey* delegate =
 		[[DelegateForReblogKey alloc] initWithEndpoint:endpoint
@@ -126,13 +116,9 @@ static NSString* TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 	NSURLConnection* connection =
 		[NSURLConnection connectionWithRequest:request delegate:delegate];
 	connection = connection;	// for compiler warning
-
-	V(@"connection=%@", SafetyDescription(connection));
 }
-#endif
 @end
 
-#ifdef FIX20080412
 @implementation DelegateForReblogKey
 /**
  * オブジェクトを初期化する.
@@ -180,8 +166,6 @@ static NSString* TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 	/* この cast は正しい */
 	NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
 
-	V(@"didReceiveResponse: statusCode=%d", [httpResponse statusCode]);
-
 	if ([httpResponse statusCode] == 200) {
 		responseData_ = [[NSMutableData data] retain];
 	}
@@ -195,7 +179,6 @@ static NSString* TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 - (void) connection:(NSURLConnection*)connection didReceiveData:(NSData*)data
 {
 	if (responseData_ != nil) {
-		V(@"didReceiveData: append length=%d", [data length]);
 		[responseData_ appendData:data];
 	}
 }
@@ -213,10 +196,7 @@ static NSString* TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
  */
 - (void) connectionDidFinishLoading:(NSURLConnection*)connection
 {
-	V(@"connectionDidFinishLoading length=%d", [responseData_ length]);
-
 	if (responseData_ != nil) {
-		//V(@"%@", [[[NSString alloc] initWithData:responseData_ encoding:NSUTF8StringEncoding] autorelease]);
 
 		/* DOMにする */
 		NSError* error = nil;
@@ -224,15 +204,11 @@ static NSString* TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 			[[NSXMLDocument alloc] initWithData:responseData_
 										options:NSXMLDocumentTidyHTML
 										  error:&error];
-		V(@"error=%@", SafetyDescription(error));
 		if (document != nil) {
-			V(@"elements(test)=%@", SafetyDescription([[document rootElement] elementsForName:@"iframe"]));
 			NSArray* elements = [[document rootElement] nodesForXPath:@"//iframe[@id=\"tumblr_controls\"]" error:&error];
-			V(@"elements=%@ error=%@", SafetyDescription(elements), SafetyDescription(error));
 			if (elements != nil && [elements count] > 0) {
 				NSXMLElement* element = [elements objectAtIndex:0];
 				NSString* src = [[[element attributeForName:@"src"] stringValue] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-				V(@"src=%@", SafetyDescription(src));
 				NSRange range = [src rangeOfString:@"&pid="];
 				NSString* s = [src substringFromIndex:range.location + 1];
 				NSArray* segments = [s componentsSeparatedByString:@"&"];
@@ -265,8 +241,6 @@ static NSString* TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 - (void) connection:(NSURLConnection*)connection
 	 didFailWithError:(NSError*)error
 {
-	V(@"didFailWithError: %@", [error description]);
 	[self release];
 }
 @end // DelegateForReblogKey
-#endif

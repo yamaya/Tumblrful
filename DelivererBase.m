@@ -259,7 +259,6 @@
 	}
 }
 
-#ifdef FIX20080412
 /**
  * "Reblog".
  *	@param entryID エントリID
@@ -285,33 +284,7 @@
 	}
 	return result;
 }
-#else
-/**
- * "Reblog".
- *	@param entryID エントリID
- *	@return Reblog したポストのタイプを示す文字列等。
- *					何を返すかは PostAdaptor の派生クラスで決まる。
- */
-- (NSObject*) postEntry:(NSString*)entryID
-{
-	NSObject* result = nil;
-	int i = 0;
-	NSEnumerator* enumerator = [PostAdaptorCollection enumerator];
-	Class postClass;
-	while ((postClass = [enumerator nextObject]) != nil) {
-		if ((1 << i) & filterMask_) { /* do filter */
-			PostAdaptor* adaptor = [postClass alloc];
-			[adaptor initWithCallback:self];
-			NSObject* tmp = [adaptor postEntry:entryID];
-			if (tmp != nil && result == nil) {
-				result = tmp;
-			}
-		}
-		i++;
-	}
-	return result;
-}
-#endif
+
 /**
  * ポスト成功時のコールバック
  */
