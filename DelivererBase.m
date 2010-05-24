@@ -194,10 +194,9 @@
  * "Quote" post.
  *	@param text 引用テキスト
  */
-- (void) postQuote:(NSString*)text
+- (void)postQuote:(NSString*)text
 {
-	Anchor* anchor = [Anchor anchorWithURL:[context_ documentURL]
-																	 title:[context_ documentTitle]];
+	Anchor* anchor = [Anchor anchorWithURL:[context_ documentURL] title:[context_ documentTitle]];
 	int i = 0;
 	NSEnumerator* enumerator = [PostAdaptorCollection enumerator];
 	Class postClass;

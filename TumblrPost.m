@@ -202,7 +202,7 @@ static float TIMEOUT = 60.0;
 
 		if (!NSEqualRanges([name rangeOfString:@"post[one]"], empty)) {
 			/* one は出現しない？ */
-			Log(@"post[one] is not implemented in Reblog(Photo).");
+			D0(@"post[one] is not implemented in Reblog(Photo).");
 		}
 		else if (!NSEqualRanges([name rangeOfString:@"post[two]"], empty)) {
 			[fields setValue:[element stringValue] forKey:@"post[two]"];
@@ -242,7 +242,7 @@ static float TIMEOUT = 60.0;
 		}
 		else if (!NSEqualRanges([name rangeOfString:@"post[three]"], empty)) {
 			/* three は出現しない？ */
-			Log(@"post[three] is not implemented in Reblog(Quote).");
+			D0(@"post[three] is not implemented in Reblog(Quote).");
 		}
 		else {
 			[self addElementIfFormKey:element fields:fields];
@@ -277,7 +277,7 @@ static float TIMEOUT = 60.0;
 		}
 		else if (!NSEqualRanges([name rangeOfString:@"post[three]"], empty)) {
 			/* three は出現しない？ */
-			Log(@"post[three] is not implemented in Reblog(Quote).");
+			D0(@"post[three] is not implemented in Reblog(Quote).");
 		}
 		else {
 			[self addElementIfFormKey:element fields:fields];
@@ -311,7 +311,7 @@ static float TIMEOUT = 60.0;
 		}
 		else if (!NSEqualRanges([name rangeOfString:@"post[three]"], empty)) {
 			/* three は出現しない？ */
-			Log(@"post[three] is not implemented in Reblog(Conversation).");
+			D0(@"post[three] is not implemented in Reblog(Conversation).");
 		}
 		else {
 			[self addElementIfFormKey:element fields:fields];
@@ -344,7 +344,7 @@ static float TIMEOUT = 60.0;
 		}
 		else if (!NSEqualRanges([name rangeOfString:@"post[three]"], empty)) {
 			/* three は出現しない？ */
-			Log(@"post[three] is not implemented in Reblog(Video).");
+			D0(@"post[three] is not implemented in Reblog(Video).");
 		}
 		else {
 			[self addElementIfFormKey:element fields:fields];
@@ -587,7 +587,7 @@ static float TIMEOUT = 60.0;
 /**
  * create minimum request param for Tumblr
  */
-- (NSMutableDictionary*) createMinimumRequestParams
+- (NSMutableDictionary*)createMinimumRequestParams
 {
 	NSMutableArray* keys = [NSMutableArray arrayWithObjects:@"email", @"password", @"generator", nil];
 	NSMutableArray* objs = [NSMutableArray arrayWithObjects: [TumblrPost username], [TumblrPost password], @"Tumblrful", nil];
@@ -595,7 +595,7 @@ static float TIMEOUT = 60.0;
 		[keys addObject:@"private"];
 		[objs addObject:@"1"];
 	}
-	return [[NSMutableDictionary alloc] initWithObjects:objs forKeys:keys];
+	return [NSMutableDictionary dictionaryWithObjects:objs forKeys:keys];
 }
 
 /**
@@ -743,10 +743,10 @@ static float TIMEOUT = 60.0;
 {
 	NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response; /* この cast は正しい */
 
-	NSInteger httpStatus = [httpResponse statusCode];
+	NSInteger const httpStatus = [httpResponse statusCode];
 	if (httpStatus != 201 && httpStatus != 200) {
-		Log(@"TumblrPost.didReceiveResponse statusCode: %d", [httpResponse statusCode]);
-		Log(@"TumblrPost.didReceiveResponse ResponseHeader: %@", [[httpResponse allHeaderFields] description]);
+		D(@"TumblrPost.didReceiveResponse statusCode: %d", httpStatus);
+		D(@"TumblrPost.didReceiveResponse ResponseHeader: %@", [[httpResponse allHeaderFields] description]);
 	}
 
 	[responseData_ setLength:0]; // initialize receive buffer
@@ -787,6 +787,8 @@ static float TIMEOUT = 60.0;
  */
 - (void) connection:(NSURLConnection*)connection didFailWithError:(NSError*)error
 {
+	D0([error description]);
+
 	[connection release];
 
 	[responseData_ release];	/* release receive buffer */

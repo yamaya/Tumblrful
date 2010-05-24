@@ -7,9 +7,6 @@
 #import "TumblrPostAdaptor.h"
 #import "TumblrPost.h"
 
-//#define V(format, ...)	Log(format, __VA_ARGS__)
-#define V(format, ...)
-
 #pragma mark -
 @interface TumblrPostAdaptor (Private)
 - (void) postTo:(NSString*)type params:(NSDictionary*)params;
@@ -37,7 +34,6 @@
 	[params setValue:quote forKey:@"quote"];
 	[params setValue:[anchor tag] forKey:@"source"];
 
-	V(@"TumblrPostAdaptor.postQuote: %@", [params description]);
 	[self postTo:@"quote" params:params];
 }
 
@@ -100,7 +96,6 @@
 		NSMutableDictionary* requestParams = [tumblr createMinimumRequestParams];
 		[requestParams setValue:type forKey:@"type"];
 		[requestParams addEntriesFromDictionary:params];
-		V(@"requestParams: %@", [requestParams description]);
 
 		/* Tumblrへポストする */
 		[tumblr postWith:requestParams];

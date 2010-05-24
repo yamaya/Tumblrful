@@ -75,7 +75,7 @@ static BOOL jr_swizzleClassMethod(Class klass, SEL origSel, SEL altSel)
 {
 	NSString * bundleInfoString = [[[NSBundle bundleWithIdentifier:TUMBLRFUL_BUNDLE_ID] infoDictionary] objectForKey:@"CFBundleGetInfoString"];
 	LogEnable(DEBUG_LOG_SWITCH);
-	NSLog(bundleInfoString);
+	NSLog(@"%@", bundleInfoString);
 	D0(bundleInfoString);
 
 	Tumblrful* plugin = [Tumblrful sharedInstance];
@@ -88,7 +88,6 @@ static BOOL jr_swizzleClassMethod(Class klass, SEL origSel, SEL altSel)
 
 	// Single Window
 	if ([[UserSettings sharedInstance] boolForKey:@"openInBackgroundTab"]) {
-		clazz = NSClassFromString(@"BrowserWebView");
 		jr_swizzleMethod(clazz, @selector(webView:createWebViewWithRequest:windowFeatures:), @selector(webView_SwizzledBySafariSingleWindow:createWebViewWithRequest:windowFeatures:));
 		jr_swizzleMethod(clazz, @selector(webView:createWebViewWithRequest:), @selector(webView_SwizzledBySafariSingleWindow:createWebViewWithRequest:));
 		jr_swizzleMethod(clazz, @selector(webView:setFrame:), @selector(webView_SwizzledBySafariSingleWindow:setFrame:));
