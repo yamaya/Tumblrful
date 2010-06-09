@@ -8,6 +8,9 @@
 #import "DelivererContext.h"
 #import "PostCallback.h"
 
+#define MENUITEM_TAG_NEED_EDIT	0x8000
+#define MENUITEM_TAG_MASK		0x00FF
+
 /**
  * DeliverBase abstract class
  */
@@ -15,6 +18,7 @@
 {
 	DelivererContext* context_;
 	NSUInteger filterMask_;
+	BOOL needEdit_;
 }
 
 /* Deliverer protocols */

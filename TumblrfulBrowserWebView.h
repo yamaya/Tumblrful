@@ -12,5 +12,5 @@
 - (NSArray*) buildMenu:(NSMutableArray*)menu element:(NSDictionary*)element;
 - (BOOL) validateAccount;
 
-- (BOOL) performKeyEquivalent_SwizzledByTumblrful:(NSEvent*)event;
+- (BOOL)performKeyEquivalent_SwizzledByTumblrful:(NSEvent*)event;
 @end

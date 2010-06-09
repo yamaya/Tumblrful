@@ -56,7 +56,7 @@ static NSString* API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
 	if ((self = [super init]) != nil) {
 		callback_ = [callback retain];
 		responseData_ = nil;
-		private_ = [[UserSettings standardUserDefaults] boolForKey:@"deliciousPrivateEnabled"];
+		private_ = [[UserSettings sharedInstance] boolForKey:@"deliciousPrivateEnabled"];
 	}
 	return self;
 }

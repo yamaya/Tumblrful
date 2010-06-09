@@ -6,6 +6,7 @@
  */
 #import "TumblrPostAdaptor.h"
 #import "TumblrPost.h"
+#import "DebugLog.h"
 
 #pragma mark -
 @interface TumblrPostAdaptor (Private)
@@ -41,6 +42,8 @@
  */
 - (void) postPhoto:(Anchor*)anchor image:(NSString*)imageURL caption:(NSString*)caption
 {
+	D(@"caption:%@", caption);
+
 	NSMutableDictionary* params = [[[NSMutableDictionary alloc] init] autorelease];
 	[params setValue:imageURL forKey:@"source"];
 	[params setValue:caption forKey:@"caption"];
@@ -78,6 +81,17 @@
 	}
 	return nil;
 }
+
+- (void) setQueueing:(BOOL)queuing
+{
+	queuing_ = queuing;
+}
+
+- (BOOL) queuing
+{
+	return queuing_;
+}
+
 @end
 
 #pragma mark -
@@ -91,6 +105,10 @@
 		/* Tumblrへポストするオブジェクトを生成する */
 		TumblrPost* tumblr = [[TumblrPost alloc] initWithCallback:callback_];
 		[tumblr retain];
+
+		// プライベートとキューイングの設定をしておく
+		[tumblr setPrivate:private_];
+		[tumblr setQueueing:queuing_];
 
 		/* リクエストパラメータを構築する */
 		NSMutableDictionary* requestParams = [tumblr createMinimumRequestParams];

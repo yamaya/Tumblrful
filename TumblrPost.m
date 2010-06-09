@@ -568,6 +568,16 @@ static float TIMEOUT = 60.0;
 	return private_;
 }
 
+- (void) setQueueing:(BOOL)queuing
+{
+	queuing_ = queuing;
+}
+
+- (BOOL) queuing
+{
+	return queuing_;
+}
+
 /**
  * get mail address of account on tumblr.
  */
@@ -620,6 +630,7 @@ static float TIMEOUT = 60.0;
         }
 		value = [value stringByURLEncoding:NSUTF8StringEncoding];
 		[escaped appendFormat:@"&%@=%@", key, value];
+		D0(escaped);
 	}
 
 	/* create the POST request */

@@ -3,21 +3,16 @@
 Tumblrful is Safari [SIMBL](http://www.culater.net/software/SIMBL/SIMBL.php) Plugin for [Tumblr](www.tumblr.com).
 
 - Do *not* support Dashbord reblogging and liking.
+- Post Editting sheet work in progress.
 
 # Requirement
 
-- Mac OS OS X 10.6
-- Safari 4.0
+- Mac OS OS X 10.6.x
+- Safari 4.x and 5.0
 - [SIMBL](http://www.culater.net/software/SIMBL/SIMBL.php) 0.9.7a
 - [Growl](http://growl.info/) 1.2
 
 *No testing in 32 bit mode.*
-
-# Requirement for development
-
-- Xcode 3.2
-
-*I use iPhone SDK :D*
 
 # Installation
 
@@ -38,7 +33,14 @@ Tumblrful is Safari [SIMBL](http://www.culater.net/software/SIMBL/SIMBL.php) Plu
 - Open contextual menu on the selection.
 - Select "Share - Quote". Thus "Quote" post write to your Tumblr site(via Tumblr API).
 
+# Requirement for development
+
+- Xcode 3.2.x
+
+*I use iPhone SDK :D*
+
 # TODO
 
 - Support Dashboard Reblogging and Liking.
+- Post Editting sheet work in progress.
 - Fix(Fix, Fix...) Memory leaks.

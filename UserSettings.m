@@ -56,7 +56,6 @@ static UserSettings * instance = nil;
 		}
 		D0([dictionary_ description]);
 	}
-	return dictionary_;
 }
 
 - (void)synchronize

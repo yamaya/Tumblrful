@@ -30,4 +30,7 @@
 - (void) setPrivate:(BOOL)private;
 - (BOOL) private;
 
+- (void) setQueueing:(BOOL)queuing;
+- (BOOL) queuing;
+
 @end

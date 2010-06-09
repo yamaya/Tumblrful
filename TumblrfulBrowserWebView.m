@@ -26,6 +26,7 @@
 #import "DebugLog.h"
 #import "GoogleReaderDelivererContext.h"
 #import "LDRDelivererContext.h"
+#import "DelivererRules.h"
 #import <WebKit/DOMHTML.h>
 
 /* POST先のサービスを識別するマスク値 */
@@ -105,25 +106,45 @@ static const NSUInteger POST_MASK_ALL = 0x7;
  */
 - (NSArray*) buildMenu:(NSMutableArray*)menu element:(NSDictionary*)element
 {
+	// アカウントが未設定ならメニューを追加しない
 	if (![self validateAccount]) {
 		[GrowlSupport notify:@"Tumblrful" description:@"Email or Password not entered."];
 		return menu;
 	}
 
-	id<Deliverer> deliverer = nil;
-	NSEnumerator* classEnumerator = [[self sharedDelivererClasses] objectEnumerator];
+	NSMenu * subMenu = [[[NSMenu alloc] initWithTitle:@"Editting Post"] autorelease];
+
 	Class class;
+	NSEnumerator* classEnumerator = [[self sharedDelivererClasses] objectEnumerator];
 	while (class = [classEnumerator nextObject]) {
-		deliverer = [class create:(DOMHTMLDocument*)[self mainFrameDocument] element:element];
+		DelivererBase * deliverer = [class create:(DOMHTMLDocument*)[self mainFrameDocument] element:element];
 		if (deliverer != nil) {
-			int i = 0;
-			NSArray* menuItems = [(DelivererBase*)deliverer createMenuItems];
-			NSEnumerator* menuEnumerator = [menuItems objectEnumerator];
+			NSUInteger i = 0;
 			NSMenuItem* menuItem;
+			NSArray* menuItems = [deliverer createMenuItems];
+			NSEnumerator* menuEnumerator = [menuItems objectEnumerator];
 			while ((menuItem = [menuEnumerator nextObject]) != nil) {
-				[menu insertObject:menuItem atIndex:i];
-				i++;
+				[menu insertObject:menuItem atIndex:i++];
+
+				// サブメニューにダイアログで編集するためのメニューを追加しておく
+				menuItem = [menuItem copy];
+				NSString * title = [menuItem title];
+				NSRange range = [title rangeOfString:[DelivererRules menuItemTitleWith:@""]];
+				D(@"range:%d, %d", range.location, range.length);
+				if (range.location != NSNotFound) {
+					[menuItem setTitle:[title substringFromIndex:(range.location + range.length)]];
+					NSInteger const tag = [menuItem tag] | MENUITEM_TAG_NEED_EDIT;
+					[menuItem setTag:tag];
+					[subMenu addItem:menuItem];
+				}
 			}
+
+			// ダイアログを表示してポストするためのサブメニューを作る
+			menuItem = [[[NSMenuItem alloc] initWithTitle:@"Share..." action:nil keyEquivalent:@""] autorelease];
+			[menuItem setSubmenu:subMenu];
+			[menu insertObject:menuItem atIndex:i++];
+
+			// セパレータを追加して返す
 			[menu insertObject:[NSMenuItem separatorItem] atIndex:i];
 			return menu;
 		}
@@ -248,7 +269,6 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 	}
 
 	BOOL processed = NO;
-
 	//FIXME: DeliverBase にも同じ配列を生成していて無駄
 	NSArray* contexts = [NSArray arrayWithObjects:
 		  [GoogleReaderDelivererContext class]
