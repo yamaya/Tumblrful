@@ -23,6 +23,7 @@
  */
 + (BOOL) match:(DOMHTMLDocument*)document target:(NSDictionary*)targetElement
 {
+#pragma unused (document, targetElement)
 	return YES; /* 常に真 */
 }
 
@@ -34,6 +35,7 @@
  */
 + (DOMHTMLElement*) matchForAutoDetection:(DOMHTMLDocument*)document windowScriptObject:(WebScriptObject*)window;
 {
+#pragma unused (document, window)
 	return FALSE; /* 常に偽 */
 }
 
@@ -91,6 +93,7 @@
  */
 - (id) initWithDocument:(DOMHTMLDocument*)document target:(NSDictionary*)targetElement
 {
+#pragma unused (document, targetElement)
 	if ((self = [super init]) != nil) {
 		document_ = [document retain];
 	}

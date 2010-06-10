@@ -7,6 +7,9 @@
 #import "PostAdaptor.h"
 
 @implementation PostAdaptor
+
+@synthesize privated = private_;
+
 /**
  * メニュー項目のタイトルを取得する
  *	@return タイトル
@@ -123,35 +126,33 @@
 	}
 }
 
-/**
- * "Link" post 
- *	@param anchor	LinkのURLアンカー
- *	@param description Linkの説明
- *
- *	@note	サブクラスでオーバーライドしなければならない
- */
-- (void) postLink:(Anchor*)anchor description:(NSString*)description
+- (void)postLink:(Anchor*)anchor description:(NSString*)description
 {
+#pragma unused (anchor, description)
 	[self doesNotRecognizeSelector:_cmd];
 }
 
-- (void) postQuote:(Anchor*)anchor quote:(NSString*)quote
+- (void)postQuote:(NSString *)quote source:(NSString *)source
 {
+#pragma unused (quote, source)
 	[self doesNotRecognizeSelector:_cmd];
 }
 
-- (void) postPhoto:(Anchor*)anchor image:(NSString*)imageURL caption:(NSString*)caption
+- (void)postPhoto:(NSString *)source caption:(NSString *)caption throughURL:(NSString *)throughURL
 {
+#pragma unused (source, caption, throughURL)
 	[self doesNotRecognizeSelector:_cmd];
 }
 
 - (void) postVideo:(Anchor*)anchor embed:(NSString*)embed caption:(NSString*)caption
 {
+#pragma unused (anchor, embed, caption)
 	[self doesNotRecognizeSelector:_cmd];
 }
 
 - (NSObject*) postEntry:(NSDictionary*)params
 {
+#pragma unused (params)
 	[self doesNotRecognizeSelector:_cmd];
 	return nil;
 }

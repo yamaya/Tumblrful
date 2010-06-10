@@ -21,7 +21,7 @@ static NSString* API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
 
 #pragma mark -
 @interface DeliciousPost (Private)
-- (NSURLRequest*) createRequest:(NSDictionary*)params;
+- (NSURLRequest *)createRequest:(NSDictionary *)params;
 - (void) callback:(SEL)selector withObject:(id)obj;
 @end
 
@@ -100,7 +100,7 @@ static NSString* API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
  *	@param params - request parameteres
  *	@param delegate - delegate for NSURLConnection
  */
-- (void) postWith:(NSDictionary*)params
+- (void)postWith:(NSDictionary *)params
 {
 	responseData_ = [[[NSMutableData alloc] init] retain];
 
@@ -126,6 +126,7 @@ static NSString* API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
  */
 - (void)connection:(NSURLConnection*)connection didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge*)challenge
 {
+#pragma unused (connection)
 	V(@"didReceiveAuthenticationChallenge: %@", @"enter");
 
 	NSURLCredential* crendential =
@@ -144,6 +145,7 @@ static NSString* API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
  */
 - (void) connection:(NSURLConnection*)connection didReceiveResponse:(NSURLResponse*)response
 {
+#pragma unused (connection)
 	V(@"DeliciousPost.didReceiveResponse retain:%x", [self retainCount]);
 
 	NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response; /* この cast は正しい */
@@ -161,6 +163,7 @@ static NSString* API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
  */
 - (void) connection:(NSURLConnection*)connection didReceiveData:(NSData*)data
 {
+#pragma unused (connection)
 	[responseData_ appendData:data]; // append data to receive buffer
 }
 
@@ -203,7 +206,7 @@ static NSString* API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
 /**
  * create POST request
  */
-- (NSURLRequest*) createRequest:(NSDictionary*)params
+- (NSURLRequest *)createRequest:(NSDictionary *)params
 {
 	@try {
 		NSMutableString* ms = [[[NSMutableString alloc] initWithString:API_ADD_ENDPOINT] autorelease];

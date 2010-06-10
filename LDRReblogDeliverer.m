@@ -7,7 +7,7 @@
 // /System/Library/Frameworks/WebKit.framework/Headers/DOMHTMLDocument.h
 #import "LDRReblogDeliverer.h"
 #import "LDRDelivererContext.h"
-#import "Log.h"
+#import "DebugLog.h"
 #import <WebKit/WebKit.h>
 #import <Foundation/NSXMLDocument.h>
 
@@ -103,6 +103,7 @@ static NSString* TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
  */
 - (void) action:(id)sender
 {
+#pragma unused (sender)
 	NSString* endpoint = [context_ documentURL];
 
 	DelegateForReblogKey* delegate =
@@ -160,9 +161,9 @@ static NSString* TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
  *	@param connection NSURLConnection オブジェクト
  *	@param response NSURLResponse オブジェクト
  */
-- (void) connection:(NSURLConnection*)connection
- didReceiveResponse:(NSURLResponse*)response
+- (void) connection:(NSURLConnection*)connection didReceiveResponse:(NSURLResponse*)response
 {
+#pragma unused (connection)
 	/* この cast は正しい */
 	NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
 
@@ -178,6 +179,7 @@ static NSString* TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
  */
 - (void) connection:(NSURLConnection*)connection didReceiveData:(NSData*)data
 {
+#pragma unused (connection)
 	if (responseData_ != nil) {
 		[responseData_ appendData:data];
 	}
@@ -196,6 +198,7 @@ static NSString* TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
  */
 - (void) connectionDidFinishLoading:(NSURLConnection*)connection
 {
+#pragma unused (connection)
 	if (responseData_ != nil) {
 
 		/* DOMにする */
@@ -238,9 +241,11 @@ static NSString* TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 
 /**
  */
-- (void) connection:(NSURLConnection*)connection
-	 didFailWithError:(NSError*)error
+- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
+#pragma unused (connection, error)
+	D0([error description]);
+
 	[self release];
 }
 @end // DelegateForReblogKey

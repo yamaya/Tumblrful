@@ -6,6 +6,7 @@
  */
 #import "QuoteViewController.h"
 #import "NSString+Tumblrful.h"
+#import "PostEditConstants.h"
 #import "DebugLog.h"
 
 @implementation QuoteViewController
@@ -16,14 +17,17 @@
 - (void)awakeFromNib
 {
 	[super awakeFromNib];
-	
-	NSFont * font = [sourceField_ font];
+
+	NSFont * font =[NSFont systemFontOfSize:POSTEDIT_TEXT_FONT_SIZE];
+	[[quoteTextView_ textStorage] setFont:font];
+	[[sourceTextView_ textStorage] setFont:font];
 	[quoteTextView_ setFont:font];
+	[sourceTextView_ setFont:font];
 }
 
 - (NSString *)source
 {
-	return [sourceField_ stringValue];
+	return [sourceTextView_ string];
 }
 
 - (NSString *)quote
@@ -31,9 +35,9 @@
 	return [quoteTextView_ string];
 }
 
-- (void)setContentsWithText:(NSString *)quoteText source:(NSString *)source
+- (void)setContentsWithText:(NSString *)quote source:(NSString *)source
 {
-	[quoteTextView_ setString:Stringnize(quoteText)];
-	[sourceField_ setStringValue:Stringnize(source)];
+	[quoteTextView_ setString:Stringnize(quote)];
+	[sourceTextView_ setString:Stringnize(source)];
 }
 @end

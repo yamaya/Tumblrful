@@ -9,13 +9,13 @@
 @interface QuoteViewController : NSViewController
 {
 	IBOutlet NSTextView * quoteTextView_;
-	IBOutlet NSTextField * sourceField_;
+	IBOutlet NSTextView * sourceTextView_;
 }
 
 @property (nonatomic, readonly) NSString * source;
 
 @property (nonatomic, readonly) NSString * quote;
 
-- (void)setContentsWithText:(NSString *)quoteText source:(NSString *)source;
+- (void)setContentsWithText:(NSString *)quote source:(NSString *)source;
 
 @end

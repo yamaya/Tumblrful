@@ -9,15 +9,13 @@
 #import "DebugLog.h"
 
 #pragma mark -
-@interface TumblrPostAdaptor (Private)
-- (void) postTo:(NSString*)type params:(NSDictionary*)params;
+@interface TumblrPostAdaptor ()
+- (void)postTo:(NSString *)type params:(NSDictionary *)params;
 @end
 
 #pragma mark -
 @implementation TumblrPostAdaptor
-/**
- */
-- (void) postLink:(Anchor*)anchor description:(NSString*)description
+- (void)postLink:(Anchor *)anchor description:(NSString *)description
 {
 	NSMutableDictionary* params = [[[NSMutableDictionary alloc] init] autorelease];
 	[params setValue:[anchor URL] forKey:@"url"];
@@ -27,33 +25,16 @@
 	[self postTo:@"link" params:params];
 }
 
-/**
- */
-- (void) postQuote:(Anchor*)anchor quote:(NSString*)quote;
+- (void)postQuote:(NSString *)quote source:(NSString *)source;
 {
-	NSMutableDictionary* params = [[[NSMutableDictionary alloc] init] autorelease];
-	[params setValue:quote forKey:@"quote"];
-	[params setValue:[anchor tag] forKey:@"source"];
-
-	[self postTo:@"quote" params:params];
+	[self postTo:@"quote" params:[NSMutableDictionary dictionaryWithObjectsAndKeys:quote, @"quote", source, @"source", nil]];
 }
 
-/**
- */
-- (void) postPhoto:(Anchor*)anchor image:(NSString*)imageURL caption:(NSString*)caption
+- (void)postPhoto:(NSString *)source caption:(NSString *)caption throughURL:(NSString *)throughURL
 {
-	D(@"caption:%@", caption);
-
-	NSMutableDictionary* params = [[[NSMutableDictionary alloc] init] autorelease];
-	[params setValue:imageURL forKey:@"source"];
-	[params setValue:caption forKey:@"caption"];
-	[params setValue:[anchor URL] forKey:@"click-through-url"];
-
-	[self postTo:@"photo" params:params];
+	[self postTo:@"photo" params:[NSMutableDictionary dictionaryWithObjectsAndKeys:source, @"source", caption, @"caption", throughURL, @"click-through-url", nil]];
 }
 
-/**
- */
 - (void) postVideo:(Anchor*)anchor embed:(NSString*)embed caption:(NSString*)caption
 {
 	NSMutableDictionary* params = [[[NSMutableDictionary alloc] init] autorelease];
@@ -64,61 +45,53 @@
 	[self postTo:@"video" params:params];
 }
 
-/**
- * エントリのポスト(Reblog等)
- */
-- (NSObject*) postEntry:(NSDictionary*)params
+- (NSObject *)postEntry:(NSDictionary *)params
 {
 	@try {
-		/* Tumblrへポストするオブジェクトを生成する */
-		TumblrPost* tumblr = [[TumblrPost alloc] initWithCallback:callback_];
+		// Tumblrへポストするオブジェクトを生成する
+		TumblrPost * tumblr = [[TumblrPost alloc] initWithCallback:callback_];
 
-		/* Reblog する */
+		// Reblog する
 		return [tumblr reblog:[params objectForKey:@"pid"] key:[params objectForKey:@"rk"]];
 	}
-	@catch (NSException* exception) {
-		[self callbackWithException:exception];
+	@catch (NSException * e) {
+		D0([e description]);
+		[self callbackWithException:e];
 	}
 	return nil;
 }
 
-- (void) setQueueing:(BOOL)queuing
+- (void)setQueueing:(BOOL)queuing
 {
 	queuing_ = queuing;
 }
 
-- (BOOL) queuing
+- (BOOL)queuing
 {
 	return queuing_;
 }
 
-@end
-
-#pragma mark -
-@implementation TumblrPostAdaptor (Private)
-/**
- * post to Tumblr
- */
-- (void) postTo:(NSString*)type params:(NSDictionary*)params
+- (void)postTo:(NSString *)type params:(NSDictionary *)params
 {
 	@try {
-		/* Tumblrへポストするオブジェクトを生成する */
-		TumblrPost* tumblr = [[TumblrPost alloc] initWithCallback:callback_];
+		// Tumblrへポストするオブジェクトを生成する
+		TumblrPost * tumblr = [[TumblrPost alloc] initWithCallback:callback_];
 		[tumblr retain];
 
 		// プライベートとキューイングの設定をしておく
 		[tumblr setPrivate:private_];
 		[tumblr setQueueing:queuing_];
 
-		/* リクエストパラメータを構築する */
-		NSMutableDictionary* requestParams = [tumblr createMinimumRequestParams];
+		// リクエストパラメータを構築する
+		NSMutableDictionary * requestParams = [tumblr createMinimumRequestParams];
 		[requestParams setValue:type forKey:@"type"];
 		[requestParams addEntriesFromDictionary:params];
 
-		/* Tumblrへポストする */
+		// Tumblrへポストする
 		[tumblr postWith:requestParams];
 	}
-	@catch (NSException* e) {
+	@catch (NSException * e) {
+		D0([e description]);
 		[self callbackWithException:e];
 	}
 }

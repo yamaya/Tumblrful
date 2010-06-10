@@ -29,7 +29,7 @@ static UserSettings * instance = nil;
 
 - (id)init
 {
-	if (self = [super init]) {
+	if ((self = [super init]) != nil) {
 		dictionary_ = nil;
 	}
 	return self;

@@ -38,7 +38,7 @@ static NSString* NOTIFY_NAME = @"NotifyPostToTumblr";
 /// init
 - (id) init
 {
-	if (self = [super init]) {
+	if ((self = [super init]) != nil) {
 		[GrowlApplicationBridge setGrowlDelegate:self];
 		[self registrationDictionaryForGrowl];
 	}

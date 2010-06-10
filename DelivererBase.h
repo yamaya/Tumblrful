@@ -16,26 +16,44 @@
  */
 @interface DelivererBase : NSObject <Deliverer, PostCallback>
 {
-	DelivererContext* context_;
+	DelivererContext * context_;
 	NSUInteger filterMask_;
 	BOOL needEdit_;
 }
 
 /* Deliverer protocols */
-+ (id<Deliverer>) create:(DOMHTMLDocument*)document element:(NSDictionary*)clickedElement;
-- (NSMenuItem*) createMenuItem;
-- (void) action:(id)sender;
++ (id<Deliverer>)create:(DOMHTMLDocument *)document element:(NSDictionary *)clickedElement;
+- (NSMenuItem *)createMenuItem;
+- (void)action:(id)sender;
 
 /* common process for PostCallback */
 - (void) posted:(NSData*)response;
 - (void) failed:(NSError*)error;
 
-- (id) initWithDocument:(DOMHTMLDocument*)document target:(NSDictionary*)clickedElement;
-- (void) dealloc;
-- (void) postLink:(NSString*)url title:(NSString*)title;
-- (void) postQuote:(NSString*)text;
-- (void) postPhoto:(NSString*)imageURL caption:(NSString*)caption through:(NSString*)url;
-- (void) postVideo:(NSString*)embed title:(NSString*)title caption:(NSString*)caption;
+- (id)initWithDocument:(DOMHTMLDocument*)document target:(NSDictionary*)clickedElement;
+
+/**
+ * post "Link" contents
+ *	@param[in] url	URL
+ *	@param[in] title	URL title
+ */
+- (void)postLink:(NSString *)url title:(NSString *)title;
+
+/**
+ * post "Quote" contents
+ *	@param[in] quote	quote text
+ */
+- (void)postQuote:(NSString *)quote;
+
+/**
+ * post "Photo" contents
+ *	@param[in] imageURL	image URL
+ *	@param[in] caption	caption text
+ *	@param[in] url	click-through URL
+ */
+- (void)postPhoto:(NSString *)imageURL caption:(NSString *)caption through:(NSString *)url;
+
+- (void)postVideo:(NSString*)embed title:(NSString*)title caption:(NSString*)caption;
 - (NSObject*) postEntry:(NSDictionary*)params;
 
 /* PostCallback overrides */

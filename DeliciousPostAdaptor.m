@@ -8,28 +8,25 @@
  */
 #import "DeliciousPostAdaptor.h"
 #import "DeliciousPost.h"
-#import "Log.h"
-
-//#define V(format, ...)	Log(format, __VA_ARGS__)
-#define V(format, ...)
+#import "DebugLog.h"
 
 #define MAX_DESCRIPTION (256)
 
 #pragma mark -
-@interface DeliciousPostAdaptor (Private)
-- (void) postTo:(NSDictionary*)params;
+@interface DeliciousPostAdaptor ()
+- (void)postTo:(NSDictionary *)params;
 @end
 
 #pragma mark -
 @implementation DeliciousPostAdaptor
 /**
  */
-+ (NSString*) titleForMenuItem
++ (NSString *)titleForMenuItem
 {
 	return @"del.icio.us";
 }
 
-+ (BOOL) enableForMenuItem
++ (BOOL)enableForMenuItem
 {
 	return [DeliciousPost isEnabled];
 }
@@ -43,8 +40,8 @@
 		}
 
 		NSMutableDictionary* params = [[[NSMutableDictionary alloc] init] autorelease];
-		[params setValue:[anchor URL] forKey:@"url"];
-		[params setValue:[anchor title] forKey:@"description"];
+		[params setValue:anchor.URL forKey:@"url"];
+		[params setValue:anchor.title forKey:@"description"];
 		[params setValue:description forKey:@"extended"];
 #if 0
 		[params setValue:"one two three" forKey:@"tags"];
@@ -55,47 +52,45 @@
 	}
 }
 
-- (void) postQuote:(Anchor*)anchor quote:(NSString*)quote
+- (void)postQuote:(NSString *)quote source:(NSString *)source;
 {
-	[self postLink:anchor description:quote];
+	[self postLink:[Anchor anchorWithHTML:source] description:quote];
 }
 
-- (void) postPhoto:(Anchor*)anchor image:(NSString*)imageURL caption:(NSString*)caption
+- (void)postPhoto:(NSString *)source caption:(NSString *)caption throughURL:(NSString *)throughURL
 {
+#pragma unused (source, caption, throughURL)
 	// do-nothing
 }
 
 - (void) postVideo:(Anchor*)anchor embed:(NSString*)embed caption:(NSString*)caption
 {
+#pragma unused (anchor, embed, caption)
 	[self postLink:anchor description:caption];
 }
 
-- (NSObject*) postEntry:(NSDictionary*)params
+- (NSObject *)postEntry:(NSDictionary *)params
 {
+#pragma unused (params)
 	return nil; // do-nothing
 }
-@end
 
-#pragma mark -
-@implementation DeliciousPostAdaptor (Private)
-/**
- * post to del.icio.us
- */
-- (void) postTo:(NSDictionary*)params
+- (void)postTo:(NSDictionary *)params
 {
 	@try {
-		/* del.icio.us へポストするオブジェクトを生成する */
-		DeliciousPost* delicious = [[DeliciousPost alloc] initWithCallback:callback_];
+		// del.icio.us へポストするオブジェクトを生成する
+		DeliciousPost * delicious = [[DeliciousPost alloc] initWithCallback:callback_];
 
-		/* リクエストパラメータを構築する */
-		NSMutableDictionary* requestParams = [delicious createMinimumRequestParams];
+		// リクエストパラメータを構築する
+		NSMutableDictionary * requestParams = [delicious createMinimumRequestParams];
 		[requestParams addEntriesFromDictionary:params];
-		V(@"requestParams: %@", [requestParams description]);
+		D(@"requestParams: %@", [requestParams description]);
 
-		/* del.icio.us へポストする */
+		// del.icio.us へポストする
 		[delicious postWith:requestParams];
 	}
-	@catch (NSException* e) {
+	@catch (NSException * e) {
+		D0([e description]);
 		[self callbackWithException:e];
 	}
 }

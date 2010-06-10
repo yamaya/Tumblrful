@@ -23,18 +23,17 @@
 	if (!controller)
 		goto failed;
 
-	WebView * tab = [controller createInactiveTab];
+	WebView * tab = [controller performSelector:@selector(createInactiveTab) withObject:nil];
 	if (!tab)
 		goto failed;
 
 	WebFrame * frame = [tab mainFrame];
 	if (!frame) {
-		D0(@"[SafariSingleWindow] Got nil mainFrame for createTab, attempting closeTab");
-		[controller closeTab: tab];
+		D0(@"Got nil mainFrame for createTab, attempting closeTab");
+		[controller performSelector:@selector(closeTab:) withObject:tab];
 		goto failed;
 	}
 
-succeeded:
 	[frame loadRequest: request];
 	return tab;
 
@@ -57,18 +56,17 @@ failed:
 	if (!controller)
 		goto failed;
 
-	WebView * tab = [controller createInactiveTab];
+	WebView * tab = [controller performSelector:@selector(createInactiveTab) withObject:nil];
 	if (!tab)
 		goto failed;
 
 	WebFrame * frame = [tab mainFrame];
 	if (!frame) {
 		D0(@"Got nil mainFrame for createTab, attempting closeTab");
-		[controller closeTab: tab];
+		[controller performSelector:@selector(closeTab:) withObject:tab];
 		goto failed;
 	}
 
-succeeded:
 	D0(@"succeeded");
 	[frame loadRequest:request];
 	return tab;

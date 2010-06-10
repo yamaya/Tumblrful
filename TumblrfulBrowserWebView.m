@@ -116,8 +116,8 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 
 	Class class;
 	NSEnumerator* classEnumerator = [[self sharedDelivererClasses] objectEnumerator];
-	while (class = [classEnumerator nextObject]) {
-		DelivererBase * deliverer = [class create:(DOMHTMLDocument*)[self mainFrameDocument] element:element];
+	while ((class = [classEnumerator nextObject]) != nil) {
+		DelivererBase * deliverer = (DelivererBase *)[class create:(DOMHTMLDocument*)[self mainFrameDocument] element:element];
 		if (deliverer != nil) {
 			NSUInteger i = 0;
 			NSMenuItem* menuItem;

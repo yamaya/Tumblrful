@@ -34,18 +34,15 @@
 		BIO_set_flags(filter, BIO_FLAGS_BASE64_NO_NL);
 	}
 	BIO* memio = BIO_push(filter, BIO_new(BIO_s_mem()));
-	BIO_write(memio, [self bytes], [self length]);
-	BIO_flush(memio);
+	BIO_write(memio, [self bytes], (int)[self length]);
+	(void)BIO_flush(memio);
 
 	char* bytes = NULL;
 	size_t length = BIO_get_mem_data(memio, &bytes);
 
 #ifdef DUMP_DEBUG
-	{
-		size_t i;
-		for (i = 0; i < length; ++i) {
-			V(@"bytes[%d]={%c:%x}", i, bytes[i], bytes[i]);
-		}
+	for (size_t i = 0; i < length; ++i) {
+		V(@"bytes[%d]={%c:%x}", i, bytes[i], bytes[i]);
 	}
 #endif
 

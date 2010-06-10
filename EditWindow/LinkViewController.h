@@ -4,7 +4,7 @@
 {
 	IBOutlet NSTextField * titleFiled_;
 	IBOutlet NSTextField * urlField_;
-	IBOutlet NSTextField * descriptionField_;
+	IBOutlet NSTextView * descriptionTextView_;
 }
 
 @property (nonatomic, readonly) NSString * title;

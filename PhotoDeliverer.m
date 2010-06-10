@@ -6,37 +6,14 @@
  */
 #import "PhotoDeliverer.h"
 #import "DelivererRules.h"
-#import "Log.h"
+#import "DebugLog.h"
 #import <WebKit/WebView.h>
 
-//#define V(format, ...)	Log(format, __VA_ARGS__)
-#define V(format, ...)
-
-static NSString* TYPE = @"Photo";
+static NSString * TYPE = @"Photo";
 
 #pragma mark -
-@interface PhotoDeliverer (Private)
-- (NSString*) getSelectionText:(NSDictionary*)clickedElement;
-@end
-
-#pragma mark -
-@implementation PhotoDeliverer (Private)
-- (NSString*) getSelectionText:(NSDictionary*)clickedElement
-{
-	NSString* selection = nil;
-	WebFrame* frame = [clickedElement objectForKey:WebElementFrameKey];
-	if (frame != nil) {
-		NSView<WebDocumentView>* view = [[frame frameView] documentView];
-		if (view != nil) {
-			if ([view respondsToSelector:@selector(selectedString)]) {
-				selection = [view performSelector:@selector(selectedString)];
-			}
-		}
-	}
-
-	V(@"selection=\"%@\"", selection);
-	return selection;
-}
+@interface PhotoDeliverer ()
+- (NSString *)selectionText:(NSDictionary *)clickedElement;
 @end
 
 #pragma mark -
@@ -100,21 +77,43 @@ static NSString* TYPE = @"Photo";
 /**
  * メニューのアクション
  */
-- (void) action:(id)sender
+- (void)action:(id)sender
 {
+#pragma unused (sender)
 	@try {
-		NSString* caption = [context_ anchorTagToDocument];
-		NSString* selection = [self getSelectionText:clickedElement_];
+		NSString * imageURL = (NSString *)[clickedElement_ objectForKey:WebElementImageURLKey];
+		NSString * caption = [context_ anchorTagToDocument];
+
+		// セレクションはキャプションとして設定する
+		NSString * selection = [self selectionText:clickedElement_];
 		if (selection != nil && [selection length] > 0) {
 			caption = [caption stringByAppendingFormat:@"<blockquote>%@</blockquote>", selection];
 		}
 
-		[super postPhoto:(NSString*)[clickedElement_ objectForKey:WebElementImageURLKey]
-						 caption:caption
-						 through:[context_ documentURL]];
+		[super postPhoto:imageURL caption:caption through:[context_ documentURL]];
 	}
-	@catch (NSException* e) {
+	@catch (NSException * e) {
+		D0([e description]);
 		[self failedWithException:e];
 	}
+}
+
+- (NSString *)selectionText:(NSDictionary *)clickedElement
+{
+	SEL selector = @selector(selectedString);
+
+	NSString * text = nil;
+	WebFrame * frame = [clickedElement objectForKey:WebElementFrameKey];
+	if (frame != nil) {
+		NSView<WebDocumentView> * view = [[frame frameView] documentView];
+		if (view != nil) {
+			if ([view respondsToSelector:selector]) {
+				text = [view performSelector:selector];
+			}
+		}
+	}
+
+	D0(text);
+	return text;
 }
 @end

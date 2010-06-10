@@ -17,6 +17,7 @@
 	case ConversationPostType:	return @"Conversation";
 	case VideoPostType:			return @"Video";
 	case AudioPostType:			return @"Audio";
+	case UndefinedPostType:		break;
 	}
 	return @"Undefined";
 }

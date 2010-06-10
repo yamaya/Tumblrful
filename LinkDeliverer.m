@@ -73,6 +73,7 @@ static NSString* TYPE = @"Link";
  */
 - (void) action:(id)sender
 {
+#pragma unused (sender)
 	@try {
 		/* <a> を選択している場合は WebElementLinkURL にURLが入っている */
 		NSString* url = (NSString*)[clickedElement_ objectForKey:WebElementLinkURLKey];

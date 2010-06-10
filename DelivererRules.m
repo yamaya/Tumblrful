@@ -27,7 +27,7 @@
 /**
  * aタグを作る
  */
-+ (NSString*) anchorTag:(DOMHTMLDocument*)document
++ (NSString *)anchorTag:(DOMHTMLDocument *)document
 {
 	return [NSString stringWithFormat:@"<a href=\"%@\">%@</a>", [document URL], [document title]];
 }

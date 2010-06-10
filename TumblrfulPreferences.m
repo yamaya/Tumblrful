@@ -152,6 +152,7 @@
  */
 - (NSImage*) imageForPreferenceNamed:(NSString *)name
 {
+#pragma unused (name)
 	NSImage* image = [NSImage imageNamed:@"Tumblrful.png"];
 	if (image == nil)
 		image = [TumblrfulPreferences preloadImage:@"Tumblrful.png"];
@@ -198,20 +199,20 @@
 
 	[settings setObject:[emailTextField stringValue] forKey:@"tumblrEmail"];
 	[settings setObject:[passwordTextField stringValue] forKey:@"tumblrPassword"];
-	[settings setBool:[privateCheckBox state] forKey:@"tumblrPrivateEnabled"];
-	[settings setBool:[queuingCheckBox state] forKey:@"tumblrQueuingEnabled"];
+	[settings setBool:([privateCheckBox state] == NSOnState) forKey:@"tumblrPrivateEnabled"];
+	[settings setBool:([queuingCheckBox state] == NSOnState) forKey:@"tumblrQueuingEnabled"];
 	// del.icio.us
-	[settings setBool:[deliciousCheckBox state] forKey:@"deliciousEnabled"];
+	[settings setBool:([deliciousCheckBox state] == NSOnState) forKey:@"deliciousEnabled"];
 	[settings setObject:[deliciousUsernameTextField stringValue] forKey:@"deliciousUsername"];
 	[settings setObject:[deliciousPasswordTextField stringValue] forKey:@"deliciousPassword"];
-	[settings setBool:[deliciousPrivateCheckBox state] forKey:@"deliciousPrivateEnabled"];
+	[settings setBool:([deliciousPrivateCheckBox state] == NSOnState) forKey:@"deliciousPrivateEnabled"];
 	// other
-	[settings setBool:[otherCheckBox state] forKey:@"otherTumblogEnabled"];
+	[settings setBool:([otherCheckBox state] == NSOnState) forKey:@"otherTumblogEnabled"];
 	[settings setObject:[otherURLTextField stringValue] forKey:@"otherTumblogSiteURL"];
 	[settings setObject:[otherLoginTextField stringValue] forKey:@"otherTumblogLoginName"];
 	[settings setObject:[otherPasswordTextField stringValue] forKey:@"otherTumblogPassword"];
 
-	[settings setBool:[openInBackgroundTab state] forKey:@"openInBackgroundTab"];
+	[settings setBool:([openInBackgroundTab state] == NSOnState) forKey:@"openInBackgroundTab"];
 
 	[settings synchronize];
 }

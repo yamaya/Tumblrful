@@ -6,20 +6,59 @@
  */
 #import <Foundation/Foundation.h>
 
+/**
+ * Anchor class
+ */
 @interface Anchor : NSObject
 {
-	NSString* url_;
-	NSString* title_;
+	NSString * url_;
+	NSString * title_;
 }
-+ (Anchor*) anchorWithURL:(NSString*)url title:(NSString*)title;
 
-- (id) initWithURL:(NSString*)url title:(NSString*)title;
-- (void) dealloc;
+/// URL
+@property (nonatomic, retain) NSString * URL;
 
-- (NSString*) URL;
-- (void) setURL:(NSString*)url;
-- (NSString*) title;
-- (void) setTitle:(NSString*)title;
+/// title
+@property (nonatomic, retain) NSString * title;
 
-- (NSString*)tag;
+/// html tag
+@property (nonatomic, readonly) NSString * html;
+
+/**
+ * initialize Anchor object.
+ *	@param[in] url	URL string
+ *	@param[in] title	title string
+ *	@return initialized Anchor object
+ */
+- (id)initWithURL:(NSString *)url title:(NSString *)title;
+
+/**
+ * initialize Anchor object.
+ *	@param[in] html	TAB separated string for URL and title
+ *	@return initialized Anchor object
+ */
+- (id)initWithHTML:(NSString *)html;
+
+/**
+ * create Anchor object.
+ *	@param[in] url	URL string
+ *	@param[in] title	title string
+ *	@return Anchor object
+ */
++ (Anchor *)anchorWithURL:(NSString *)url title:(NSString *)title;
+
+/**
+ * create Anchor object.
+ *	@param[in] html	HTML anchor tag
+ *	@return Anchor object
+ */
++ (Anchor *)anchorWithHTML:(NSString *)html;
+
+/**
+ * create HTML anchor tag string
+ *	@param[in] url	URL string
+ *	@param[in] title	title string
+ *	@return HTML anchor tag
+ */
++ (NSString *)htmlWithURL:(NSString *)URL title:(NSString *)title;
 @end

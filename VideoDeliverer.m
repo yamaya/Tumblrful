@@ -101,6 +101,7 @@ static NSString* TYPE = @"Video";
  */
 - (void) action:(id)sender
 {
+#pragma unused (sender)
 	@try {
 		[super postVideo:[context_ documentURL]
 							 title:[context_ documentTitle]

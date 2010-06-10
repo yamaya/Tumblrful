@@ -148,6 +148,7 @@ static NSString* TYPE = @"Reblog";
  */
 - (void) action:(id)sender
 {
+#pragma unused (sender)
 	[self reblog];
 }
 
@@ -183,8 +184,9 @@ static NSString* TYPE = @"Reblog";
 /**
  * ポストが成功した時
  */
-- (void) posted:(NSData*)responseData
+- (void) posted:(NSData *)responseData
 {
+#pragma unused (responseData)
 	V(@"posted) retain=%x", [self retainCount]);
 
 	@try {

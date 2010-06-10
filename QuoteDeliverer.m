@@ -7,10 +7,7 @@
 #import "QuoteDeliverer.h"
 #import "DelivererRules.h"
 #import "GrowlSupport.h"
-#import "Log.h"
-
-//#define V(format, ...)	Log(format, __VA_ARGS__)
-#define V(format, ...)
+#import "DebugLog.h"
 
 static NSString* TYPE = @"Quote";
 
@@ -36,26 +33,26 @@ static NSString* TYPE = @"Quote";
 /**
  * factory for QuoteDeliverer
  */
-+ (id<Deliverer>) create:(DOMHTMLDocument*)document element:(NSDictionary*)clickedElement
++ (id<Deliverer>)create:(DOMHTMLDocument*)document element:(NSDictionary*)clickedElement
 {
 	QuoteDeliverer* deliverer = nil;
-	NSString* selection = nil;
+	NSString * selection = nil;
 
 	id selected = [clickedElement objectForKey:WebElementIsSelectedKey];
-	V(@"selected: %@", SafetyDescription(selected));
+	D(@"selected: %@", SafetyDescription(selected));
 	if (selected != nil && CFBooleanGetValue((CFBooleanRef)selected)) {
-		WebFrame* frame = [clickedElement objectForKey:WebElementFrameKey];
-		NSView<WebDocumentView>* view = [[frame frameView] documentView];
+		WebFrame * frame = [clickedElement objectForKey:WebElementFrameKey];
+		NSView<WebDocumentView> * view = [[frame frameView] documentView];
 		if ([view respondsToSelector:@selector(selectedString)]) {
 			selection = [view performSelector:@selector(selectedString)];
 		}
-		V(@"selection=\"%@\"", selection);
+		D0(selection);
 	}
 
-	if (selection != nil && [selection length] > 0) {
+	if (selection != nil && [selection length] != 0) {
 		deliverer = [[QuoteDeliverer alloc] initWithDocument:document target:clickedElement selection:selection];
 		if (deliverer == nil) {
-			Log(@"Could not alloc+init QuoteDeliverer");
+			D0(@"Could not alloc+init QuoteDeliverer");
 		}
 	}
 	return deliverer;
@@ -64,7 +61,7 @@ static NSString* TYPE = @"Quote";
 /**
  * オブジェクトを初期化する
  */
-- (id) initWithDocument:(DOMHTMLDocument*)document target:(NSDictionary*)targetElement selection:(NSString*)selection
+- (id)initWithDocument:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement selection:(NSString *)selection
 {
 	if ((self = [super initWithDocument:document target:targetElement]) != nil) {
 		selectionText_ = [selection retain];
@@ -100,29 +97,30 @@ static NSString* TYPE = @"Quote";
 /**
  * メニューのアクション
  */
-- (void) action:(id)sender
+- (void)action:(id)sender
 {
-	V(@"action) QuoteDeliverer.retain=%x", [self retainCount]);
+#pragma unused (sender)
+	D(@"action) QuoteDeliverer.retain=%x", [self retainCount]);
 
-	NSString* text = selectionText_;
-	if (text == nil) {
+	NSString * quote = selectionText_;
+	if (quote == nil) {
 		[self notifyByEmptyText];
 		return;
 	}
 
-	/* 前後の空白を取り除く */
-	text = [text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-	text = [text stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"\xE3\x80\x80"]];
+	// 前後の空白を取り除く
+	quote = [quote stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	quote = [quote stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"\xE3\x80\x80"]];
 
-	if ([text length] < 1) {
+	if ([quote length] < 1) {
 		[self notifyByEmptyText];
 		return;
 	}
 
 	@try {
-		[super postQuote:text];
+		[super postQuote:quote];
 	}
-	@catch (NSException* e) {
+	@catch (NSException * e) {
 		[self failedWithException:e];
 	}
 }

@@ -158,8 +158,8 @@
 			}
 		}
 	}
-	@catch (NSException* exp) {
-		[self failedWith:photoID exception:exp];
+	@catch (NSException * e) {
+		[self failedWith:photoID exception:e];
 		return nil;
 	}
 
@@ -277,6 +277,7 @@
  */
 - (void) action:(id)sender
 {
+#pragma unused (sender)
 	[self post];
 }
 @end

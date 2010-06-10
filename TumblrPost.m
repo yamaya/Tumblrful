@@ -13,11 +13,11 @@
 static NSString* WRITE_URL = @"http://www.tumblr.com/api/write";
 static NSString* TUMBLR_URL = @"http://www.tumblr.com";
 static NSString* EXCEPTION_NAME = @"TumblrPostException";
-static float TIMEOUT = 60.0;
+static float TIMEOUT = 60.0f;
 
 #pragma mark -
 @interface NSString (URLEncoding)
-- (NSString*) stringByURLEncoding:(NSStringEncoding)encoding;
+- (NSString *)stringByURLEncoding:(NSStringEncoding)encoding;
 @end
 
 @implementation NSString (URLEncoding)
@@ -26,7 +26,7 @@ static float TIMEOUT = 60.0;
  * @param [in] encoding エンコーディング
  * @return NSString オブジェクト
  */
-- (NSString*) stringByURLEncoding:(NSStringEncoding)encoding
+- (NSString *)stringByURLEncoding:(NSStringEncoding)encoding
 {
 	NSArray* escapeChars = [NSArray arrayWithObjects:
 			 @";" ,@"/" ,@"?" ,@":"
@@ -48,9 +48,8 @@ static float TIMEOUT = 60.0;
 	NSMutableString* encodedString =
 		[[[self stringByAddingPercentEscapesUsingEncoding:encoding] mutableCopy] autorelease];
 
-	const int N = [escapeChars count];
-	int i;
-	for (i = 0; i < N; i++) {
+	const NSUInteger N = [escapeChars count];
+	for (NSUInteger i = 0; i < N; i++) {
 		[encodedString replaceOccurrencesOfString:[escapeChars objectAtIndex:i]
 									   withString:[replaceChars objectAtIndex:i]
 										  options:NSLiteralSearch
@@ -463,11 +462,11 @@ static float TIMEOUT = 60.0;
  *	@param connection NSURLConnection オブジェクト
  *	@param response NSURLResponse オブジェクト
  */
-- (void) connection:(NSURLConnection*)connection
- didReceiveResponse:(NSURLResponse*)response
+- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
+#pragma unused (connection)
 	/* この cast は正しい */
-	NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
+	NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse *)response;
 
 	if ([httpResponse statusCode] == 200) {
 		responseData_ = [[NSMutableData data] retain];
@@ -479,9 +478,9 @@ static float TIMEOUT = 60.0;
  *	@param connection NSURLConnection オブジェクト
  *	@param response data NSData オブジェクト
  */
-- (void) connection:(NSURLConnection*)connection
-		 didReceiveData:(NSData*)data
+- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
 {
+#pragma unused (connection)
 	if (responseData_ != nil) {
 		[responseData_ appendData:data];
 	}
@@ -491,13 +490,14 @@ static float TIMEOUT = 60.0;
  * connectionDidFinishLoading.
  * @param connection コネクション
  */
-- (void) connectionDidFinishLoading:(NSURLConnection*)connection
+- (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
+#pragma unused (connection)
 	if (continuation_ != nil) {
 		[continuation_ reblogPost:endpoint_ form:responseData_];
 	}
 	else {
-		NSError* error = [NSError errorWithDomain:@"TumblrfulErrorDomain" code:-1 userInfo:nil];
+		NSError * error = [NSError errorWithDomain:@"TumblrfulErrorDomain" code:-1 userInfo:nil];
 		[continuation_ invokeCallback:@selector(failed:) withObject:error]; /* 失敗時の処理 */
 	}
 	if (responseData_ != nil) {
@@ -510,8 +510,10 @@ static float TIMEOUT = 60.0;
  * エラーが発生した場合.
  * @param connection コネクション
  */
-- (void) connection:(NSURLConnection*)connection didFailWithError:(NSError*)error
+- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
+#pragma unused (connection)
+	D0([error description]);
 	[self release];
 }
 @end // TumblrReblogDelegate
@@ -611,19 +613,19 @@ static float TIMEOUT = 60.0;
 /**
  * create POST request
  */
-- (NSURLRequest*) createRequest:(NSString*)url params:(NSDictionary*)params
+- (NSURLRequest *)createRequest:(NSString *)url params:(NSDictionary *)params
 {
-	NSMutableString* escaped = [[[NSMutableString alloc] init] autorelease];
+	NSMutableString * escaped = [[[NSMutableString alloc] init] autorelease];
 
 	/* create the body */
 	/* add key-values from the NSDictionary object */
-	NSEnumerator* enumerator = [params keyEnumerator];
-	NSString* key;
+	NSEnumerator * enumerator = [params keyEnumerator];
+	NSString * key;
 	while ((key = [enumerator nextObject]) != nil) {
-        NSObject* any = [params objectForKey:key]; 
-		NSString* value;
+        NSObject * any = [params objectForKey:key]; 
+		NSString * value;
         if ([any isMemberOfClass:[NSURL class]]) {
-            value = [(NSURL*)any absoluteString];
+            value = [(NSURL *)any absoluteString];
         }
         else {
             value = (NSString*)any;
@@ -634,7 +636,7 @@ static float TIMEOUT = 60.0;
 	}
 
 	/* create the POST request */
-	NSMutableURLRequest* request =
+	NSMutableURLRequest * request =
 		[NSMutableURLRequest requestWithURL:[NSURL URLWithString:url]
 								cachePolicy:NSURLRequestReloadIgnoringCacheData
 							timeoutInterval:TIMEOUT];
@@ -690,7 +692,7 @@ static float TIMEOUT = 60.0;
  * post to Tumblr.
  *	@param params - request parameteres
  */
-- (void) postWith:(NSDictionary*)params
+- (void)postWith:(NSDictionary *)params
 {
 	[self postTo:WRITE_URL params:params];
 }
@@ -700,14 +702,12 @@ static float TIMEOUT = 60.0;
  *	@param url - URL to post
  *	@param params - request parameteres
  */
-- (void) postTo:(NSString*)url params:(NSDictionary*)params
+- (void)postTo:(NSString *)url params:(NSDictionary *)params
 {
 	responseData_ = [[NSMutableData data] retain];
 
-	NSURLRequest* request = [self createRequest:url params:params]; /* request は connection に指定した時点で reatin upする */ 
-
-	NSURLConnection* connection = [NSURLConnection connectionWithRequest:request delegate:self];
-	[connection retain];
+	NSURLRequest * request = [self createRequest:url params:params];	// request は connection に指定した時点で reatin upする
+	NSURLConnection * connection = [NSURLConnection connectionWithRequest:request delegate:self];
 
 	if (connection == nil) {
 		[self invokeCallback:@selector(failed:) withObject:nil];
@@ -715,6 +715,8 @@ static float TIMEOUT = 60.0;
 		responseData_ = nil;
 		return;
 	}
+
+	[connection retain];
 }
 
 /**
@@ -750,9 +752,10 @@ static float TIMEOUT = 60.0;
  *	正常なら statusCode は 201
  *	Account 不正なら 403
  */
-- (void) connection:(NSURLConnection*)connection didReceiveResponse:(NSURLResponse*)response
+- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
-	NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response; /* この cast は正しい */
+#pragma unused (connection)
+	NSHTTPURLResponse * httpResponse = (NSHTTPURLResponse *)response; /* この cast は正しい */
 
 	NSInteger const httpStatus = [httpResponse statusCode];
 	if (httpStatus != 201 && httpStatus != 200) {
@@ -767,8 +770,9 @@ static float TIMEOUT = 60.0;
  * didReceiveData
  *	delegate method
  */
-- (void) connection:(NSURLConnection*)connection didReceiveData:(NSData*)data
+- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
 {
+#pragma unused (connection)
 	[responseData_ appendData:data]; // append data to receive buffer
 }
 
@@ -776,7 +780,7 @@ static float TIMEOUT = 60.0;
  * connectionDidFinishLoading
  *	delegate method
  */
-- (void) connectionDidFinishLoading:(NSURLConnection*)connection
+- (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
 	[connection release];
 
@@ -784,7 +788,7 @@ static float TIMEOUT = 60.0;
 		[self invokeCallback:@selector(posted:) withObject:responseData_];
 	}
 	else {
-		NSError* error = [NSError errorWithDomain:@"TumblrfulErrorDomain" code:-1 userInfo:nil];
+		NSError * error = [NSError errorWithDomain:@"TumblrfulErrorDomain" code:-1 userInfo:nil];
 		[self invokeCallback:@selector(failed:) withObject:error];
 	}
 
@@ -796,7 +800,7 @@ static float TIMEOUT = 60.0;
  * didFailWithError
  *	delegate method
  */
-- (void) connection:(NSURLConnection*)connection didFailWithError:(NSError*)error
+- (void) connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
 	D0([error description]);
 

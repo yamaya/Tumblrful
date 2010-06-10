@@ -26,7 +26,7 @@
 
 - (id)initWithPostType:(PostType)postType withInvocation:(NSInvocation *)invocation
 {
-	if (self = [super init]) {
+	if ((self = [super init]) != nil) {
 		postType_ = postType;
 		invocation_ = [invocation retain];
 	}
@@ -43,6 +43,7 @@
 
 - (void)setContentsOptionWithPrivated:(BOOL)privated queued:(BOOL)queued
 {
+#pragma unused (queued)
 	[self loadNibSafety];
 
 	[privateButton_ setState:get_button_state(privated)];
@@ -53,43 +54,44 @@
 {
 	[self loadNibSafety];
 
-	// ポストタイプ文字列
-	NSString * type = type = [NSString stringWithPostType:postType_];
-
-	// ディスクリプションとコンテンツビューはタイプ別に処理する
-	NSString * description = nil;
 	NSView * contentsView = nil;
 
+	// ディスクリプションとコンテンツビューはタイプ別に処理する
 	switch (postType_) {
 	case LinkPostType:
 		{
 			Anchor * anchor = nil;
+			NSString * description = nil;
 			[invocation_ getArgument:&anchor atIndex:2];
 			[invocation_ getArgument:&description atIndex:3];
+			D(@"URL:%@", anchor.URL);
+			D(@"title:%@", anchor.title);
+			D(@"description:%@", description);
 			[linkViewController_ setContentsWithTitle:anchor.title URL:anchor.URL description:description];
+			D0(@"YYY");
 			contentsView = [linkViewController_ view];
 		}
 		break;
 	case QuotePostType:
 		{
-			Anchor * anchor = nil;
 			NSString * quote = nil;
-			[invocation_ getArgument:&anchor atIndex:2];
-			[invocation_ getArgument:&quote atIndex:3];
+			NSString * source = nil;
+			[invocation_ getArgument:&quote atIndex:2];
+			[invocation_ getArgument:&source atIndex:3];
 			D(@"quote:%@", quote);
-			[quoteViewController_ setContentsWithText:quote source:[anchor tag]];
+			[quoteViewController_ setContentsWithText:quote source:source];
 			contentsView = [quoteViewController_ view];
 		}
 		break;
 	case PhotoPostType:
 		{
-			Anchor * anchor = nil;
-			NSString * url = nil;
+			NSString * source = nil;
 			NSString * caption = nil;
-			[invocation_ getArgument:&anchor atIndex:2];
-			[invocation_ getArgument:&url atIndex:3];
-			[invocation_ getArgument:&caption atIndex:4];
-			[photoViewController_ setContentsWithImageURL:url caption:caption throughURL:anchor.URL];
+			NSString * throughURL = nil;
+			[invocation_ getArgument:&source atIndex:2];
+			[invocation_ getArgument:&caption atIndex:3];
+			[invocation_ getArgument:&throughURL atIndex:4];
+			[photoViewController_ setContentsWithImageURL:source caption:caption throughURL:throughURL];
 			contentsView = [photoViewController_ view];
 		}
 		break;
@@ -111,11 +113,10 @@
 	NSRect newFrame = [postEditPanel_ frame];
 	newFrame.size.height -= delta;
 	[postEditPanel_ setFrame:newFrame display:NO];
-	[genericView_ setBounds:contentsBounds];
 
 	[genericView_ addSubview:contentsView];
+	[genericView_ setBounds:contentsBounds];
 
-	[postTypeLabel_ setStringValue:type];
 	[tagsField_ setStringValue:@""];
 
 	[NSApp beginSheet:postEditPanel_
@@ -153,35 +154,33 @@
 	[adaptor setPrivate:[privateButton_ state] == NSOnState];
 	SEL selector = @selector(setQueueing:);
 	if ([adaptor respondsToSelector:selector]) {
-		[adaptor setQueueing:[queueingButton_ state] == NSOnState];
+		[adaptor performSelector:selector withObject:(id)([queueingButton_ state] == NSOnState)];
 	}
 
 	switch (postType_) {
 	case LinkPostType:
 		{
 			Anchor * anchor = [Anchor anchorWithURL:linkViewController_.URL title:linkViewController_.title];
-			[invocation_ setArgument:&anchor atIndex:2];
-
 			NSString * description = linkViewController_.description;
+			[invocation_ setArgument:&anchor atIndex:2];
 			[invocation_ setArgument:&description atIndex:3];
 		}
 		break;
 	case QuotePostType:
 		{
-			//TODO これAnchorのままじゃ駄目だ。NSString*でsourceとして受けつけるようにしないと...
-			//Anchor * anchor = [Anchor anchorWithURL:quoteViewController_.URL title:quoteViewController_.title];
-			//[invocation_ setArgument:&anchor atIndex:2];
 			NSString * quote = quoteViewController_.quote;
-			D(@"quote:%@", quote);
-			[invocation_ setArgument:&quote atIndex:3];
+			NSString * source = quoteViewController_.source;
+			[invocation_ setArgument:&quote atIndex:2];
+			[invocation_ setArgument:&source atIndex:3];
 		}
 		break;
 	case PhotoPostType:
 		{
-			//TODO これAnchorのままじゃ駄目だ。NSString*でsourceとして受けつけるようにしないと...
 			NSString * caption = photoViewController_.caption;
+			NSString * throughURL = photoViewController_.throughURL;
 			D(@"caption:%@", caption);
-			[invocation_ setArgument:&caption atIndex:4];
+			[invocation_ setArgument:&caption atIndex:3];
+			[invocation_ setArgument:&throughURL atIndex:4];
 		}
 		break;
 	case VideoPostType:	
@@ -198,6 +197,7 @@
 
 - (void)didEndSheet:(NSWindow *)sheet returnCode:(NSInteger)returnCode contextInfo:(void *)contextInfo
 {
+#pragma unused (contextInfo)
 	[sheet orderOut:self];
 
 	if (returnCode == NSOKButton) {
@@ -238,6 +238,7 @@
 
 - (IBAction)pressOKButton:(id)sender
 {
+#pragma unused (sender)
 	[tagsField_ validateEditing];
 	@try {
 		SEL selector = @selector(validateEditingIfControl:);
@@ -259,6 +260,7 @@
 
 - (IBAction)pressCancelButton:(id)sender
 {
+#pragma unused (sender)
 	[postEditPanel_ close];
 	[NSApp endSheet:postEditPanel_ returnCode:NSCancelButton];
 

@@ -198,6 +198,7 @@
  */
 + (void) dumpXPathResult:(DOMXPathResult*)result withPrefix:(NSString*)prefix
 {
+#pragma unused (prefix)
 #define ToTypeName(t) \
 					(t == DOM_NUMBER_TYPE ? @"NUMBER" : \
 					 t == DOM_STRING_TYPE ? @"STRING" : \
@@ -279,6 +280,7 @@
  */
 + (DOMHTMLElement*) matchForAutoDetection:(DOMHTMLDocument*)document windowScriptObject:(WebScriptObject*)wso;
 {
+#pragma unused (wso)
 	DOMHTMLElement* element = nil;
 
 	NSURL* url = [NSURL URLWithString:[document URL]];

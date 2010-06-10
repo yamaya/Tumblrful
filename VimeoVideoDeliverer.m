@@ -69,7 +69,7 @@
 	/* MD5 を得る */
 	const char* cstr = [s UTF8String];  /* C文字列(UTF-8)を取得する */
 	unsigned char md5[CC_MD5_DIGEST_LENGTH];   /* MD5の計算結果を保持する領域 */
-	CC_MD5(cstr, strlen(cstr), md5); /* MD5の計算を実行する */
+	CC_MD5(cstr, (CC_LONG)strlen(cstr), md5); /* MD5の計算を実行する */
 
 	NSString* sig = [NSString stringWithFormat:@"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
 		md5[0], md5[1], md5[2], md5[3], md5[4], md5[5], md5[6], md5[7], md5[8], md5[9], md5[10], md5[11], md5[12], md5[13], md5[14], md5[15]];
@@ -303,17 +303,16 @@
 /**
  * メニューのアクション
  */
-- (void) action:(id)sender
+- (void)action:(id)sender
 {
+#pragma unused (sender)
 	@try {
-		NSDictionary* context = [self makeContextForVimeo];
+		NSDictionary * context = [self makeContextForVimeo];
 		if (context != nil) {
-			[super postVideo:[context objectForKey:@"embed"]
-								 title:[context objectForKey:@"title"]
-							 caption:[context objectForKey:@"caption"]];
+			[super postVideo:[context objectForKey:@"embed"] title:[context objectForKey:@"title"] caption:[context objectForKey:@"caption"]];
 		}
 	}
-	@catch (NSException* e) {
+	@catch (NSException * e) {
 		[self failedWithException:e];
 	}
 }

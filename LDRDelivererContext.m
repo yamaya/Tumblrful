@@ -68,6 +68,7 @@
  */
 - (NSString*) stringForXPath:(NSString*)xpath target:(DOMNode*)targetNode debug:(NSString*)message
 {
+#pragma unused (message)
 #if 0	//DEBUG
 	V(@"%@: targetNode: %@", message, SafetyDescription(targetNode));
 	if ([targetNode respondsToSelector:@selector(idName)]) {
@@ -198,6 +199,7 @@
  */
 + (void) dumpXPathResult:(DOMXPathResult*)result withPrefix:(NSString*)prefix
 {
+#pragma unused (prefix)
 #define ToTypeName(t) \
 					(t == DOM_NUMBER_TYPE ? @"NUMBER" : \
 					 t == DOM_STRING_TYPE ? @"STRING" : \

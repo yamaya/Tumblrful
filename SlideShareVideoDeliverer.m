@@ -60,7 +60,7 @@
 }
 
 /**
- * makeContextForVimeo
+ * makeContextForVimeo FIXME: SlideShareだってばよ
  */
 - (NSDictionary*) makeContextForVimeo
 {
@@ -150,6 +150,7 @@
  */
 - (void) action:(id)sender
 {
+#pragma unused (sender)
 	@try {
 		NSDictionary* context = [self makeContextForVimeo];
 		if (context != nil) {

@@ -9,11 +9,18 @@
 #import "PostAdaptor.h"
 
 @interface UmesuePostAdaptor : PostAdaptor
-+ (NSString*) titleForMenuItem;
-+ (BOOL) enableForMenuItem;
-- (void) postLink:(Anchor*)anchor description:(NSString*)description;
-- (void) postQuote:(Anchor*)anchor quote:(NSString*)quote;
-- (void) postPhoto:(Anchor*)anchor image:(NSString*)imageURL caption:(NSString*)caption;
-- (void) postVideo:(Anchor*)anchor embed:(NSString*)embed caption:(NSString*)caption;
-- (NSObject*) postEntry:(NSDictionary*)params;
+
++ (NSString *)titleForMenuItem;
+
++ (BOOL)enableForMenuItem;
+
+- (void)postLink:(Anchor*)anchor description:(NSString *)description;
+
+- (void)postQuote:(NSString *)quote source:(NSString *)source;
+
+- (void)postPhoto:(NSString *)source caption:(NSString *)caption throughURL:(NSString *)throughURL;
+
+- (void)postVideo:(Anchor*)anchor embed:(NSString *)embed caption:(NSString *)caption;
+
+- (NSObject *)postEntry:(NSDictionary *)params;
 @end

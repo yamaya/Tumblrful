@@ -13,12 +13,17 @@
 	NSMutableData* responseData_;	/**< for NSURLConnection */
 	NSObject<PostCallback>* callback_; /**< for Deliverer */
 }
+
 + (NSString*) username;
+
 + (NSString*) password;
+
 - (id) initWithCallback:(NSObject<PostCallback>*)callback;
-- (void) dealloc;
+
 - (NSMutableDictionary*) createMinimumRequestParams;
-- (NSURLRequest*) createRequest:(NSString*)url params:(NSDictionary*)params;
+
+- (NSURLRequest *)createRequest:(NSString *)url params:(NSDictionary *)params;
+
 #ifdef SUPPORT_MULTIPART_PORT
 - (NSURLRequest*) createRequestForMultipart:(NSDictionary*)params withData:(NSData*)data;
 #endif

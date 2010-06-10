@@ -1,5 +1,6 @@
 #import "LinkViewController.h"
 #import "NSString+Tumblrful.h"
+#import "PostEditConstants.h"
 #import "DebugLog.h"
 
 @implementation LinkViewController
@@ -8,11 +9,18 @@
 @dynamic URL;
 @dynamic description;
 
+- (void)awakeFromNib
+{
+	NSFont * font =[NSFont systemFontOfSize:POSTEDIT_TEXT_FONT_SIZE];
+	[[descriptionTextView_ textStorage] setFont:font];
+	[descriptionTextView_ setFont:font];
+}
+
 - (void)setContentsWithTitle:(NSString *)title URL:(NSString *)url description:(NSString *)description
 {
 	[titleFiled_ setStringValue:Stringnize(title)];
 	[urlField_ setStringValue:Stringnize(url)];
-	[descriptionField_ setStringValue:Stringnize(description)];
+	[descriptionTextView_ setString:Stringnize(description)];
 }
 
 - (NSString *)title
@@ -27,6 +35,6 @@
 
 - (NSString *)description
 {
-	return [descriptionField_ stringValue];
+	return [descriptionTextView_ string];
 }
 @end

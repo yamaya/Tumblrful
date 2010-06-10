@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "Log.h"
 
 static bool gEnable = false;
 

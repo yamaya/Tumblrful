@@ -144,9 +144,9 @@
  * didReceiveAuthenticationChallenge
  *	delegate method
  */
-- (void)connection:(NSURLConnection*)connection
-	didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge*)challenge
+- (void)connection:(NSURLConnection*)connection didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge*)challenge
 {
+#pragma unused (connection)
 	V(@"didReceiveAuthenticationChallenge: %@", @"enter");
 
 	NSURLCredential* crendential =
@@ -165,9 +165,9 @@
  *	@param connection コネクション
  *	@param response レスポンス
  */
-- (void) connection:(NSURLConnection*)connection
- didReceiveResponse:(NSURLResponse*)response
+- (void)connection:(NSURLConnection*)connection didReceiveResponse:(NSURLResponse*)response
 {
+#pragma unused (connection)
 	V(@"UmesuePost.didReceiveResponse retain:%x", [self retainCount]);
 
 	NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response; /* この cast は正しい */
@@ -187,6 +187,7 @@
  */
 - (void) connection:(NSURLConnection*)connection didReceiveData:(NSData*)data
 {
+#pragma unused (connection)
 	if (responseData_ != nil) {
 		[responseData_ appendData:data]; /* append data to receive buffer */
 	}

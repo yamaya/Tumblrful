@@ -15,7 +15,6 @@
 @interface PostEditWindow : NSObject
 {
 	IBOutlet NSPanel * postEditPanel_;
-	IBOutlet NSTextField * postTypeLabel_;
 	IBOutlet NSView * genericView_;
 	IBOutlet NSTextField * tagsField_;
 	IBOutlet NSButton * privateButton_;

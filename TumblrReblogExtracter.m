@@ -85,6 +85,7 @@ static NSString* TUMBLR_URL = @"http://www.tumblr.com";
  */
 - (void)connection:(NSURLConnection*)connection didReceiveResponse:(NSURLResponse*)response
 {
+#pragma unused (connection)
 	/* この cast は正しい */
 	NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
 
@@ -103,6 +104,7 @@ static NSString* TUMBLR_URL = @"http://www.tumblr.com";
  */
 - (void)connection:(NSURLConnection*)connection didReceiveData:(NSData*)data
 {
+#pragma unused (connection)
 	if (responseData_ != nil) {
 		[responseData_ appendData:data];
 	}
@@ -113,6 +115,7 @@ static NSString* TUMBLR_URL = @"http://www.tumblr.com";
  */
 - (void)connectionDidFinishLoading:(NSURLConnection*)connection
 {
+#pragma unused (connection)
 	D(@"didReceiveData: connectionDidFinishLoading length=%d", [responseData_ length]);
 
 	[self extractImpl:endpoint_ form:responseData_];
@@ -126,7 +129,9 @@ static NSString* TUMBLR_URL = @"http://www.tumblr.com";
  */
 - (void)connection:(NSURLConnection*)connection didFailWithError:(NSError*)error
 {
-	D(@"didFailWithError: %@", [error description]);
+#pragma unused (connection)
+	D0([error description]);
+
 	[self release];
 }
 @end
@@ -139,6 +144,7 @@ static NSString* TUMBLR_URL = @"http://www.tumblr.com";
  */
 - (void)extractImpl:(NSString*)endpoint form:(NSData*)formData
 {
+#pragma unused (endpoint)
 	NSArray* inputs = [self inputFields:formData];
 	NSString* type = [self typeofPost:inputs];
 

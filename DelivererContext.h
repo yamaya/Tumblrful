@@ -14,7 +14,7 @@
 
 @interface DelivererContext : NSObject
 {
-	DOMHTMLDocument* document_;
+	DOMHTMLDocument * document_;
 }
 + (BOOL) match:(DOMHTMLDocument*)document target:(NSDictionary*)targetElement;
 + (DOMHTMLElement*) matchForAutoDetection:(DOMHTMLDocument*)document windowScriptObject:(WebScriptObject*)wso;

@@ -9,32 +9,28 @@
 #import "UmesuePostAdaptor.h"
 #import "UmesuePost.h"
 #import "TumblrReblogExtracter.h"
-#import "Log.h"
+#import "DebugLog.h"
 // /System/Library/Frameworks/WebKit.framework/Headers/DOMHTMLAnchorElement.h
 
-//#define V(format, ...)	Log(format, __VA_ARGS__)
-#define V(format, ...)
-
 #pragma mark -
-@interface UmesuePostAdaptor (Private)
-- (void) postTo:(NSDictionary*)params;
+@interface UmesuePostAdaptor ()
+- (void)postTo:(NSDictionary *)params;
 @end
 
 #pragma mark -
 @implementation UmesuePostAdaptor
-/**
- */
-+ (NSString*) titleForMenuItem
+
++ (NSString *)titleForMenuItem
 {
 	return @"Umesue";
 }
 
-+ (BOOL) enableForMenuItem
++ (BOOL)enableForMenuItem
 {
 	return [UmesuePost isEnabled];
 }
 
-- (void) postLink:(Anchor*)anchor description:(NSString*)description
+- (void)postLink:(Anchor *)anchor description:(NSString *)description
 {
 	if ([UmesuePost isEnabled]) {
 		NSMutableDictionary* params = [[[NSMutableDictionary alloc] init] autorelease];
@@ -46,31 +42,23 @@
 	}
 }
 
-- (void) postQuote:(Anchor*)anchor quote:(NSString*)quote
+- (void)postQuote:(NSString *)quote source:(NSString *)source;
 {
-	if ([UmesuePost isEnabled]) {
-		NSMutableDictionary* params = [[[NSMutableDictionary alloc] init] autorelease];
-		[params setValue:@"QuotePost" forKey:@"type"];
-		[params setValue:quote forKey:@"quote"];
-		[params setValue:[anchor tag] forKey:@"source"];
-		[self postTo:params];
-	}
+	if (![UmesuePost isEnabled]) return;
+
+	[self postTo:[NSDictionary dictionaryWithObjectsAndKeys:@"QuotePost", @"type", quote, @"quote", source, @"source", nil]];
 }
 
-- (void) postPhoto:(Anchor*)anchor image:(NSString*)imageURL caption:(NSString*)caption
+- (void)postPhoto:(NSString *)source caption:(NSString *)caption throughURL:(NSString *)throughURL
 {
-	if ([UmesuePost isEnabled]) {
-		NSMutableDictionary* params = [[[NSMutableDictionary alloc] init] autorelease];
-		[params setValue:@"PhotoPost" forKey:@"type"];
-		[params setValue:imageURL forKey:@"image"];
-		[params setValue:caption forKey:@"caption"];
-		[params setValue:[anchor URL] forKey:@"link"];
-		[self postTo:params];
-	}
+	if (![UmesuePost isEnabled]) return;
+
+	[self postTo:[NSDictionary dictionaryWithObjectsAndKeys:@"PhotoPost", @"type", source, @"image", caption, @"caption", throughURL, @"link", nil]];
 }
 
 - (void) postVideo:(Anchor*)anchor embed:(NSString*)embed caption:(NSString*)caption
 {
+#pragma unused (anchor)
 	if ([UmesuePost isEnabled]) {
 		NSMutableDictionary* params = [[[NSMutableDictionary alloc] init] autorelease];
 		[params setValue:@"VideoPost" forKey:@"type"];
@@ -96,7 +84,7 @@
  */
 - (void) extract:(NSObject*)obj
 {
-	V(@"extract: obj=%@", SafetyDescription(obj));
+	D(@"extract: obj=%@", SafetyDescription(obj));
 
 	Class clazz = [obj class];
 	if ([clazz isSubclassOfClass:[NSString class]]) {
@@ -148,28 +136,19 @@
 		}
 	}
 }
-@end
 
-#pragma mark -
-@implementation UmesuePostAdaptor (Private)
-/**
- * post to del.icio.us
- */
-- (void) postTo:(NSDictionary*)params
+- (void)postTo:(NSDictionary *)params
 {
 	@try {
-		/* del.icio.us へポストするオブジェクトを生成する */
-		UmesuePost* umesue = [[UmesuePost alloc] initWithCallback:callback_];
+		UmesuePost * umesue = [[UmesuePost alloc] initWithCallback:callback_];
 
-		/* リクエストパラメータを構築する */
-		NSMutableDictionary* requestParams = [umesue createMinimumRequestParams];
+		NSMutableDictionary * requestParams = [umesue createMinimumRequestParams];
 		[requestParams addEntriesFromDictionary:params];
-		V(@"requestParams: %@", [requestParams description]);
 
-		/* del.icio.us へポストする */
 		[umesue postWith:requestParams];
 	}
-	@catch (NSException* e) {
+	@catch (NSException * e) {
+		D0([e description]);
 		[self callbackWithException:e];
 	}
 }
