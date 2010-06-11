@@ -7,32 +7,20 @@
 #import "QuoteDeliverer.h"
 #import "DelivererRules.h"
 #import "GrowlSupport.h"
+#import "NSString+Tumblrful.h"
 #import "DebugLog.h"
 
-static NSString* TYPE = @"Quote";
+static NSString * TYPE = @"Quote";
 
 #pragma mark -
-@interface QuoteDeliverer (Private)
-- (void) notifyByEmptyText;
-@end
-
-#pragma mark -
-@implementation QuoteDeliverer (Private)
-/**
- * エラー処理
- */
-- (void) notifyByEmptyText
-{
-	[GrowlSupport notify:TYPE
-					 description:[DelivererRules errorMessageWith:selectionText_]];
-}
+@interface QuoteDeliverer ()
+- (id)initWithDocument:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement selection:(NSString *)selection;
+- (void)notifyByEmptyText;
 @end
 
 #pragma mark -
 @implementation QuoteDeliverer
-/**
- * factory for QuoteDeliverer
- */
+
 + (id<Deliverer>)create:(DOMHTMLDocument*)document element:(NSDictionary*)clickedElement
 {
 	QuoteDeliverer* deliverer = nil;
@@ -40,6 +28,7 @@ static NSString* TYPE = @"Quote";
 
 	id selected = [clickedElement objectForKey:WebElementIsSelectedKey];
 	D(@"selected: %@", SafetyDescription(selected));
+
 	if (selected != nil && CFBooleanGetValue((CFBooleanRef)selected)) {
 		WebFrame * frame = [clickedElement objectForKey:WebElementFrameKey];
 		NSView<WebDocumentView> * view = [[frame frameView] documentView];
@@ -58,9 +47,6 @@ static NSString* TYPE = @"Quote";
 	return deliverer;
 }
 
-/**
- * オブジェクトを初期化する
- */
 - (id)initWithDocument:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement selection:(NSString *)selection
 {
 	if ((self = [super initWithDocument:document target:targetElement]) != nil) {
@@ -69,59 +55,49 @@ static NSString* TYPE = @"Quote";
 	return self;
 }
 
-/**
- * オブジェクトの解放
- */
-- (void) dealloc
+- (void)dealloc
 {
 	[selectionText_ release];
+
 	[super dealloc];
 }
 
-/**
- * Tumblr APIが規定するポストのタイプ
- */
-- (NSString*) postType
+- (NSString *)postType
 {
 	return [TYPE lowercaseString];
 }
 
-/**
- * MenuItemのタイトルを返す
- */
-- (NSString*) titleForMenuItem
+- (NSString *)titleForMenuItem
 {
 	return TYPE;
 }
 
-/**
- * メニューのアクション
- */
 - (void)action:(id)sender
 {
 #pragma unused (sender)
-	D(@"action) QuoteDeliverer.retain=%x", [self retainCount]);
-
-	NSString * quote = selectionText_;
-	if (quote == nil) {
-		[self notifyByEmptyText];
-		return;
-	}
-
-	// 前後の空白を取り除く
-	quote = [quote stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-	quote = [quote stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"\xE3\x80\x80"]];
-
-	if ([quote length] < 1) {
-		[self notifyByEmptyText];
-		return;
-	}
-
 	@try {
+		NSString * quote = selectionText_;
+		if (quote == nil) {
+			[self notifyByEmptyText];
+			return;
+		}
+
+		// 前後の空白を取り除く
+		quote = [quote stringByTrimmingWhitespace];
+		if ([quote length] < 1) {
+			[self notifyByEmptyText];
+			return;
+		}
+
 		[super postQuote:quote];
 	}
 	@catch (NSException * e) {
 		[self failedWithException:e];
 	}
+}
+
+- (void)notifyByEmptyText
+{
+	[GrowlSupport notify:TYPE description:[DelivererRules errorMessageWith:selectionText_]];
 }
 @end

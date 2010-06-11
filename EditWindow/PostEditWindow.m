@@ -8,6 +8,7 @@
 #import "QuoteViewController.h"
 #import "LinkViewController.h"
 #import "PhotoViewController.h"
+#import "VideoViewController.h"
 #import "Anchor.h"
 #import "PostAdaptor.h"
 #import "NSString+Tumblrful.h"
@@ -21,6 +22,8 @@
 
 @implementation PostEditWindow
 
+@synthesize image = image_;
+
 #pragma mark -
 #pragma mark Public Methods
 
@@ -29,6 +32,7 @@
 	if ((self = [super init]) != nil) {
 		postType_ = postType;
 		invocation_ = [invocation retain];
+		image_ = nil;
 	}
 	return self;
 }
@@ -37,6 +41,7 @@
 {
 	D_METHOD;
 
+	[image_ release];
 	[invocation_ release];
 	[super dealloc];
 }
@@ -91,12 +96,19 @@
 			[invocation_ getArgument:&source atIndex:2];
 			[invocation_ getArgument:&caption atIndex:3];
 			[invocation_ getArgument:&throughURL atIndex:4];
-			[photoViewController_ setContentsWithImageURL:source caption:caption throughURL:throughURL];
+			[photoViewController_ setContentsWithImageURL:source image:image_ caption:caption throughURL:throughURL];
 			contentsView = [photoViewController_ view];
 		}
 		break;
 	case VideoPostType:	
-		NSAssert(0, @"unimplemented yet");
+		{
+			NSString * embed = nil;
+			NSString * caption = nil;
+			[invocation_ getArgument:&embed atIndex:2];
+			[invocation_ getArgument:&caption atIndex:3];
+			[videoViewController_ setContentsWithEmbed:embed caption:caption];
+			contentsView = [videoViewController_ view];
+		}
 		break;
 	default:
 		NSAssert(0, @"unimplemented yet");
@@ -151,11 +163,8 @@
 {
 	// プライベートとキューイングの設定を反映
 	PostAdaptor * adaptor = [invocation_ target];
-	[adaptor setPrivate:[privateButton_ state] == NSOnState];
-	SEL selector = @selector(setQueueing:);
-	if ([adaptor respondsToSelector:selector]) {
-		[adaptor performSelector:selector withObject:(id)([queueingButton_ state] == NSOnState)];
-	}
+	adaptor.privated = ([privateButton_ state] == NSOnState);
+	adaptor.queuingEnabled = ([queueingButton_ state] == NSOnState);
 
 	switch (postType_) {
 	case LinkPostType:
@@ -178,13 +187,17 @@
 		{
 			NSString * caption = photoViewController_.caption;
 			NSString * throughURL = photoViewController_.throughURL;
-			D(@"caption:%@", caption);
 			[invocation_ setArgument:&caption atIndex:3];
 			[invocation_ setArgument:&throughURL atIndex:4];
 		}
 		break;
 	case VideoPostType:	
-		NSAssert(0, @"unimplemented yet");
+		{
+			NSString * embed = videoViewController_.embed;
+			NSString * caption = videoViewController_.caption;
+			[invocation_ getArgument:&embed atIndex:2];
+			[invocation_ getArgument:&caption atIndex:3];
+		}
 		break;
 	default:
 		{

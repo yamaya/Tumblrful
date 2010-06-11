@@ -10,13 +10,4 @@
 {
 	NSString * selectionText_;
 }
-- (id)initWithDocument:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement selection:(NSString *)selection;
-
-- (NSString *)postType;
-
-- (NSString *)titleForMenuItem;
-
-- (void)action:(id)sender;
-
-+ (id<Deliverer>) create:(DOMHTMLDocument*)document element:(NSDictionary*)clickedElement;
 @end

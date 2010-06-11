@@ -35,7 +35,7 @@
 /**
  * aタグを作る
  */
-+ (NSString*) anchorTagWithName:(NSString*)url name:(NSString*)name
++ (NSString *)anchorTagWithName:(NSString*)url name:(NSString*)name
 {
 	if (name == nil) {
 		name = url;

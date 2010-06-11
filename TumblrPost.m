@@ -21,6 +21,7 @@ static float TIMEOUT = 60.0f;
 @end
 
 @implementation NSString (URLEncoding)
+
 /**
  * URL エンコーディングを行う
  * @param [in] encoding エンコーディング
@@ -63,9 +64,9 @@ static float TIMEOUT = 60.0f;
 #pragma mark -
 @interface TumblrReblogDelegate : NSObject
 {
-	NSString* endpoint_;	/**< url */
-	TumblrPost*	continuation_;
-	NSMutableData* responseData_;	/**< for NSURLConnection */
+	NSString * endpoint_;	/**< url */
+	TumblrPost *	continuation_;
+	NSMutableData * responseData_;	/**< for NSURLConnection */
 }
 - (id) initWithEndpoint:(NSString*)endpoint continuation:(TumblrPost*)continuation;
 - (void) dealloc;
@@ -425,10 +426,8 @@ static float TIMEOUT = 60.0f;
 
 #pragma mark -
 @implementation TumblrReblogDelegate
-/**
- */
-- (id) initWithEndpoint:(NSString*)endpoint
-					 continuation:(TumblrPost*)continuation
+
+- (id)initWithEndpoint:(NSString *)endpoint continuation:(TumblrPost *)continuation
 {
 	if ((self = [super init]) != nil) {
 		endpoint_ = [endpoint retain];
@@ -438,22 +437,12 @@ static float TIMEOUT = 60.0f;
 	return self;
 }
 
-/**
- */
 - (void) dealloc
 {
-	if (endpoint_ != nil) {
-		[endpoint_ release];
-		endpoint_ = nil;
-	}
-	if (continuation_ != nil) {
-		[continuation_ release];
-		continuation_ = nil;
-	}
-	if (responseData_ != nil) {
-		[responseData_ release];
-		responseData_ = nil;
-	}
+	[endpoint_ release];
+	[continuation_ release];
+	[responseData_ release];
+
 	[super dealloc];
 }
 
@@ -500,9 +489,10 @@ static float TIMEOUT = 60.0f;
 		NSError * error = [NSError errorWithDomain:@"TumblrfulErrorDomain" code:-1 userInfo:nil];
 		[continuation_ invokeCallback:@selector(failed:) withObject:error]; /* 失敗時の処理 */
 	}
-	if (responseData_ != nil) {
-		[responseData_ release];
-	}
+
+	[responseData_ release];
+	responseData_ = nil;
+
 	[self release];
 }
 
@@ -520,10 +510,11 @@ static float TIMEOUT = 60.0f;
 
 #pragma mark -
 @implementation TumblrPost
-/**
- * PostCallback 付きの生成
- */
-- (id) initWithCallback:(NSObject<PostCallback>*)callback
+
+@synthesize privated = private_;
+@synthesize queuingEnabled = queuing_;
+
+- (id)initWithCallback:(NSObject<PostCallback> *)callback
 {
 	if ((self = [super init]) != nil) {
 		callback_ = [callback retain];
@@ -536,83 +527,35 @@ static float TIMEOUT = 60.0f;
 	return self;
 }
 
-/**
- * オブジェクトの解放.
- */
 - (void) dealloc
 {
-	if (callback_ != nil) {
-		[callback_ release];
-		callback_ = nil;
-	}
-	if (responseData_ != nil) {
-		[responseData_ release];
-		responseData_ = nil;
-	}
+	[callback_ release];
+	[responseData_ release];
+
 	[super dealloc];
 }
 
-/**
- * set to private.
- * @param private trueの場合プライベートポストにする
- */
-- (void) setPrivate:(BOOL)private
-{
-	private_ = private;
-}
-
-/**
- * get private.
- * @return trueの場合プライベートポストを示す
- */
-- (BOOL) private
-{
-	return private_;
-}
-
-- (void) setQueueing:(BOOL)queuing
-{
-	queuing_ = queuing;
-}
-
-- (BOOL) queuing
-{
-	return queuing_;
-}
-
-/**
- * get mail address of account on tumblr.
- */
-+ (NSString*)username
++ (NSString *)username
 {
 	return [[UserSettings sharedInstance] stringForKey:@"tumblrEmail"];
 }
 
-/**
- * get passowrd of account on tumblr
- */
-+ (NSString*)password
++ (NSString *)password
 {
 	return [[UserSettings sharedInstance] stringForKey:@"tumblrPassword"];
 }
 
-/**
- * create minimum request param for Tumblr
- */
-- (NSMutableDictionary*)createMinimumRequestParams
+- (NSMutableDictionary *)createMinimumRequestParams
 {
-	NSMutableArray* keys = [NSMutableArray arrayWithObjects:@"email", @"password", @"generator", nil];
-	NSMutableArray* objs = [NSMutableArray arrayWithObjects: [TumblrPost username], [TumblrPost password], @"Tumblrful", nil];
-	if ([self private]) {
+	NSMutableArray * keys = [NSMutableArray arrayWithObjects:@"email", @"password", @"generator", nil];
+	NSMutableArray * objs = [NSMutableArray arrayWithObjects:[TumblrPost username], [TumblrPost password], @"Tumblrful", nil];
+	if (self.privated) {
 		[keys addObject:@"private"];
 		[objs addObject:@"1"];
 	}
 	return [NSMutableDictionary dictionaryWithObjects:objs forKeys:keys];
 }
 
-/**
- * create POST request
- */
 - (NSURLRequest *)createRequest:(NSString *)url params:(NSDictionary *)params
 {
 	NSMutableString * escaped = [[[NSMutableString alloc] init] autorelease];
@@ -650,7 +593,7 @@ static float TIMEOUT = 60.0f;
 /**
  * create multipart POST request
  */
--(NSURLRequest*) createRequestForMultipart:(NSDictionary*)params withData:(NSData*)data
+-(NSURLRequest *)createRequestForMultipart:(NSDictionary *)params withData:(NSData *)data
 {
 	static NSString* HEADER_BOUNDARY = @"0xKhTmLbOuNdArY";
 
@@ -697,11 +640,6 @@ static float TIMEOUT = 60.0f;
 	[self postTo:WRITE_URL params:params];
 }
 
-/**
- * post to Tumblr.
- *	@param url - URL to post
- *	@param params - request parameteres
- */
 - (void)postTo:(NSString *)url params:(NSDictionary *)params
 {
 	responseData_ = [[NSMutableData data] retain];
@@ -723,19 +661,15 @@ static float TIMEOUT = 60.0f;
  * reblog
  *	@param postID ポストのID(整数値)
  */
-- (NSObject*) reblog:(NSString*)postID key:(NSString*)reblogKey
+- (NSObject *)reblog:(NSString *)postID key:(NSString *)reblogKey
 {
-	NSString* endpoint = [NSString stringWithFormat:@"%@/reblog/%@/%@", TUMBLR_URL, postID, reblogKey];
+	NSString * endpoint = [NSString stringWithFormat:@"%@/reblog/%@/%@", TUMBLR_URL, postID, reblogKey];
+	NSURLRequest * request = [NSURLRequest requestWithURL:[NSURL URLWithString:endpoint]];
 
-	NSURLRequest* request =
-		[NSURLRequest requestWithURL:[NSURL URLWithString:endpoint]];
-
-	TumblrReblogDelegate* delegate =
-		[[TumblrReblogDelegate alloc] initWithEndpoint:endpoint continuation:self];
+	TumblrReblogDelegate * delegate = [[TumblrReblogDelegate alloc] initWithEndpoint:endpoint continuation:self];
 	[delegate retain];
 
-	NSURLConnection* connection =
-		[NSURLConnection connectionWithRequest:request delegate:delegate];
+	NSURLConnection* connection = [NSURLConnection connectionWithRequest:request delegate:delegate];
 
 	if (connection == nil) {
 		[NSException raise:EXCEPTION_NAME format:@"Couldn't get Reblog form. endpoint: %@", endpoint];
@@ -759,27 +693,19 @@ static float TIMEOUT = 60.0f;
 
 	NSInteger const httpStatus = [httpResponse statusCode];
 	if (httpStatus != 201 && httpStatus != 200) {
-		D(@"TumblrPost.didReceiveResponse statusCode: %d", httpStatus);
-		D(@"TumblrPost.didReceiveResponse ResponseHeader: %@", [[httpResponse allHeaderFields] description]);
+		D(@"statusCode:%d", httpStatus);
+		D(@"ResponseHeader:%@", [[httpResponse allHeaderFields] description]);
 	}
 
 	[responseData_ setLength:0]; // initialize receive buffer
 }
 
-/**
- * didReceiveData
- *	delegate method
- */
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
 {
 #pragma unused (connection)
 	[responseData_ appendData:data]; // append data to receive buffer
 }
 
-/**
- * connectionDidFinishLoading
- *	delegate method
- */
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
 	[connection release];
@@ -796,11 +722,7 @@ static float TIMEOUT = 60.0f;
 	[self release];
 }
 
-/**
- * didFailWithError
- *	delegate method
- */
-- (void) connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
+- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
 	D0([error description]);
 

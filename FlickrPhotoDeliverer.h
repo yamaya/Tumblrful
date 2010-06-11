@@ -7,10 +7,4 @@
 #import "PhotoDeliverer.h"
 
 @interface FlickrPhotoDeliverer : PhotoDeliverer
-/*
- * PhotoDeliver overrides
- */
-+ (id<Deliverer>) create:(DOMHTMLDocument*)document element:(NSDictionary*)clickedElement;
-- (NSString*) titleForMenuItem;
-- (void) action:(id)sender;
 @end

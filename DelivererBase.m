@@ -18,13 +18,15 @@
 #import "NSString+Tumblrful.h"
 
 @interface DelivererBase ()
-- (NSArray*)sharedContexts;
-- (NSString*)makeMenuTitle;
+- (NSArray *)sharedContexts;
+- (NSString *)makeMenuTitle;
 - (void)actionInternal:(id)sender;
+- (void)invoke:(NSInvocation *)invocation withType:(PostType)type;
+- (void)invoke:(NSInvocation *)invocation withType:(PostType)type withImage:(NSImage *)image;
 @end
 
 @implementation DelivererBase
-+ (id<Deliverer>) create:(DOMHTMLDocument*)document element:(NSDictionary*)clickedElement
++ (id<Deliverer>)create:(DOMHTMLDocument *)document element:(NSDictionary *)clickedElement
 {
 #pragma unused (document, clickedElement)
 	[self doesNotRecognizeSelector:_cmd]; // _cmd はカレントセレクタ
@@ -36,14 +38,14 @@
  *	@param document 現在表示しているビューの DOMHTMLDocumentオブジェクト
  *	@param targetElement 選択していた要素の情報
  */
-- (id) initWithDocument:(DOMHTMLDocument*)document target:(NSDictionary*)targetElement
+- (id)initWithDocument:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement
 {
 	context_ = nil;
 	filterMask_ = 0;
 	needEdit_ = NO;
 
 	if ((self = [super init]) != nil) {
-		NSEnumerator* enumerator = [[self sharedContexts] objectEnumerator];
+		NSEnumerator * enumerator = [[self sharedContexts] objectEnumerator];
 		id clazz;
 		while ((clazz = [enumerator nextObject]) != nil) {
 			if ([clazz match:document target:targetElement]) {
@@ -61,25 +63,22 @@
 	return nil;
 }
 
-/**
- * オブジェクトの解放.
- */
-- (void) dealloc
+- (void)dealloc
 {
 	[context_ release];
+
 	[super dealloc];
 }
 
 - (NSMenuItem *)createMenuItem
 {
-	//FIXME retainedだけど、いいんだっけ？
-	NSMenuItem * rootItem = [[[NSMenuItem alloc] init] retain];
+	NSMenuItem * menuItem = [[[NSMenuItem alloc] init] autorelease];
 
-	[rootItem setTitle:[self makeMenuTitle]];
-	[rootItem setTarget:self];
-	[rootItem setAction:@selector(actionInternal:)];
+	[menuItem setTitle:[self makeMenuTitle]];
+	[menuItem setTarget:self];
+	[menuItem setAction:@selector(actionInternal:)];
 
-	return rootItem;
+	return menuItem;
 }
 
 - (void)action:(id)sender
@@ -92,6 +91,20 @@
 {
 	if (needEdit_) {
 		PostEditWindow * window = [[PostEditWindow alloc] initWithPostType:type withInvocation:invocation];
+		[window openSheet:[[NSApplication sharedApplication] keyWindow]];
+	}
+	else {
+		[invocation invoke];
+	}
+}
+
+- (void)invoke:(NSInvocation *)invocation withType:(PostType)type withImage:(NSImage *)image
+{
+	D_METHOD;
+
+	if (needEdit_) {
+		PostEditWindow * window = [[PostEditWindow alloc] initWithPostType:type withInvocation:invocation];
+		window.image = image;
 		[window openSheet:[[NSApplication sharedApplication] keyWindow]];
 	}
 	else {
@@ -114,7 +127,7 @@
 - (void)postLink:(NSString *)url title:(NSString *)title
 {
 	@try {
-		Anchor* anchor = [Anchor anchorWithURL:url title:title];
+		Anchor * anchor = [Anchor anchorWithURL:url title:title];
 		NSUInteger i = 0;
 		NSEnumerator * enumerator = [PostAdaptorCollection enumerator];
 		Class postClass;
@@ -140,7 +153,7 @@
 {
 	@try {
 		NSString * source = [Anchor htmlWithURL:[context_ documentURL] title:[context_ documentTitle]];
-		int i = 0;
+		NSUInteger i = 0;
 		NSEnumerator * enumerator = [PostAdaptorCollection enumerator];
 		Class postClass;
 		while ((postClass = [enumerator nextObject]) != nil) {
@@ -161,48 +174,41 @@
 	}
 }
 
-- (void)postPhoto:(NSString *)imageURL caption:(NSString *)caption through:(NSString *)url
+- (void)postPhoto:(NSString *)source caption:(NSString *)caption through:(NSString *)url image:(NSImage *)image
 {
-	D(@"imageURL:%@", [imageURL description]);
+	D(@"source:%@", [source description]);
 	D(@"caption:%@", [caption description]);
 	D(@"url:%@", [url description]);
+	D(@"image:%@", [image description]);
 
 	NSUInteger i = 0;
 	NSEnumerator * enumerator = [PostAdaptorCollection enumerator];
 	Class postClass;
 	while ((postClass = [enumerator nextObject]) != nil) {
-		if ((1 << i) & filterMask_) { // do filter
+		if ((1 << i) & filterMask_) {	// do filter
 			PostAdaptor * adaptor = [[postClass alloc] initWithCallback:self];
 			NSInvocation * invocation = [self typedInvocation:@selector(postPhoto:caption:throughURL:) withAdaptor:adaptor];
-			[invocation setArgument:&imageURL atIndex:2];
+			[invocation setArgument:&source atIndex:2];
 			[invocation setArgument:&caption atIndex:3];
 			[invocation setArgument:&url atIndex:4];
 			[invocation retainArguments];
-			[self invoke:invocation withType:PhotoPostType];
+			[self invoke:invocation withType:PhotoPostType withImage:image];
 		}
 		i++;
 	}
 }
 
-/**
- * "Video" post.
- *	@param embed ビデオオブジェクトの embed URL - youtube の場合 URL を指定可能
- *	@param title ビデオのタイトル
- *	@param caption ビデオの概要
- */
-- (void)postVideo:(NSString*)embed title:(NSString*)title caption:(NSString*)caption
+- (void)postVideo:(NSString *)embed caption:(NSString *)caption
 {
-	Anchor* anchor = [Anchor anchorWithURL:[context_ documentURL] title:title];
-	int i = 0;
-	NSEnumerator* enumerator = [PostAdaptorCollection enumerator];
+	NSUInteger i = 0;
+	NSEnumerator * enumerator = [PostAdaptorCollection enumerator];
 	Class postClass;
 	while ((postClass = [enumerator nextObject]) != nil) {
-		if ((1 << i) & filterMask_) { // do filter
-			PostAdaptor* adaptor = [[postClass alloc] initWithCallback:self];
-			NSInvocation * invocation = [self typedInvocation:@selector(postVideo:embed:caption:) withAdaptor:adaptor];
-			[invocation setArgument:&anchor atIndex:2];
-			[invocation setArgument:&embed atIndex:3];
-			[invocation setArgument:&caption atIndex:4];
+		if ((1 << i) & filterMask_) {	// do filter
+			PostAdaptor * adaptor = [[postClass alloc] initWithCallback:self];
+			NSInvocation * invocation = [self typedInvocation:@selector(postVideo:caption:) withAdaptor:adaptor];
+			[invocation setArgument:&embed atIndex:2];
+			[invocation setArgument:&caption atIndex:3];
 			[invocation retainArguments];
 			[self invoke:invocation withType:VideoPostType];
 		}
@@ -216,17 +222,17 @@
  *	@return Reblog したポストのタイプを示す文字列等。
  *					何を返すかは PostAdaptor の派生クラスで決まる。
  */
-- (NSObject*) postEntry:(NSDictionary*)params
+- (NSObject *)postEntry:(NSDictionary *)params
 {
 	NSObject* result = nil;
-	int i = 0;
+	NSUInteger i = 0;
 	NSEnumerator* enumerator = [PostAdaptorCollection enumerator];
 	Class postClass;
 	while ((postClass = [enumerator nextObject]) != nil) {
-		if ((1 << i) & filterMask_) { /* do filter */
-			PostAdaptor* adaptor = [postClass alloc];
+		if ((1 << i) & filterMask_) { // do filter
+			PostAdaptor * adaptor = [postClass alloc];
 			[adaptor initWithCallback:self];
-			NSObject* tmp = [adaptor postEntry:params];
+			NSObject * tmp = [adaptor postEntry:params];
 			if (tmp != nil && result == nil) {
 				result = tmp;
 			}
@@ -239,15 +245,16 @@
 /**
  * ポスト成功時のコールバック
  */
-- (void) successed:(NSString*)response
+- (void)successed:(NSString *)response
 {
-	D(@"successed: %@", response);
+	D0(response);
+
 	@try {
-		NSString* message = [NSString stringWithFormat:@"%@\n--- %@", [context_ documentTitle], response];
+		NSString * message = [NSString stringWithFormat:@"%@\n--- %@", [context_ documentTitle], response];
 		[self notify:message];
 	}
-	@catch(NSException* e) {
-		Log([e description]);
+	@catch (NSException * e) {
+		D0([e description]);
 	}
 
 	[response release];
@@ -279,8 +286,8 @@
 		NSString* message = [NSString stringWithFormat:@"%@\n--- %@", [context_ documentTitle], replyMessage];
 		[self notify:message];
 	}
-	@catch(NSException* e) {
-		Log([e description]);
+	@catch (NSException * e) {
+		D0([e description]);
 	}
 }
 
@@ -302,24 +309,16 @@
 }
 
 #pragma mark -
-/**
- * メニューアイテムのタイトルを取得する
- *	@return タイトル
- */
-- (NSString*) titleForMenuItem
+- (NSString *)titleForMenuItem
 {
-	[self doesNotRecognizeSelector:_cmd]; /* _cmd はカレントセレクタ */
+	[self doesNotRecognizeSelector:_cmd]; // _cmd はカレントセレクタ
 	return nil;
 }
 
-/**
- * メニューアイテム(複数)を生成する.
- *	@return メニューアイテムを格納した配列
- */
-- (NSArray*) createMenuItems
+- (NSArray *)createMenuItems
 {
-	NSMutableArray* items = [[[NSMutableArray alloc] init] autorelease];
-	int i = 0;
+	NSMutableArray * items = [[[NSMutableArray alloc] init] autorelease];
+	NSUInteger i = 0;
 	NSUInteger mask = 1;
 	D(@"initial count:%d", [PostAdaptorCollection count]);
 
@@ -327,7 +326,7 @@
 	Class postClass;
 	while ((postClass = [enumerator nextObject]) != nil) {
 		if ([postClass enableForMenuItem]) {
-			NSMenuItem* menuItem = [self createMenuItem];
+			NSMenuItem * menuItem = [self createMenuItem];
 			NSString* suffix = [postClass titleForMenuItem];
 			if (suffix != nil) {
 				NSString* title = [menuItem title];
@@ -349,24 +348,21 @@
  * @param [in] param 要素0にaction:に渡すオブジェクト、要素1にマスクビットが
  *                   格納された配列
  */
-- (void) actionWithMask:(NSArray*)param
+- (void)actionWithMask:(NSArray *)param
 {
-	NSNumber* number = (NSNumber*)[param objectAtIndex:1];
+	NSNumber * number = (NSNumber *)[param objectAtIndex:1];
 	filterMask_ = [number unsignedIntegerValue];
 	D(@"filterMask=0x%x", filterMask_);
 
-	[self action:[param objectAtIndex:0]]; /* 移譲する */
+	[self action:[param objectAtIndex:0]]; // 移譲する
 }
 
 #pragma mark -
 #pragma mark Private Methods
 
-/**
- * Deliverer の class を singleton な array にしまっておく
- */
-- (NSArray*) sharedContexts
+- (NSArray *)sharedContexts
 {
-	static NSMutableArray* contexts = nil;
+	static NSMutableArray * contexts = nil;
 
 	@try {
 		if (contexts == nil) {
@@ -378,21 +374,17 @@
 			[contexts retain]; // must
 		}
 	}
-	@catch (NSException* e) {
-		Log(@"Catch exception in sharedContexts: ", [e description]);
+	@catch (NSException * e) {
+		D0([e description]);
 	}
 
 	return contexts;
 }
 
-/**
- * メニュータイトルを作る
- */
-- (NSString*) makeMenuTitle
+// メニュータイトルを作る
+- (NSString *)makeMenuTitle
 {
-	NSString* title = [NSString stringWithFormat:@"%@%@",
-											[self titleForMenuItem],
-											[context_ menuTitle]];
+	NSString * title = [NSString stringWithFormat:@"%@%@", [self titleForMenuItem], [context_ menuTitle]];
 	return [DelivererRules menuItemTitleWith:title];
 }
 

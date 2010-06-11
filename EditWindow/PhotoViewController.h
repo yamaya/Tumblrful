@@ -1,19 +1,24 @@
 #import <Cocoa/Cocoa.h>
 
-@class WebView;
-
 @interface PhotoViewController : NSViewController
 {
-	IBOutlet WebView * webView_;
+	IBOutlet NSImageView * imageView_;
 	IBOutlet NSTextField * throughURLField_;
 	IBOutlet NSTextView * captionField_;
 }
 
-//@property (nonatomic, readonly) NSString * imageURL;
-
+/// caption text
 @property (nonatomic, readonly) NSString * caption;
 
+/// click-through URL
 @property (nonatomic, readonly) NSString * throughURL;
 
-- (void)setContentsWithImageURL:(NSString *)imageURL caption:(NSString *)caption throughURL:(NSString *)throughURL;
+/**
+ * set Post contents
+ *	@param[in] imageURL	URL of image
+ *	@param[in] image	NSImage object
+ *	@param[in] caption	caption
+ *	@param[in] throughURL	click-through URL
+ */
+- (void)setContentsWithImageURL:(NSString *)imageURL image:(NSImage *)image caption:(NSString *)caption throughURL:(NSString *)throughURL;
 @end

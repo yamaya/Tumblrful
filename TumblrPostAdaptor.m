@@ -10,7 +10,7 @@
 
 #pragma mark -
 @interface TumblrPostAdaptor ()
-- (void)postTo:(NSString *)type params:(NSDictionary *)params;
+- (void)postWithType:(NSString *)type withParams:(NSDictionary *)params;
 @end
 
 #pragma mark -
@@ -22,27 +22,22 @@
 	[params setValue:[anchor title] forKey:@"name"];
 	[params setValue:description forKey:@"description"];
 
-	[self postTo:@"link" params:params];
+	[self postWithType:@"link" withParams:params];
 }
 
 - (void)postQuote:(NSString *)quote source:(NSString *)source;
 {
-	[self postTo:@"quote" params:[NSMutableDictionary dictionaryWithObjectsAndKeys:quote, @"quote", source, @"source", nil]];
+	[self postWithType:@"quote" withParams:[NSMutableDictionary dictionaryWithObjectsAndKeys:quote, @"quote", source, @"source", nil]];
 }
 
 - (void)postPhoto:(NSString *)source caption:(NSString *)caption throughURL:(NSString *)throughURL
 {
-	[self postTo:@"photo" params:[NSMutableDictionary dictionaryWithObjectsAndKeys:source, @"source", caption, @"caption", throughURL, @"click-through-url", nil]];
+	[self postWithType:@"photo" withParams:[NSMutableDictionary dictionaryWithObjectsAndKeys:source, @"source", caption, @"caption", throughURL, @"click-through-url", nil]];
 }
 
-- (void) postVideo:(Anchor*)anchor embed:(NSString*)embed caption:(NSString*)caption
+- (void)postVideo:(NSString *)embed caption:(NSString*)caption
 {
-	NSMutableDictionary* params = [[[NSMutableDictionary alloc] init] autorelease];
-	[params setValue:embed forKey:@"embed"];
-	[params setValue:[anchor title] forKey:@"title"];
-	[params setValue:caption forKey:@"caption"];
-
-	[self postTo:@"video" params:params];
+	[self postWithType:@"video" withParams:[NSMutableDictionary dictionaryWithObjectsAndKeys:embed, @"embed", caption, @"caption", nil]];
 }
 
 - (NSObject *)postEntry:(NSDictionary *)params
@@ -61,17 +56,7 @@
 	return nil;
 }
 
-- (void)setQueueing:(BOOL)queuing
-{
-	queuing_ = queuing;
-}
-
-- (BOOL)queuing
-{
-	return queuing_;
-}
-
-- (void)postTo:(NSString *)type params:(NSDictionary *)params
+- (void)postWithType:(NSString *)type withParams:(NSDictionary *)params
 {
 	@try {
 		// Tumblrへポストするオブジェクトを生成する
@@ -79,8 +64,8 @@
 		[tumblr retain];
 
 		// プライベートとキューイングの設定をしておく
-		[tumblr setPrivate:private_];
-		[tumblr setQueueing:queuing_];
+		tumblr.privated = self.privated;
+		tumblr.queuingEnabled = self.queuingEnabled;
 
 		// リクエストパラメータを構築する
 		NSMutableDictionary * requestParams = [tumblr createMinimumRequestParams];

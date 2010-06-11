@@ -73,8 +73,7 @@ static NSString* TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 	}
 
 	/* Google Reader ではこの時点で ReblogKey は得られないので nil を指定する */
-	deliverer =
-		[[GoogleReaderReblogDeliverer alloc] initWithDocument:document target:clickedElement postID:postID reblogKey:nil];
+	deliverer = [[GoogleReaderReblogDeliverer alloc] initWithDocument:document target:clickedElement postID:postID reblogKey:nil];
 	if (deliverer != nil) {
 		[deliverer retain];	//TODO: need?
 	}

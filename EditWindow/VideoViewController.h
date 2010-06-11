@@ -4,18 +4,15 @@
  */
 #import <Cocoa/Cocoa.h>
 
-@class WebView;
-
 @interface VideoViewController : NSViewController
 {
-	IBOutlet WebView * webView_;
 	IBOutlet NSTextView * embedTextView_;
-	IBOutlet NSTextView * captionField_;
+	IBOutlet NSTextView * captionTextView_;
 }
-
-@property (nonatomic, readonly) NSString * caption;
 
 @property (nonatomic, readonly) NSString * embed;
 
-- (void)setContentsWithEmbedTag:(NSString *)embed caption:(NSString *)caption;
+@property (nonatomic, readonly) NSString * caption;
+
+- (void)setContentsWithEmbed:(NSString *)embed caption:(NSString *)caption;
 @end

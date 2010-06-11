@@ -12,46 +12,37 @@
 #import "DebugLog.h"
 #import <Foundation/NSXMLDocument.h>
 
-//#define V(format, ...)	Log(format, __VA_ARGS__)
-#define V(format, ...)
-
-static NSString* API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
+static NSString * API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
 
 #define TIMEOUT (30.0)
 
 #pragma mark -
-@interface DeliciousPost (Private)
+@interface DeliciousPost ()
 - (NSURLRequest *)createRequest:(NSDictionary *)params;
-- (void) callback:(SEL)selector withObject:(id)obj;
+- (void)callback:(SEL)selector withObject:(id)obj;
 @end
 
 #pragma mark -
 @implementation DeliciousPost
-/**
- * get name of account on del.icio.us
- */
-+ (NSString*) username
++ (NSString *)username
 {
 	return [[UserSettings sharedInstance] stringForKey:@"deliciousUsername"];
 }
 
-/**
- * get passowrd of account on del.icio.us
- */
-+ (NSString*) password
++ (NSString *)password
 {
 	return [[UserSettings sharedInstance] stringForKey:@"deliciousPassword"];
 }
 
 /**
- * get enable on del.icio.us
+ * enable on del.icio.us post
  */
-+ (BOOL) isEnabled
++ (BOOL)isEnabled
 {
 	return [[UserSettings sharedInstance] boolForKey:@"deliciousEnabled"];
 }
 
-- (id) initWithCallback:(NSObject<PostCallback>*)callback
+- (id)initWithCallback:(NSObject<PostCallback> *)callback
 {
 	if ((self = [super init]) != nil) {
 		callback_ = [callback retain];
@@ -61,36 +52,24 @@ static NSString* API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
 	return self;
 }
 
-/**
- * dealloc
- */
-- (void) dealloc
+- (void)dealloc
 {
-	if (callback_ != nil) {
-		[callback_ release];
-		callback_ = nil;
-	}
+	[callback_ release];
+
 	[super dealloc];
 }
 
-/**
- * create minimum request param for del.icio.us
- */
-- (NSMutableDictionary*) createMinimumRequestParams
+- (NSMutableDictionary *)createMinimumRequestParams
 {
-	NSString* shared =
-		[NSString stringWithFormat:@"%@", ([self private] ? @"no" : @"yes")];
+	NSString * shared = [NSString stringWithFormat:@"%@", ([self privated] ? @"no" : @"yes")];
 
-	NSMutableArray* keys = [NSMutableArray arrayWithObjects:@"shared", nil];
-	NSMutableArray* objs = [NSMutableArray arrayWithObjects:shared, nil];
+	NSMutableArray * keys = [NSMutableArray arrayWithObjects:@"shared", nil];
+	NSMutableArray * objs = [NSMutableArray arrayWithObjects:shared, nil];
 
 	return [[NSMutableDictionary alloc] initWithObjects:objs forKeys:keys];
 }
 
-/**
- *
- */
-- (BOOL) private
+- (BOOL)privated
 {
 	return private_;
 }
@@ -104,20 +83,18 @@ static NSString* API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
 {
 	responseData_ = [[[NSMutableData alloc] init] retain];
 
-	NSURLRequest* request = [self createRequest:params]; /* request は connection に指定した時点で reatin upする */ 
-	NSLog(@"DeliciousPost.post: request: %@", [request description]);
+	NSURLRequest * request = [self createRequest:params]; // request は connection に指定した時点で reatin upする
+	D(@"request:%@", [request description]);
 
-	NSURLConnection* connection = [NSURLConnection connectionWithRequest:request delegate:self];
+	NSURLConnection * connection = [NSURLConnection connectionWithRequest:request delegate:self];
 	[connection retain];
 
-	V(@"DeliciousPost.post connection: %@", SafetyDescription(connection));
+	D(@"connection:%@", SafetyDescription(connection));
 	if (connection == nil) {
 		[self callback:@selector(failedWithError:) withObject:nil];
 		[responseData_ release];
 		responseData_ = nil;
-		return;
 	}
-	V(@"DeliciousPost.post: %@", @"exit");
 }
 
 /**
@@ -127,13 +104,12 @@ static NSString* API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
 - (void)connection:(NSURLConnection*)connection didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge*)challenge
 {
 #pragma unused (connection)
-	V(@"didReceiveAuthenticationChallenge: %@", @"enter");
+	D_METHOD;
 
-	NSURLCredential* crendential =
-		[NSURLCredential credentialWithUser:[DeliciousPost username]
-															 password:[DeliciousPost password]
-														persistence:NSURLCredentialPersistenceForSession];
+	NSString * user = [DeliciousPost username];
+	NSString * pass = [DeliciousPost password];
 
+	NSURLCredential * crendential = [NSURLCredential credentialWithUser:user password:pass persistence:NSURLCredentialPersistenceForSession];
 	[[challenge sender] useCredential:crendential forAuthenticationChallenge:challenge];
 }
 
@@ -143,15 +119,15 @@ static NSString* API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
  *	正常なら statusCode は 201
  *	Account 不正なら 403
  */
-- (void) connection:(NSURLConnection*)connection didReceiveResponse:(NSURLResponse*)response
+- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
 #pragma unused (connection)
-	V(@"DeliciousPost.didReceiveResponse retain:%x", [self retainCount]);
+	D(@"DeliciousPost.didReceiveResponse retain:%x", [self retainCount]);
 
 	NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response; /* この cast は正しい */
 	if ([httpResponse statusCode] != 201) {
-		Log(@"\tAbnormal! statusCode: %d", [httpResponse statusCode]);
-		Log(@"\tallHeaderFields: %@", [[httpResponse allHeaderFields] description]);
+		D(@"\tAbnormal! statusCode: %d", [httpResponse statusCode]);
+		D(@"\tallHeaderFields: %@", [[httpResponse allHeaderFields] description]);
 	}
 
 	[responseData_ setLength:0]; // initialize receive buffer
@@ -161,7 +137,7 @@ static NSString* API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
  * didReceiveData
  *	delegate method
  */
-- (void) connection:(NSURLConnection*)connection didReceiveData:(NSData*)data
+- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
 {
 #pragma unused (connection)
 	[responseData_ appendData:data]; // append data to receive buffer
@@ -171,72 +147,59 @@ static NSString* API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
  * connectionDidFinishLoading
  *	delegate method
  */
-- (void) connectionDidFinishLoading:(NSURLConnection*)connection
+- (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
-	V(@"DeliciousPost.connectionDidFinishLoading: succeeded to load %d bytes", [responseData_ length]);
-
-	[connection release];
+	D(@"succeeded to load %d bytes", [responseData_ length]);
 
 	if (callback_ != nil) {
-		NSString* resultCode = nil;
-		NSXMLNode* node = nil;
-		NSError* error = nil;
-		NSXMLDocument* document =
-			[[[NSXMLDocument alloc] initWithData:responseData_
-																	 options:NSXMLDocumentTidyHTML
-																		 error:&error] autorelease];
+		NSString * resultCode = nil;
+		NSXMLNode * node = nil;
+		NSError * error = nil;
+		NSXMLDocument * document = [[[NSXMLDocument alloc] initWithData:responseData_ options:NSXMLDocumentTidyHTML error:&error] autorelease];
 		node = [[document rootElement] attributeForName:@"code"];
 		if (node != nil) {
 			resultCode = [node stringValue];
 		}
-		V(@"resultCode: %@", resultCode);
+		D(@"resultCode:%@", resultCode);
 		[self callback:@selector(successed:) withObject:[resultCode retain]];
 	}
 	else {
 		[self callback:@selector(failedWithError:) withObject:nil];
 	}
 
-	[responseData_ release]; /* release receive buffer */
+	[connection release];
+	[responseData_ release];
 	responseData_ = nil;
 }
-@end
 
-#pragma mark -
-@implementation DeliciousPost (Private)
-/**
- * create POST request
- */
 - (NSURLRequest *)createRequest:(NSDictionary *)params
 {
 	@try {
-		NSMutableString* ms = [[[NSMutableString alloc] initWithString:API_ADD_ENDPOINT] autorelease];
-		NSEnumerator* enumerator = [params keyEnumerator];
-		NSString* key;
+		NSMutableString * ms = [[[NSMutableString alloc] initWithString:API_ADD_ENDPOINT] autorelease];
+		NSEnumerator * enumerator = [params keyEnumerator];
+		NSString * key;
 		while ((key = [enumerator nextObject]) != nil) {
 			[ms appendFormat:@"&%@=%@", key, [params objectForKey:key]];
 		}
-		NSString* s = [NSString stringWithString:ms];
+		NSString * s = [NSString stringWithString:ms];
 		s = [s stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 		s = [s stringByReplacingOccurrencesOfString:@"+" withString:@"%2B"];
 
-		/* create the POST request */
-		NSMutableURLRequest* request =
-			[NSMutableURLRequest requestWithURL:[NSURL URLWithString:s]
-															cachePolicy:NSURLRequestReloadIgnoringCacheData
-													timeoutInterval:TIMEOUT];
+		// create the POST request
+		NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:s] cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:TIMEOUT];
 #if 0
-    s = [NSString stringWithFormat:@"%@:%@", [DeliciousPost username], [DeliciousPost password]];
-    s = [NSString stringWithFormat:@"Basic %@", [[s dataUsingEncoding:NSASCIIStringEncoding] encodeBase64]];
-    [request setValue:s forHTTPHeaderField: @"Authorization"];
+		s = [NSString stringWithFormat:@"%@:%@", [DeliciousPost username], [DeliciousPost password]];
+		s = [NSString stringWithFormat:@"Basic %@", [[s dataUsingEncoding:NSASCIIStringEncoding] encodeBase64]];
+		[request setValue:s forHTTPHeaderField: @"Authorization"];
 		[request setHTTPShouldHandleCookies:NO];
 #endif
 		[request setValue:@"Tumblrful" forHTTPHeaderField:@"User-Agent"];
 
-		//V(@"request: %@", SafetyDescription(request));
+		//D(@"request: %@", SafetyDescription(request));
 		return request;
 	}
-	@catch (NSException* e) {
-		V(@"Exception: %@", [e description]);
+	@catch (NSException * e) {
+		D0([e description]);
 	}
 	return nil;
 }
@@ -245,20 +208,18 @@ static NSString* API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
  * didFailWithError
  *	delegate method
  */
-- (void) connection:(NSURLConnection*)connection didFailWithError:(NSError*)error
+- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
-	V(@"DeliciousPost.didFailWithError: in, NSError:%@", [error description]);
+	D0([error description]);
 
 	[connection release];
-	[responseData_ release];	/* release receive buffer */
+	[responseData_ release];	// release receive buffer
+	responseData_ = nil;
 
 	[self callback:@selector(failedWithError:) withObject:error];
 }
 
-/**
-	callback on MainThread
- */
-- (void) callback:(SEL)selector withObject:(id)obj
+- (void)callback:(SEL)selector withObject:(id)obj
 {
 	if (callback_ != nil && [callback_ respondsToSelector:selector]) {
 		[callback_ performSelectorOnMainThread:selector withObject:obj waitUntilDone:NO];

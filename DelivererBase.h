@@ -23,14 +23,16 @@
 
 /* Deliverer protocols */
 + (id<Deliverer>)create:(DOMHTMLDocument *)document element:(NSDictionary *)clickedElement;
+
 - (NSMenuItem *)createMenuItem;
+
 - (void)action:(id)sender;
 
 /* common process for PostCallback */
 - (void) posted:(NSData*)response;
 - (void) failed:(NSError*)error;
 
-- (id)initWithDocument:(DOMHTMLDocument*)document target:(NSDictionary*)clickedElement;
+- (id)initWithDocument:(DOMHTMLDocument*)document target:(NSDictionary*)targetElement;
 
 /**
  * post "Link" contents
@@ -47,13 +49,20 @@
 
 /**
  * post "Photo" contents
- *	@param[in] imageURL	image URL
+ *	@param[in] source	URL of image
  *	@param[in] caption	caption text
  *	@param[in] url	click-through URL
+ *	@param[in] image	NSImage object
  */
-- (void)postPhoto:(NSString *)imageURL caption:(NSString *)caption through:(NSString *)url;
+- (void)postPhoto:(NSString *)source caption:(NSString *)caption through:(NSString *)url image:(NSImage *)image;
 
-- (void)postVideo:(NSString*)embed title:(NSString*)title caption:(NSString*)caption;
+/**
+ * "Video" post.
+ *	@param[in] embed embed or URL
+ *	@param[in] caption caption
+ */
+- (void)postVideo:(NSString *)embed caption:(NSString *)caption;
+
 - (NSObject*) postEntry:(NSDictionary*)params;
 
 /* PostCallback overrides */
@@ -61,11 +70,20 @@
 - (void) failedWithError:(NSError*)error;
 - (void) failedWithException:(NSException*)exception;
 
-- (NSString*) titleForMenuItem;
 - (void) notify:(NSString*)message;
 - (void) failedWithException:(NSException*)exception;
 
-- (NSArray*) createMenuItems;
+/**
+ * メニューアイテムのタイトルを取得する
+ *	@return タイトル
+ */
+- (NSString *)titleForMenuItem;
 
-- (void) actionWithMask:(NSArray*)param;
+/**
+ * メニューアイテム(複数)を生成する.
+ *	@return メニューアイテムを格納した配列
+ */
+- (NSArray *)createMenuItems;
+
+- (void)actionWithMask:(NSArray *)param;
 @end

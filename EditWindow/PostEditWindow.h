@@ -7,10 +7,10 @@
 #import <Cocoa/Cocoa.h>
 #import "PostType.h"
 
-@class Anchor;
 @class QuoteViewController;
 @class LinkViewController;
 @class PhotoViewController;
+@class VideoViewController;
 
 @interface PostEditWindow : NSObject
 {
@@ -23,19 +23,29 @@
 	IBOutlet QuoteViewController * quoteViewController_;
 	IBOutlet LinkViewController * linkViewController_;
 	IBOutlet PhotoViewController * photoViewController_;
+	IBOutlet VideoViewController * videoViewController_;
 
 	PostType postType_;
 	NSInvocation * invocation_;
+	NSImage * image_;
 }
 
-- (id)initWithPostType:(PostType)postType withInvocation:(NSInvocation *)invocation;
+/// 画像(オプショナル)
+@property (nonatomic, retain) NSImage * image;
 
 - (IBAction)pressOKButton:(id)sender;
 
 - (IBAction)pressCancelButton:(id)sender;
 
+/**
+ * Initialize object
+ *	@param[in] postType type of post
+ *	@param[in] invocation invocation when OK button of sheet
+ */
+- (id)initWithPostType:(PostType)postType withInvocation:(NSInvocation *)invocation;
+
 - (void)setContentsOptionWithPrivated:(BOOL)privated queued:(BOOL)queued;
 
-- (void)openSheet:(NSWindow * )window;
+- (void)openSheet:(NSWindow *)window;
 
 @end

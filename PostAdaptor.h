@@ -15,10 +15,15 @@
 @interface PostAdaptor : NSObject
 {
 	id<PostCallback> callback_;
-	BOOL private_;
+	BOOL privated_;
+	BOOL queuingEnabled_;
 }
 
+/// プライベートポストかどうか - サブクラスの実装による
 @property (nonatomic, assign) BOOL privated;
+
+/// キューイングポストかどうか - サブクラスの実装による
+@property (nonatomic, assign) BOOL queuingEnabled;
 
 - (id) initWithCallback:(id<PostCallback>)callback;
 
@@ -38,9 +43,6 @@
 
 - (id<PostCallback>) callback;
 - (void) setCallback:(id<PostCallback>)callback;
-
-- (BOOL) private;
-- (void) setPrivate:(BOOL)private;
 
 - (void) callbackWith:(NSString*)response;
 - (void) callbackWithError:(NSError*)error;
@@ -65,10 +67,16 @@
  *	@param[in] source	URL to image
  *	@param[in] caption	caption
  *	@param[in] throughURL	click-through URL
+ *	@param[in] image	NSImage object
  */
 - (void)postPhoto:(NSString *)source caption:(NSString *)caption throughURL:(NSString *)throughURL;
 
-- (void)postVideo:(Anchor*)anchor embed:(NSString*)embed caption:(NSString*)caption;
+/**
+ * post "Video" contents
+ *	@param[in] embed	emebd tag or URL
+ *	@param[in] caption	caption
+ */
+- (void)postVideo:(NSString *)embed caption:(NSString*)caption;
 
 - (NSObject*)postEntry:(NSDictionary*)params;
 @end

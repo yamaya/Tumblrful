@@ -6,15 +6,28 @@
  */
 #import "DelivererBase.h"
 
+/**
+ * VideoDeliverer class declaration
+ *	support Youtube only
+ */
 @interface VideoDeliverer : DelivererBase
 {
-	NSDictionary* clickedElement_;
+	NSDictionary * clickedElement_;
 }
-+ (NSString*) name;
-+ (id<Deliverer>) create:(DOMHTMLDocument*)document element:(NSDictionary*)clickedElement;
-- (id) initWithDocument:(DOMHTMLDocument*)document element:(NSDictionary*)clickedElement;
-- (void) dealloc;
-- (NSString*) postType;
-- (NSString*) makeCaption;
-- (void) action:(id)sender;
+
+- (id)initWithDocument:(DOMHTMLDocument *)document element:(NSDictionary *)clickedElement;
+
+/**
+ * Make contents of Video
+ *	@return dictionary following keys and values
+ *	- @"source", Video URL or embed (string).
+ *	- @"caption", caption text.
+ */
+- (NSDictionary *)videoContents;
+
+/**
+ * Name of this Deliverer class
+ */
++ (NSString *)name;
+
 @end

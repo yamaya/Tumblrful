@@ -6,36 +6,41 @@
  */
 #import "Post.h"
 
+/**
+ * TumblrPost class
+ */
 @interface TumblrPost : NSObject<Post>
 {
-	BOOL private_;	/**< private post */
-	BOOL queuing_;	/**< queuing post */
+	BOOL private_;
+	BOOL queuing_;
 	NSMutableData* responseData_;	/**< for NSURLConnection */
 	NSObject<PostCallback>* callback_; /**< for Deliverer */
 }
 
-+ (NSString*) username;
+/// private post
+@property (nonatomic, assign) BOOL privated;
 
-+ (NSString*) password;
+/// queuing post enabled
+@property (nonatomic, assign) BOOL queuingEnabled;
 
-- (id) initWithCallback:(NSObject<PostCallback>*)callback;
++ (NSString *)username;
 
-- (NSMutableDictionary*) createMinimumRequestParams;
++ (NSString *)password;
+
+- (id)initWithCallback:(NSObject<PostCallback> *)callback;
+
+- (NSMutableDictionary *)createMinimumRequestParams;
 
 - (NSURLRequest *)createRequest:(NSString *)url params:(NSDictionary *)params;
 
 #ifdef SUPPORT_MULTIPART_PORT
-- (NSURLRequest*) createRequestForMultipart:(NSDictionary*)params withData:(NSData*)data;
+- (NSURLRequest *)createRequestForMultipart:(NSDictionary *)params withData:(NSData *)data;
 #endif
 
-- (void) postWith:(NSDictionary*)params;
-- (void) postTo:(NSString*)url params:(NSDictionary*)params;
-- (NSObject*) reblog:(NSString*)postID key:(NSString*)reblogKey;
+- (void)postWith:(NSDictionary *)params;
 
-- (void) setPrivate:(BOOL)private;
-- (BOOL) private;
+- (void)postTo:(NSString *)url params:(NSDictionary *)params;
 
-- (void) setQueueing:(BOOL)queuing;
-- (BOOL) queuing;
+- (NSObject *)reblog:(NSString *)postID key:(NSString *)reblogKey;
 
 @end

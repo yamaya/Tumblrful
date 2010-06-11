@@ -8,13 +8,14 @@
 
 @implementation PostAdaptor
 
-@synthesize privated = private_;
+@synthesize privated = privated_;
+@synthesize queuingEnabled = queueingButton_;
 
 /**
  * メニュー項目のタイトルを取得する
  *	@return タイトル
  */
-+ (NSString*) titleForMenuItem
++ (NSString *)titleForMenuItem
 {
 	return nil;
 }
@@ -22,7 +23,7 @@
 /**
  * メニュー項目の有効・無効を取得する
  */
-+ (BOOL) enableForMenuItem
++ (BOOL)enableForMenuItem
 {
 	return YES;
 }
@@ -36,7 +37,8 @@
 {
 	if ((self = [super init]) != nil) {
 		callback_ = [callback retain];
-		private_ = NO;
+		privated_ = NO;
+		queuingEnabled_ = NO;
 	}
 	return self;
 }
@@ -51,7 +53,7 @@
 {
 	if ((self = [super init]) != nil) {
 		callback_ = [callback retain];
-		private_ = private;
+		privated_ = private;
 	}
 	return self;
 }
@@ -83,16 +85,6 @@
 	callback_ = [callback retain];
 }
 
-- (BOOL) private
-{
-	return private_;
-}
-
-- (void) setPrivate:(BOOL)private
-{
-	private_ = private;
-}
-
 /**
  * callback when successed post.
  *	@param response レスポンスデータ
@@ -119,7 +111,7 @@
  * callback when failed post with NSException.
  *	@param error NSException オブジェクト
  */
-- (void) callbackWithException:(NSException*)exception
+- (void)callbackWithException:(NSException *)exception
 {
 	if (callback_ != nil) {
 		[callback_ failedWithException:exception];
@@ -144,13 +136,13 @@
 	[self doesNotRecognizeSelector:_cmd];
 }
 
-- (void) postVideo:(Anchor*)anchor embed:(NSString*)embed caption:(NSString*)caption
+- (void)postVideo:(NSString *)embed caption:(NSString*)caption
 {
-#pragma unused (anchor, embed, caption)
+#pragma unused (embed, title, caption)
 	[self doesNotRecognizeSelector:_cmd];
 }
 
-- (NSObject*) postEntry:(NSDictionary*)params
+- (NSObject *)postEntry:(NSDictionary *)params
 {
 #pragma unused (params)
 	[self doesNotRecognizeSelector:_cmd];

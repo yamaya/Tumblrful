@@ -5,7 +5,6 @@
  * @date:   2008-03-03
  */
 #import "PhotoDeliverer.h"
-#import "DelivererRules.h"
 #import "DebugLog.h"
 #import <WebKit/WebView.h>
 
@@ -13,35 +12,29 @@ static NSString * TYPE = @"Photo";
 
 #pragma mark -
 @interface PhotoDeliverer ()
-- (NSString *)selectionText:(NSDictionary *)clickedElement;
+- (NSString *)selectedString;
 @end
 
 #pragma mark -
 @implementation PhotoDeliverer
-/**
- * Deliverer のファクトリ
- */
-+ (id<Deliverer>) create:(DOMHTMLDocument*)document element:(NSDictionary*)clickedElement
++ (id<Deliverer>)create:(DOMHTMLDocument *)document element:(NSDictionary *)clickedElement
 {
-	PhotoDeliverer* deliverer = nil;
+	PhotoDeliverer * deliverer = nil;
 
 	id imageURL = [clickedElement objectForKey:WebElementImageURLKey];
 	if (imageURL != nil) {
 		deliverer = [[PhotoDeliverer alloc] initWithDocument:document element:clickedElement];
 		if (deliverer != nil) {
-			[deliverer retain]; //need?
+			[deliverer retain]; //need? FIXME ここでretainするんじゃなくて呼び出し側でやるようにする
 		}
 		else {
-			Log(@"Could not alloc+init %@Deliverer.", TYPE);
+			D(@"Could not alloc+init %@Deliverer.", TYPE);
 		}
 	}
 	return deliverer;
 }
 
-/**
- * オブジェクトを初期化する
- */
-- (id) initWithDocument:(DOMHTMLDocument*)document element:(NSDictionary*)clickedElement
+- (id)initWithDocument:(DOMHTMLDocument *)document element:(NSDictionary *)clickedElement
 {
 	if ((self = [super initWithDocument:document target:clickedElement]) != nil) {
 		clickedElement_ = [clickedElement retain];
@@ -49,27 +42,19 @@ static NSString * TYPE = @"Photo";
 	return self;
 }
 
-/**
- * オブジェクトの解放
- */
-- (void) dealloc
+- (void)dealloc
 {
 	[clickedElement_ release];
+
 	[super dealloc];
 }
 
-/**
- * Tumblr APIが規定するポストのタイプ
- */
-- (NSString*) postType
+- (NSString *)postType
 {
 	return [TYPE lowercaseString];
 }
 
-/**
- * MenuItemのタイトルを返す
- */
-- (NSString*) titleForMenuItem
+- (NSString *)titleForMenuItem
 {
 	return TYPE;
 }
@@ -81,16 +66,17 @@ static NSString * TYPE = @"Photo";
 {
 #pragma unused (sender)
 	@try {
-		NSString * imageURL = (NSString *)[clickedElement_ objectForKey:WebElementImageURLKey];
-		NSString * caption = [context_ anchorTagToDocument];
+		// コンテンツを得る
+		NSDictionary * contents = [self photoContents];
 
-		// セレクションはキャプションとして設定する
-		NSString * selection = [self selectionText:clickedElement_];
-		if (selection != nil && [selection length] > 0) {
-			caption = [caption stringByAppendingFormat:@"<blockquote>%@</blockquote>", selection];
-		}
+		// 画像
+		NSImage * image = [clickedElement_ objectForKey:WebElementImageKey];
 
-		[super postPhoto:imageURL caption:caption through:[context_ documentURL]];
+		// ポストする
+		[super postPhoto:[contents objectForKey:@"source"]
+				 caption:[contents objectForKey:@"caption"]
+				 through:[contents objectForKey:@"throughURL"]
+				   image:image];
 	}
 	@catch (NSException * e) {
 		D0([e description]);
@@ -98,22 +84,46 @@ static NSString * TYPE = @"Photo";
 	}
 }
 
-- (NSString *)selectionText:(NSDictionary *)clickedElement
+- (NSDictionary *)photoContents
 {
-	SEL selector = @selector(selectedString);
+	// 画像のソースURL
+	NSString * source = [[clickedElement_ objectForKey:WebElementImageURLKey] absoluteString];
 
-	NSString * text = nil;
-	WebFrame * frame = [clickedElement objectForKey:WebElementFrameKey];
-	if (frame != nil) {
-		NSView<WebDocumentView> * view = [[frame frameView] documentView];
-		if (view != nil) {
-			if ([view respondsToSelector:selector]) {
-				text = [view performSelector:selector];
+	// キャプション - セレクションがあればそれを blockquoteで囲って追加する
+	NSString * caption = [context_ anchorTagToDocument];
+	NSString * selection = [self selectedStringWithBlockquote];
+	if (selection != nil && [selection length] > 0) {
+		caption = [caption stringByAppendingFormat:@"\r%@", selection];
+	}
+
+	return [NSDictionary dictionaryWithObjectsAndKeys:source, @"source", caption, @"caption", [context_ documentURL], @"throughURL", nil];
+}
+
+- (NSString *)selectedStringWithBlockquote
+{
+	NSString * s = [self selectedString];
+	if (s != nil && [s length] > 0) {
+		s = [s stringByAppendingFormat:@"<blockquote>%@</blockquote>", s];
+	}
+	return s;
+}
+
+- (NSString *)selectedString
+{
+	NSString * selection = nil;
+
+	if (clickedElement_ != nil) {
+		SEL selector = @selector(selectedString);
+		WebFrame * frame = [clickedElement_ objectForKey:WebElementFrameKey];
+		if (frame != nil) {
+			NSView<WebDocumentView> * view = [[frame frameView] documentView];
+			if (view != nil && [view respondsToSelector:selector]) {
+				selection = [view performSelector:selector];
 			}
 		}
 	}
 
-	D0(text);
-	return text;
+	D0(selection);
+	return selection;
 }
 @end

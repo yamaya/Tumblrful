@@ -8,12 +8,25 @@
 
 @interface PhotoDeliverer : DelivererBase
 {
-	NSDictionary* clickedElement_;
+	NSDictionary * clickedElement_;
 }
-+ (id<Deliverer>) create:(DOMHTMLDocument*)document element:(NSDictionary*)clickedElement;
-- (id) initWithDocument:(DOMHTMLDocument*)document element:(NSDictionary*)clickedElement;
-- (void) dealloc;
-- (NSString*) postType;
-- (NSString*) titleForMenuItem;
-- (void) action:(id)sender;
+
+//TODO これ DeliverBaseに持ち上げられないの？
+//できる clickedElement_を DeliverBaseに持たせればいい
+- (id)initWithDocument:(DOMHTMLDocument *)document element:(NSDictionary *)clickedElement;
+
+/**
+ * contents for Photo post.
+ *	@return contents dictionary object has following keys
+ *	- @"source" - URL of image
+ *	- @"caption" - caption
+ *	- @"throughURL" - click-through URL
+ */
+- (NSDictionary *)photoContents;
+
+/**
+ * selected string with <blockquote> tag
+ *	@return string
+ */
+- (NSString *)selectedStringWithBlockquote;
 @end

@@ -52,12 +52,7 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 	return [self buildMenu:[original mutableCopy] element:element]; // add Tumblrful to original menu
 }
 
-/**
- * Deliverer の class を singleton な array にしまっておく
- *
- * @return array of Deliverers.
- */
-- (NSArray*) sharedDelivererClasses
+- (NSArray *)sharedDelivererClasses
 {
 	static NSMutableArray* classes = nil;
 
@@ -84,27 +79,15 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 	return classes;
 }
 
-/**
- * validate account
- *
- * @return true is valid account, other than false.
- */
-- (BOOL) validateAccount
+- (BOOL)validateAccount
 {
-	NSString* mail = [TumblrPost username];
-	NSString* pass = [TumblrPost password];
+	NSString * mail = [TumblrPost username];
+	NSString * pass = [TumblrPost password];
 
 	return (mail != nil) && ([mail length] > 0) && (pass != nil) && ([pass length] > 0);
 }
 
-/**
- * buildMenu
- *	コンテキストメニューに独自の要素を追加する。
- * @param menu オリジナルの NSMenuItem の配列
- * @param element クリックしている要素
- * @return NSMenuItem の配列
- */
-- (NSArray*) buildMenu:(NSMutableArray*)menu element:(NSDictionary*)element
+- (NSArray *)buildMenu:(NSMutableArray *)menu element:(NSDictionary *)element
 {
 	// アカウントが未設定ならメニューを追加しない
 	if (![self validateAccount]) {
@@ -114,15 +97,15 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 
 	NSMenu * subMenu = [[[NSMenu alloc] initWithTitle:@"Editting Post"] autorelease];
 
-	Class class;
-	NSEnumerator* classEnumerator = [[self sharedDelivererClasses] objectEnumerator];
-	while ((class = [classEnumerator nextObject]) != nil) {
-		DelivererBase * deliverer = (DelivererBase *)[class create:(DOMHTMLDocument*)[self mainFrameDocument] element:element];
+	Class delivererClass;
+	NSEnumerator * classEnumerator = [[self sharedDelivererClasses] objectEnumerator];
+	while ((delivererClass = [classEnumerator nextObject]) != nil) {
+		DelivererBase * deliverer = (DelivererBase *)[delivererClass create:(DOMHTMLDocument *)[self mainFrameDocument] element:element];
 		if (deliverer != nil) {
 			NSUInteger i = 0;
-			NSMenuItem* menuItem;
-			NSArray* menuItems = [deliverer createMenuItems];
-			NSEnumerator* menuEnumerator = [menuItems objectEnumerator];
+			NSMenuItem * menuItem;
+			NSArray * menuItems = [deliverer createMenuItems];	// autoreleased
+			NSEnumerator * menuEnumerator = [menuItems objectEnumerator];
 			while ((menuItem = [menuEnumerator nextObject]) != nil) {
 				[menu insertObject:menuItem atIndex:i++];
 
@@ -150,7 +133,7 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 		}
 	}
 
-	/* error process */
+	// error handling
 	[GrowlSupport notify:@"Tumblrful" description:@"Error - Could not detect type of post"];
 	return menu;
 }
@@ -181,8 +164,8 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 			[elements setObject:[(DOMHTMLImageElement*)target src] forKey:WebElementImageURLKey];
 		}
 
-		for (Class clazz in [[self sharedDelivererClasses] objectEnumerator]) {
-			id<Deliverer> maybeDeliver = [clazz create:document element:elements];
+		for (Class delivererClass in [[self sharedDelivererClasses] objectEnumerator]) {
+			id<Deliverer> maybeDeliver = [delivererClass create:document element:elements];
 			if (maybeDeliver == nil) {
 				continue;
 			}

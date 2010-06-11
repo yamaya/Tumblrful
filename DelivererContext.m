@@ -91,7 +91,7 @@
  * @param [in] targetElement 選択している要素 - このクラスでは未使用
  * @return 自身のオブジェクト
  */
-- (id) initWithDocument:(DOMHTMLDocument*)document target:(NSDictionary*)targetElement
+- (id)initWithDocument:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement
 {
 #pragma unused (document, targetElement)
 	if ((self = [super init]) != nil) {

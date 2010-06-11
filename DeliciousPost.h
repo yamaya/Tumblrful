@@ -8,16 +8,11 @@
 
 @interface DeliciousPost : NSObject<Post>
 {
-	NSMutableData* responseData_;	/* for NSURLConnection */
-	NSObject<PostCallback>* callback_;
+	NSMutableData * responseData_;	/* for NSURLConnection */
+	NSObject<PostCallback> * callback_;
 	BOOL private_;
 }
-+ (NSString*) username;
-+ (NSString*) password;
+
 + (BOOL) isEnabled;
-- (id) initWithCallback:(NSObject<PostCallback>*)callback;
-- (void) dealloc;
-- (NSMutableDictionary*) createMinimumRequestParams;
-- (void) postWith:(NSDictionary*)params;
-- (BOOL) private;
+
 @end
