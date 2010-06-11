@@ -9,7 +9,7 @@
 @implementation PostAdaptor
 
 @synthesize privated = privated_;
-@synthesize queuingEnabled = queueingButton_;
+@synthesize queuingEnabled = queuingEnabled_;
 
 /**
  * メニュー項目のタイトルを取得する

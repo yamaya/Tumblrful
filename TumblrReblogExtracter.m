@@ -129,7 +129,7 @@ static NSString* TUMBLR_URL = @"http://www.tumblr.com";
  */
 - (void)connection:(NSURLConnection*)connection didFailWithError:(NSError*)error
 {
-#pragma unused (connection)
+#pragma unused (connection, error)
 	D0([error description]);
 
 	[self release];

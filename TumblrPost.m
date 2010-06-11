@@ -502,7 +502,7 @@ static float TIMEOUT = 60.0f;
  */
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
-#pragma unused (connection)
+#pragma unused (connection, error)
 	D0([error description]);
 	[self release];
 }

@@ -65,6 +65,7 @@ static UserSettings * instance = nil;
 	if (dictionary_ != nil) {
 		NSString * filePath = [self pathForPropertyList];
 
+		BOOL result;
 		NSFileManager * fileManager = [NSFileManager defaultManager];
 		D(@"fileExistsAtPath:%d",[fileManager fileExistsAtPath:filePath]); 
 		if (![fileManager fileExistsAtPath:filePath]) {
@@ -76,11 +77,11 @@ static UserSettings * instance = nil;
 			D0(directoryPath);
 
 			NSError * error = nil;
-			BOOL const result = [fileManager createDirectoryAtPath:directoryPath withIntermediateDirectories:YES attributes:nil error:&error];
+			result = [fileManager createDirectoryAtPath:directoryPath withIntermediateDirectories:YES attributes:nil error:&error];
 			D(@"result: %d, %@", result, [error description]);
 		}
 
-		BOOL result = [dictionary_ writeToFile:filePath atomically:YES];
+		result = [dictionary_ writeToFile:filePath atomically:YES];
 		D(@"result:%d", result);
 	}
 }

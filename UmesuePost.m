@@ -107,7 +107,7 @@
  * プライベートか否かを返す.
  *	@return プライベートフラグ
  */
-- (BOOL) private
+- (BOOL) privated
 {
 	return NO;
 }
