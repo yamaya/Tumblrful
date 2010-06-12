@@ -31,7 +31,6 @@
 		3BB4090D0D8D284700BBDA84 /* NSPreferences+Tumblrful.m in Sources */ = {isa = PBXBuildFile; fileRef = 3BB4090C0D8D284700BBDA84 /* NSPreferences+Tumblrful.m */; };
 		3BB409100D8D287500BBDA84 /* TumblrfulPreferences.m in Sources */ = {isa = PBXBuildFile; fileRef = 3BB4090F0D8D287500BBDA84 /* TumblrfulPreferences.m */; };
 		3BB46FED0D92CE6300F56F88 /* ReblogDeliverer.m in Sources */ = {isa = PBXBuildFile; fileRef = 3BB46FEC0D92CE6300F56F88 /* ReblogDeliverer.m */; };
-		3BB995930DBE42B100E6471F /* TumblrReblogExtracter.m in Sources */ = {isa = PBXBuildFile; fileRef = 3BB995920DBE42B100E6471F /* TumblrReblogExtracter.m */; };
 		3BC522490DBA2EA800D5BACA /* NSDataBase64.m in Sources */ = {isa = PBXBuildFile; fileRef = 3BC522460DBA2EA800D5BACA /* NSDataBase64.m */; };
 		3BC5224A0DBA2EA800D5BACA /* UmesuePostAdaptor.m in Sources */ = {isa = PBXBuildFile; fileRef = 3BC522480DBA2EA800D5BACA /* UmesuePostAdaptor.m */; };
 		3BC55B960D95AD8E0010DF31 /* VideoDeliverer.m in Sources */ = {isa = PBXBuildFile; fileRef = 3BC55B950D95AD8E0010DF31 /* VideoDeliverer.m */; };
@@ -47,6 +46,7 @@
 		540CBAEB11B3B6C300EE6D77 /* PostEditWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 540CBAE511B3B6C300EE6D77 /* PostEditWindow.xib */; };
 		540CBAEC11B3B6C300EE6D77 /* QuoteViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 540CBAE711B3B6C300EE6D77 /* QuoteViewController.m */; };
 		5443AAB911A0FB55003F7A53 /* Tumblrful.png in Resources */ = {isa = PBXBuildFile; fileRef = 5443AAB811A0FB55003F7A53 /* Tumblrful.png */; };
+		5459AE7A11C3599D00A6ADE3 /* TumblrReblogExtractor.m in Sources */ = {isa = PBXBuildFile; fileRef = 5459AE7911C3599D00A6ADE3 /* TumblrReblogExtractor.m */; };
 		546A0751105A7E57009DE2D1 /* Growl.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 546A0750105A7E57009DE2D1 /* Growl.framework */; };
 		546A0759105A7E60009DE2D1 /* Growl.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 546A0750105A7E57009DE2D1 /* Growl.framework */; };
 		546A07AC105A8A4B009DE2D1 /* SafariSingleWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 546A07AB105A8A4B009DE2D1 /* SafariSingleWindow.m */; };
@@ -127,8 +127,6 @@
 		3BB4090F0D8D287500BBDA84 /* TumblrfulPreferences.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TumblrfulPreferences.m; sourceTree = "<group>"; };
 		3BB46FEB0D92CE6300F56F88 /* ReblogDeliverer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ReblogDeliverer.h; sourceTree = "<group>"; };
 		3BB46FEC0D92CE6300F56F88 /* ReblogDeliverer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReblogDeliverer.m; sourceTree = "<group>"; };
-		3BB995910DBE42B100E6471F /* TumblrReblogExtracter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TumblrReblogExtracter.h; sourceTree = "<group>"; };
-		3BB995920DBE42B100E6471F /* TumblrReblogExtracter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TumblrReblogExtracter.m; sourceTree = "<group>"; };
 		3BC522450DBA2EA800D5BACA /* NSDataBase64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSDataBase64.h; sourceTree = "<group>"; };
 		3BC522460DBA2EA800D5BACA /* NSDataBase64.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSDataBase64.m; sourceTree = "<group>"; };
 		3BC522470DBA2EA800D5BACA /* UmesuePostAdaptor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UmesuePostAdaptor.h; sourceTree = "<group>"; };
@@ -159,6 +157,8 @@
 		540CBAE711B3B6C300EE6D77 /* QuoteViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = QuoteViewController.m; path = EditWindow/QuoteViewController.m; sourceTree = "<group>"; };
 		5443AAB811A0FB55003F7A53 /* Tumblrful.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Tumblrful.png; sourceTree = "<group>"; };
 		5443AABA11A0FB65003F7A53 /* NSPreferenceModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSPreferenceModule.h; sourceTree = "<group>"; };
+		5459AE7811C3599D00A6ADE3 /* TumblrReblogExtractor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TumblrReblogExtractor.h; sourceTree = "<group>"; };
+		5459AE7911C3599D00A6ADE3 /* TumblrReblogExtractor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TumblrReblogExtractor.m; sourceTree = "<group>"; };
 		546A0750105A7E57009DE2D1 /* Growl.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Growl.framework; path = Frameworks/Growl.framework; sourceTree = "<group>"; };
 		546A07AA105A8A4B009DE2D1 /* SafariSingleWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SafariSingleWindow.h; sourceTree = "<group>"; };
 		546A07AB105A8A4B009DE2D1 /* SafariSingleWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SafariSingleWindow.m; sourceTree = "<group>"; };
@@ -234,6 +234,8 @@
 		08FB77AFFE84173DC02AAC07 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				5459AE7811C3599D00A6ADE3 /* TumblrReblogExtractor.h */,
+				5459AE7911C3599D00A6ADE3 /* TumblrReblogExtractor.m */,
 				54AFE52811B5329000156646 /* NSString+Tumblrful.h */,
 				54AFE52911B5329100156646 /* NSString+Tumblrful.m */,
 				54EE0E8E11B5272100BA6F0C /* PostType.h */,
@@ -253,8 +255,6 @@
 				3B2920A00DDB3F4E00260CB1 /* SlideShareVideoDeliverer.m */,
 				3B62B1AC0DD4BA2B009E51C6 /* VimeoVideoDeliverer.h */,
 				3B62B1AD0DD4BA2B009E51C6 /* VimeoVideoDeliverer.m */,
-				3BB995910DBE42B100E6471F /* TumblrReblogExtracter.h */,
-				3BB995920DBE42B100E6471F /* TumblrReblogExtracter.m */,
 				3BC522450DBA2EA800D5BACA /* NSDataBase64.h */,
 				3BC522460DBA2EA800D5BACA /* NSDataBase64.m */,
 				3BC522470DBA2EA800D5BACA /* UmesuePostAdaptor.h */,
@@ -492,7 +492,6 @@
 				3B83F0ED0DBA263C004718A8 /* UmesuePost.m in Sources */,
 				3BC522490DBA2EA800D5BACA /* NSDataBase64.m in Sources */,
 				3BC5224A0DBA2EA800D5BACA /* UmesuePostAdaptor.m in Sources */,
-				3BB995930DBE42B100E6471F /* TumblrReblogExtracter.m in Sources */,
 				3B62B1AE0DD4BA2B009E51C6 /* VimeoVideoDeliverer.m in Sources */,
 				3B2920A10DDB3F4E00260CB1 /* SlideShareVideoDeliverer.m in Sources */,
 				54EA05690ED066ED001116D7 /* GoogleReaderDelivererContext.m in Sources */,
@@ -507,6 +506,7 @@
 				54EE0E9011B5272100BA6F0C /* PostType.m in Sources */,
 				54AFE52A11B5329100156646 /* NSString+Tumblrful.m in Sources */,
 				54A3ABBD11C264DE003B6C67 /* VideoViewController.m in Sources */,
+				5459AE7A11C3599D00A6ADE3 /* TumblrReblogExtractor.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

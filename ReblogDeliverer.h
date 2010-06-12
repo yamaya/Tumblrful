@@ -14,7 +14,6 @@
 {
 	NSString * postID_;
 	NSString * reblogKey_;
-	NSString * type_;
 }
 
 /**
@@ -62,5 +61,4 @@
  * Set Reblog Key
  */
 - (void) setReblogKey:(NSString*)reblogKey;
-
 @end

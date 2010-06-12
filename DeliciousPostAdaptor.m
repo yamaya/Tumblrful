@@ -31,7 +31,7 @@
 	return [DeliciousPost isEnabled];
 }
 
-- (void) postLink:(Anchor*)anchor description:(NSString*)description
+- (void)postLink:(Anchor *)anchor description:(NSString *)description
 {
 	if ([DeliciousPost isEnabled]) {
 
@@ -69,10 +69,10 @@
 	[self postLink:anchor description:caption];
 }
 
-- (NSObject *)postEntry:(NSDictionary *)params
+- (void)postEntry:(NSDictionary *)params
 {
 #pragma unused (params)
-	return nil; // do-nothing
+	// do-nothing
 }
 
 - (void)postTo:(NSDictionary *)params

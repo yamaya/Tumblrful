@@ -219,23 +219,18 @@
 	}
 }
 
-- (NSObject *)postEntry:(NSDictionary *)params
+- (void)postEntry:(NSDictionary *)params
 {
-	NSObject * lastResult = nil;
 	NSUInteger i = 0;
 	NSEnumerator * enumerator = [PostAdaptorCollection enumerator];
 	Class adaptorClass;
 	while ((adaptorClass = [enumerator nextObject]) != nil) {
 		if ((1 << i) & filterMask_) { // do filter
 			PostAdaptor * adaptor = [[adaptorClass alloc] initWithCallback:self];
-			NSObject * result = [adaptor postEntry:params];
-			if (result != nil && lastResult == nil) {
-				lastResult = result;
-			}
+			[adaptor postEntry:params];
 		}
 		i++;
 	}
-	return lastResult;
 }
 
 /**
@@ -290,7 +285,7 @@
 /**
  * ポストが失敗した時
  */
-- (void) failed:(NSError*)error
+- (void)failed:(NSError*)error
 {
 	NSString* msg = error != nil ? [error description] : @"";
 	[self notify:[DelivererRules errorMessageWith:msg]];
@@ -299,7 +294,7 @@
 /**
  * 汎用メッセージ処理
  */
-- (void) notify:(NSString*)message
+- (void)notify:(NSString*)message
 {
 	[GrowlSupport notify:[[self postType] capitalizedString] description:message];
 }

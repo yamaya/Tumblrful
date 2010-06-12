@@ -1,15 +1,14 @@
 /**
- * @file TumblrReblogExtracter.m
- * @brief TumblrReblogExtracter implementation
+ * @file TumblrReblogExtractor.m
+ * @brief TumblrReblogExtractor class implementation
  * @author Masayuki YAMAYA
  * @date 2008-04-23
  */
-#import "TumblrReblogExtracter.h"
+#import "TumblrReblogExtractor.h"
+#import "TumblrfulConstants.h"
 #import "DebugLog.h"
 
-static NSString* TUMBLR_URL = @"http://www.tumblr.com";
-
-@interface TumblrReblogExtracter (Private)
+@interface TumblrReblogExtractor (Private)
 - (NSString*)typeofPost:(NSArray*)inputs;
 - (NSArray*)inputFields:(NSData*)form;
 - (NSMutableDictionary*)inputFieldsAsLink:(NSArray*)elements;
@@ -22,22 +21,22 @@ static NSString* TUMBLR_URL = @"http://www.tumblr.com";
 - (void)extractImpl:(NSString*)endpoint form:(NSData*)formData;
 @end
 
-@implementation TumblrReblogExtracter
+@implementation TumblrReblogExtractor
 /**
  * endpointから reblog form を取得して field に展開する.
  */
-- (void)extract:(NSString*)pid key:(NSString*)rk
+- (void)startWithPID:(NSString*)pid withReblogKey:(NSString*)rk
 {
-	if (continuation_ == nil) {
-		D(@"exract: continuation_ is nil, pid=%@, rk=%@", pid, rk);
+	if (delegate_ == nil) {
+		D(@"exract: delegate_ is nil, pid=%@, rk=%@", pid, rk);
 		return;
 	}
-	if (![continuation_ respondsToSelector:@selector(extract:)]) {
-		D(@"exract: Not respond is \"extract\", continuation_=%@", [continuation_ description]);
+	if (![delegate_ respondsToSelector:@selector(extract:)]) {
+		D(@"exract: Not respond is \"extract\", delegate_=%@", [delegate_ description]);
 		return;
 	}
 
-	endpoint_ = [NSString stringWithFormat:@"%@/reblog/%@/%@", TUMBLR_URL, pid, rk];
+	endpoint_ = [NSString stringWithFormat:@"%@/reblog/%@/%@", TUMBLRFUL_TUMBLR_URL, pid, rk];
 	[endpoint_ retain];
 
 	NSURLRequest* request = [NSURLRequest requestWithURL:[NSURL URLWithString:endpoint_]];
@@ -47,34 +46,21 @@ static NSString* TUMBLR_URL = @"http://www.tumblr.com";
 	}
 }
 
-/**
- */
-- (id)initWith:(id)continuation
+- (id)initWithDelegate:(NSObject<TumblrReblogExtractorDelegate> *)delegate
 {
 	if ((self = [super init]) != nil) {
-		continuation_ = [continuation retain];
+		delegate_ = [delegate retain];
 		endpoint_ = nil;
 		responseData_ = nil;
 	}
 	return self;
 }
 
-/**
- */
 - (void)dealloc
 {
-	if (endpoint_ != nil) {
-		[endpoint_ release];
-		endpoint_ = nil;
-	}
-	if (continuation_ != nil) {
-		[continuation_ release];
-		continuation_ = nil;
-	}
-	if (responseData_ != nil) {
-		[responseData_ release];
-		responseData_ = nil;
-	}
+	[endpoint_ release], endpoint_ = nil;
+	[delegate_ release], delegate_ = nil;
+	[responseData_ release], responseData_ = nil;
 	[super dealloc];
 }
 
@@ -136,7 +122,7 @@ static NSString* TUMBLR_URL = @"http://www.tumblr.com";
 }
 @end
 
-@implementation TumblrReblogExtracter (Private)
+@implementation TumblrReblogExtractor (Private)
 /**
  * extractImpl.
  *	@param endpoint
@@ -190,7 +176,7 @@ static NSString* TUMBLR_URL = @"http://www.tumblr.com";
 	[obj setValue:type forKey:@"type"];
 	[obj addEntriesFromDictionary:fields];
 
-	[continuation_ performSelectorOnMainThread:@selector(extract:) withObject:obj waitUntilDone:NO];
+	[delegate_ performSelectorOnMainThread:@selector(extract:) withObject:obj waitUntilDone:NO];
 }
 
 /**

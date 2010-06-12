@@ -1,514 +1,55 @@
 /**
  * @file TumblrPost.m
- * @brief TumblrPost implementation
+ * @brief TumblrPost class implementation
  * @author Masayuki YAMAYA
  * @date 2008-03-07
  */
 #import "TumblrPost.h"
 #import "UserSettings.h"
+#import "TumblrfulConstants.h"
+#import "NSString+Tumblrful.h"
 #import "DebugLog.h"
 #import <WebKit/WebKit.h>
 #import <Foundation/NSXMLDocument.h>
 
-static NSString* WRITE_URL = @"http://www.tumblr.com/api/write";
-static NSString* TUMBLR_URL = @"http://www.tumblr.com";
-static NSString* EXCEPTION_NAME = @"TumblrPostException";
 static float TIMEOUT = 60.0f;
 
+static const NSRange EmptyRange = {NSNotFound, 0};
+
+
 #pragma mark -
-@interface NSString (URLEncoding)
-- (NSString *)stringByURLEncoding:(NSStringEncoding)encoding;
-@end
 
-@implementation NSString (URLEncoding)
-
-/**
- * URL エンコーディングを行う
- * @param [in] encoding エンコーディング
- * @return NSString オブジェクト
- */
-- (NSString *)stringByURLEncoding:(NSStringEncoding)encoding
+@interface ReblogDelegate : NSObject
 {
-	NSArray* escapeChars = [NSArray arrayWithObjects:
-			 @";" ,@"/" ,@"?" ,@":"
-			,@"@" ,@"&" ,@"=" ,@"+"
-			,@"$" ,@"," ,@"[" ,@"]"
-			,@"#" ,@"!" ,@"'" ,@"("
-			,@")" ,@"*"
-			,nil];
-
-	NSArray* replaceChars = [NSArray arrayWithObjects:
-			  @"%3B" ,@"%2F" ,@"%3F"
-			 ,@"%3A" ,@"%40" ,@"%26"
-			 ,@"%3D" ,@"%2B" ,@"%24"
-			 ,@"%2C" ,@"%5B" ,@"%5D"
-			 ,@"%23" ,@"%21" ,@"%27"
-			 ,@"%28" ,@"%29" ,@"%2A"
-			 ,nil];
-
-	NSMutableString* encodedString =
-		[[[self stringByAddingPercentEscapesUsingEncoding:encoding] mutableCopy] autorelease];
-
-	const NSUInteger N = [escapeChars count];
-	for (NSUInteger i = 0; i < N; i++) {
-		[encodedString replaceOccurrencesOfString:[escapeChars objectAtIndex:i]
-									   withString:[replaceChars objectAtIndex:i]
-										  options:NSLiteralSearch
-											range:NSMakeRange(0, [encodedString length])];
-	}
-
-	return [NSString stringWithString: encodedString];
+	NSString * endpoint_;
+	TumblrPost * postman_;
+	NSMutableData * data_;
 }
+
+- (id)initWithEndpoint:(NSString *)endpoint withPostman:(TumblrPost *)postman;
 @end
 
 #pragma mark -
-@interface TumblrReblogDelegate : NSObject
-{
-	NSString * endpoint_;	/**< url */
-	TumblrPost *	continuation_;
-	NSMutableData * responseData_;	/**< for NSURLConnection */
-}
-- (id) initWithEndpoint:(NSString*)endpoint continuation:(TumblrPost*)continuation;
-- (void) dealloc;
+
+@interface TumblrPost ()
+- (void)postWithEndpoint:(NSString *)url withParams:(NSDictionary *)params;
+- (void)reblogPostWithPostID:(NSString *)postID reblogKey:(NSString *)reblogKey;
+- (void)callbackOnMainThread:(SEL)selector withObject:(NSObject *)param;
+- (NSString *)postTypeWithElements:(NSArray *)elements;
+- (NSMutableDictionary *)collectInputFieldsAsLink:(NSArray *)elements;
+- (NSMutableDictionary *)collectInputFieldsAsPhoto:(NSArray *)elements;
+- (NSMutableDictionary *)collectInputFieldsAsQuote:(NSArray *)elements;
+- (NSMutableDictionary *)collectInputFieldsAsRegular:(NSArray *)elements;
+- (NSMutableDictionary *)collectInputFieldsAsChat:(NSArray *)elements;
+- (NSMutableDictionary *)collectInputFieldsAsVideo:(NSArray *)elements;
+- (NSMutableDictionary *)collectInputFieldsAsAudio:(NSArray *)elements;
+- (void)setFormKeyFieldIfExist:(NSXMLElement *)element fields:(NSMutableDictionary *)fields;
+- (NSArray *)inputElementsWithReblogFrom:(NSData *)reblogForm;
+- (void)reblogPost:(NSString *)endpoint form:(NSData *)formData;
 @end
 
 #pragma mark -
-@interface TumblrPost (Private)
-- (void) invokeCallback:(SEL)selector withObject:(NSObject*)param;
-- (NSString*) detectPostType:(NSArray*)inputs;
-- (NSMutableDictionary*) collectInputFieldsAsLink:(NSArray*)elements;
-- (NSMutableDictionary*) collectInputFieldsAsPhoto:(NSArray*)elements;
-- (NSMutableDictionary*) collectInputFieldsAsQuote:(NSArray*)elements;
-- (NSMutableDictionary*) collectInputFieldsAsRegular:(NSArray*)elements;
-- (NSMutableDictionary*) collectInputFieldsAsChat:(NSArray*)elements;
-- (NSMutableDictionary*) collectInputFieldsAsVideo:(NSArray*)elements;
-- (void) addElementIfFormKey:(NSXMLElement*)element fields:(NSMutableDictionary*)fields;
-// TODO: support "audio"
-- (NSArray*) collectInputFields:(NSData*)form;
-- (void) reblogPost:(NSString*)endpoint form:(NSData*)formData;
-@end
 
-@implementation TumblrPost (Private)
-/**
- * MainThread上でコールバックする
- */
-- (void) invokeCallback:(SEL)selector withObject:(NSObject*)param
-{
-	if (callback_) {
-		if ([callback_ respondsToSelector:selector]) {
-			[callback_ performSelectorOnMainThread:selector withObject:param waitUntilDone:NO];
-		}
-	}
-}
-
-/**
- * form HTMLからfieldを得る.
- * @param formData フォームデータ
- * @return フィールド(DOM要素)
- */
-- (NSArray*) collectInputFields:(NSData*)formData
-{
-	static NSString* EXPR = @"//div[@id=\"container\"]/div[@id=\"content\"]/form[@id=\"edit_post\"]//(input[starts-with(@name, \"post\")] | textarea[starts-with(@name, \"post\")] | input[@id=\"form_key\"])";
-
-	/* UTF-8 文字列にしないと後の [attribute stringValue] で日本語がコードポイント表記になってしまう */
-	NSString* html = [[[NSString alloc] initWithData:formData encoding:NSUTF8StringEncoding] autorelease];
-
-	/* DOMにする */
-	NSError* error = nil;
-	NSXMLDocument* document = [[NSXMLDocument alloc] initWithXMLString:html options:NSXMLDocumentTidyHTML error:&error];
-	if (document == nil) {
-		[NSException raise:EXCEPTION_NAME format:@"Couldn't make DOMDocument. error: %@", [error description]];
-	}
-
-	NSArray* inputs = [[document rootElement] nodesForXPath:EXPR error:&error];
-	if (inputs == nil) {
-		[NSException raise:EXCEPTION_NAME format:@"Failed nodesForXPath. error: %@", [error description]];
-	}
-
-	return inputs;
-}
-
-/**
- * input(NSXMLElement) array から post[type] の value を得る
- */
-- (NSString*) detectPostType:(NSArray*)inputs
-{
-	NSRange empty = NSMakeRange(NSNotFound, 0);
-
-	NSEnumerator* enumerator = [inputs objectEnumerator];
-	NSXMLElement* element;
-	while ((element = [enumerator nextObject]) != nil) {
-
-		NSString* name = [[element attributeForName:@"name"] stringValue];
-
-		if (!NSEqualRanges([name rangeOfString:@"post[type]"], empty)) {
-			return [[element attributeForName:@"value"] stringValue];
-		}
-	}
-	return nil;
-}
-
-/**
- * "Link" post type の時の input fields の抽出
- */
-- (NSMutableDictionary*) collectInputFieldsAsLink:(NSArray*)elements
-{
-	NSMutableDictionary* fields = [[NSMutableDictionary alloc] init];
-	[fields setValue:@"link" forKey:@"post[type]"];
-
-	NSEnumerator* enumerator = [elements objectEnumerator];
-	NSRange empty = NSMakeRange(NSNotFound, 0);
-	NSXMLElement* element;
-	while ((element = [enumerator nextObject]) != nil) {
-
-		NSString* name = [[element attributeForName:@"name"] stringValue];
-		NSXMLNode* attribute;
-		NSString* value;
-
-		if (!NSEqualRanges([name rangeOfString:@"post[one]"], empty)) {
-			attribute = [element attributeForName:@"value"];
-			value = [attribute stringValue];
-			[fields setValue:value forKey:@"post[one]"];
-		}
-		else if (!NSEqualRanges([name rangeOfString:@"post[two]"], empty)) {
-			[fields setValue:[[element attributeForName:@"value"] stringValue] forKey:@"post[two]"];
-		}
-		else if (!NSEqualRanges([name rangeOfString:@"post[three]"], empty)) {
-			[fields setValue:[element stringValue] forKey:@"post[three]"];
-		}
-		else {
-			[self addElementIfFormKey:element fields:fields];
-		}
-	}
-
-	return fields;
-}
-
-/**
- * "Photo" post type の時の input fields の抽出
- */
-- (NSMutableDictionary*) collectInputFieldsAsPhoto:(NSArray*)elements
-{
-	NSMutableDictionary* fields = [[NSMutableDictionary alloc] init];
-	[fields setValue:@"photo" forKey:@"post[type]"];
-
-	NSEnumerator* enumerator = [elements objectEnumerator];
-	NSRange empty = NSMakeRange(NSNotFound, 0);
-	NSXMLElement* element;
-	while ((element = [enumerator nextObject]) != nil) {
-
-		NSString* name = [[element attributeForName:@"name"] stringValue];
-		NSXMLNode* attribute;
-
-		if (!NSEqualRanges([name rangeOfString:@"post[one]"], empty)) {
-			/* one は出現しない？ */
-			D0(@"post[one] is not implemented in Reblog(Photo).");
-		}
-		else if (!NSEqualRanges([name rangeOfString:@"post[two]"], empty)) {
-			[fields setValue:[element stringValue] forKey:@"post[two]"];
-		}
-		else if (!NSEqualRanges([name rangeOfString:@"post[three]"], empty)) {
-			attribute = [element attributeForName:@"value"];
-			[fields setValue:[attribute stringValue] forKey:@"post[three]"];
-		}
-		else {
-			[self addElementIfFormKey:element fields:fields];
-		}
-	}
-
-	return fields;
-}
-
-/**
- * "Quote" post type の時の input fields の抽出
- */
-- (NSMutableDictionary*) collectInputFieldsAsQuote:(NSArray*)elements
-{
-	NSMutableDictionary* fields = [[NSMutableDictionary alloc] init];
-	[fields setValue:@"quote" forKey:@"post[type]"];
-
-	NSEnumerator* enumerator = [elements objectEnumerator];
-	NSRange empty = NSMakeRange(NSNotFound, 0);
-	NSXMLElement* element;
-	while ((element = [enumerator nextObject]) != nil) {
-
-		NSString* name = [[element attributeForName:@"name"] stringValue];
-
-		if (!NSEqualRanges([name rangeOfString:@"post[one]"], empty)) {
-			[fields setValue:[element stringValue] forKey:@"post[one]"];
-		}
-		else if (!NSEqualRanges([name rangeOfString:@"post[two]"], empty)) {
-			[fields setValue:[element stringValue] forKey:@"post[two]"];
-		}
-		else if (!NSEqualRanges([name rangeOfString:@"post[three]"], empty)) {
-			/* three は出現しない？ */
-			D0(@"post[three] is not implemented in Reblog(Quote).");
-		}
-		else {
-			[self addElementIfFormKey:element fields:fields];
-		}
-	}
-
-	return fields;
-}
-
-/**
- * "Regular" post type の時の input fields の抽出
- */
-- (NSMutableDictionary*) collectInputFieldsAsRegular:(NSArray*)elements
-{
-	NSMutableDictionary* fields = [[NSMutableDictionary alloc] init];
-	[fields setValue:@"regular" forKey:@"post[type]"];
-
-	NSEnumerator* enumerator = [elements objectEnumerator];
-	NSRange empty = NSMakeRange(NSNotFound, 0);
-	NSXMLElement* element;
-	while ((element = [enumerator nextObject]) != nil) {
-
-		NSString* name = [[element attributeForName:@"name"] stringValue];
-		NSXMLNode* attribute;
-
-		if (!NSEqualRanges([name rangeOfString:@"post[one]"], empty)) {
-			attribute = [element attributeForName:@"value"];
-			[fields setValue:[attribute stringValue] forKey:@"post[one]"];
-		}
-		else if (!NSEqualRanges([name rangeOfString:@"post[two]"], empty)) {
-			[fields setValue:[element stringValue] forKey:@"post[two]"];
-		}
-		else if (!NSEqualRanges([name rangeOfString:@"post[three]"], empty)) {
-			/* three は出現しない？ */
-			D0(@"post[three] is not implemented in Reblog(Quote).");
-		}
-		else {
-			[self addElementIfFormKey:element fields:fields];
-		}
-	}
-
-	return fields;
-}
-
-/**
- * "Conversation" post type の時の input fields の抽出
- */
-- (NSMutableDictionary*) collectInputFieldsAsChat:(NSArray*)elements
-{
-	NSMutableDictionary* fields = [[NSMutableDictionary alloc] init];
-	[fields setValue:@"conversation" forKey:@"post[type]"];
-
-	NSEnumerator* enumerator = [elements objectEnumerator];
-	NSRange empty = NSMakeRange(NSNotFound, 0);
-	NSXMLElement* element;
-	while ((element = [enumerator nextObject]) != nil) {
-
-		NSString* name = [[element attributeForName:@"name"] stringValue];
-
-		if (!NSEqualRanges([name rangeOfString:@"post[one]"], empty)) {
-			NSXMLNode* attribute = [element attributeForName:@"value"];
-			[fields setValue:[attribute stringValue] forKey:@"post[one]"];
-		}
-		else if (!NSEqualRanges([name rangeOfString:@"post[two]"], empty)) {
-			[fields setValue:[element stringValue] forKey:@"post[two]"];
-		}
-		else if (!NSEqualRanges([name rangeOfString:@"post[three]"], empty)) {
-			/* three は出現しない？ */
-			D0(@"post[three] is not implemented in Reblog(Conversation).");
-		}
-		else {
-			[self addElementIfFormKey:element fields:fields];
-		}
-	}
-
-	return fields;
-}
-
-/**
- * "Video" post type の時の input fields の抽出
- */
-- (NSMutableDictionary*) collectInputFieldsAsVideo:(NSArray*)elements
-{
-	NSMutableDictionary* fields = [[NSMutableDictionary alloc] init];
-	[fields setValue:@"video" forKey:@"post[type]"];
-
-	NSEnumerator* enumerator = [elements objectEnumerator];
-	NSRange empty = NSMakeRange(NSNotFound, 0);
-	NSXMLElement* element;
-	while ((element = [enumerator nextObject]) != nil) {
-
-		NSString* name = [[element attributeForName:@"name"] stringValue];
-
-		if (!NSEqualRanges([name rangeOfString:@"post[one]"], empty)) {
-			[fields setValue:[element stringValue] forKey:@"post[one]"];
-		}
-		else if (!NSEqualRanges([name rangeOfString:@"post[two]"], empty)) {
-			[fields setValue:[element stringValue] forKey:@"post[two]"];
-		}
-		else if (!NSEqualRanges([name rangeOfString:@"post[three]"], empty)) {
-			/* three は出現しない？ */
-			D0(@"post[three] is not implemented in Reblog(Video).");
-		}
-		else {
-			[self addElementIfFormKey:element fields:fields];
-		}
-	}
-
-	return fields;
-}
-
-/**
- * elementの要素名がformKeyであれば fields に追加する.
- */
-- (void) addElementIfFormKey:(NSXMLElement*)element fields:(NSMutableDictionary*)fields
-{
-	NSRange empty = NSMakeRange(NSNotFound, 0);
-	NSString* name = [[element attributeForName:@"name"] stringValue];
-
-	if (!NSEqualRanges([name rangeOfString:@"form_key"], empty)) {
-		NSXMLNode* attribute = [element attributeForName:@"value"];
-		[fields setValue:[attribute stringValue] forKey:@"form_key"];
-	}
-}
-
-/**
- * reblogPost.
- * @param endpoint ポスト先のURI
- * @param formData form データ
- */
-- (void) reblogPost:(NSString*)endpoint form:(NSData*)formData
-{
-	NSArray* inputs = [self collectInputFields:formData];
-	NSString* type = [self detectPostType:inputs];
-
-	if (type != nil) {
-		NSMutableDictionary* fields = nil;
-
-		if ([type isEqualToString:@"link"]) {
-			fields = [self collectInputFieldsAsLink:inputs];
-		}
-		else if ([type isEqualToString:@"photo"]) {
-			fields = [self collectInputFieldsAsPhoto:inputs];
-		}
-		else if ([type isEqualToString:@"quote"]) {
-			fields = [self collectInputFieldsAsQuote:inputs];
-		}
-		else if ([type isEqualToString:@"regular"]) {
-			fields = [self collectInputFieldsAsRegular:inputs];
-		}
-		else if ([type isEqualToString:@"conversation"]) {
-			fields = [self collectInputFieldsAsChat:inputs];
-		}
-		else if ([type isEqualToString:@"video"]) {
-			fields = [self collectInputFieldsAsVideo:inputs];
-		}
-		else {
-			[NSException raise:EXCEPTION_NAME format:@"Unknwon Reblog form. post type was invalid. type: %@", SafetyDescription(type)];
-			return;
-		}
-		if (fields == nil) {
-			[NSException raise:EXCEPTION_NAME format:@"Unknwon Reblog form. not found post[one|two|three] fields. type: %@", SafetyDescription(type)];
-			return;
-		}
-		else if ([fields count] < 2) { /* type[post] + 1このフィールドは絶対あるはず */
-			[NSException raise:EXCEPTION_NAME format:@"Unknwon Reblog form. too few fields. type: %@", SafetyDescription(type)];
-			return;
-		}
-
-		NSMutableDictionary* params = [[[NSMutableDictionary alloc] init] autorelease];
-		[params setValue:type forKey:@"type"];
-		if (queuing_)
-			[params setValue:@"2" forKey:@"post[state]"];	// queuing post
-		[params addEntriesFromDictionary:fields];
-
-		/* Tumblrへポストする */
-		[self postTo:endpoint params:params];
-	}
-}
-@end
-
-#pragma mark -
-@implementation TumblrReblogDelegate
-
-- (id)initWithEndpoint:(NSString *)endpoint continuation:(TumblrPost *)continuation
-{
-	if ((self = [super init]) != nil) {
-		endpoint_ = [endpoint retain];
-		continuation_ = [continuation retain];
-		responseData_ = nil;
-	}
-	return self;
-}
-
-- (void) dealloc
-{
-	[endpoint_ release];
-	[continuation_ release];
-	[responseData_ release];
-
-	[super dealloc];
-}
-
-/**
- * didReceiveResponse デリゲートメソッド.
- *	@param connection NSURLConnection オブジェクト
- *	@param response NSURLResponse オブジェクト
- */
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
-{
-#pragma unused (connection)
-	/* この cast は正しい */
-	NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse *)response;
-
-	if ([httpResponse statusCode] == 200) {
-		responseData_ = [[NSMutableData data] retain];
-	}
-}
-
-/**
- * didReceiveData デリゲートメソッド.
- *	@param connection NSURLConnection オブジェクト
- *	@param response data NSData オブジェクト
- */
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
-{
-#pragma unused (connection)
-	if (responseData_ != nil) {
-		[responseData_ appendData:data];
-	}
-}
-
-/**
- * connectionDidFinishLoading.
- * @param connection コネクション
- */
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection
-{
-#pragma unused (connection)
-	if (continuation_ != nil) {
-		[continuation_ reblogPost:endpoint_ form:responseData_];
-	}
-	else {
-		NSError * error = [NSError errorWithDomain:@"TumblrfulErrorDomain" code:-1 userInfo:nil];
-		[continuation_ invokeCallback:@selector(failed:) withObject:error]; /* 失敗時の処理 */
-	}
-
-	[responseData_ release];
-	responseData_ = nil;
-
-	[self release];
-}
-
-/**
- * エラーが発生した場合.
- * @param connection コネクション
- */
-- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
-{
-#pragma unused (connection, error)
-	D0([error description]);
-	[self release];
-}
-@end // TumblrReblogDelegate
-
-#pragma mark -
 @implementation TumblrPost
 
 @synthesize privated = private_;
@@ -517,20 +58,20 @@ static float TIMEOUT = 60.0f;
 - (id)initWithCallback:(NSObject<PostCallback> *)callback
 {
 	if ((self = [super init]) != nil) {
-		callback_ = [callback retain];
-
 		UserSettings * defaults = [UserSettings sharedInstance];
 		private_ = [defaults boolForKey:@"tumblrPrivateEnabled"];
 		queuing_ = [defaults boolForKey:@"tumblrQueuingEnabled"];
+
+		callback_ = [callback retain];
 		responseData_ = nil;
 	}
 	return self;
 }
 
-- (void) dealloc
+- (void)dealloc
 {
-	[callback_ release];
-	[responseData_ release];
+	[callback_ release], callback_ = nil;
+	[responseData_ release], responseData_ = nil;
 
 	[super dealloc];
 }
@@ -585,6 +126,94 @@ static float TIMEOUT = 60.0f;
 	return request;
 }
 
+- (void)postWith:(NSDictionary *)params
+{
+	D(@"type=%@", [params objectForKey:@"type"]);
+
+	if ([[params objectForKey:@"type"] isEqualToString:@"reblog"]) {
+		[self reblogPostWithPostID:[params objectForKey:@"pid"] reblogKey:[params objectForKey:@"rk"]];
+	}
+	else {
+		[self postWithEndpoint:TUMBLRFUL_TUMBLR_WRITE_URL withParams:params];
+	}
+}
+
+- (void)postWithEndpoint:(NSString *)url withParams:(NSDictionary *)params
+{
+	D_METHOD;
+
+	NSURLRequest * request = [self createRequest:url params:params];	// request は connection に指定した時点で reatin upする
+	NSURLConnection * connection = [NSURLConnection connectionWithRequest:request delegate:self];	// autoreleased
+
+	if (connection == nil) {
+		[self callbackOnMainThread:@selector(failed:) withObject:nil];
+	}
+}
+
+- (void)reblogPostWithPostID:(NSString *)postID reblogKey:(NSString *)reblogKey
+{
+	D(@"postid=%@ reblogkey=%@", postID, reblogKey);
+
+	if (postID == nil || reblogKey == nil) {
+		[NSException raise:TUMBLRFUL_EXCEPTION_NAME format:@"invalid PostID:%@ or ReblogKey:%@", postID, reblogKey];
+	}
+
+	NSString * endpoint = [NSString stringWithFormat:@"%@/reblog/%@/%@", TUMBLRFUL_TUMBLR_URL, postID, reblogKey];
+	NSURLRequest * request = [NSURLRequest requestWithURL:[NSURL URLWithString:endpoint]];
+	ReblogDelegate * delegate = [[[ReblogDelegate alloc] initWithEndpoint:endpoint withPostman:self] retain];
+	NSURLConnection * connection = [NSURLConnection connectionWithRequest:request delegate:delegate];
+
+	if (connection == nil) {
+		[NSException raise:TUMBLRFUL_EXCEPTION_NAME format:@"Couldn't get Reblog form. endpoint: %@", endpoint];
+	}
+}
+
+- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
+{
+#pragma unused (connection)
+	NSHTTPURLResponse * httpResponse = (NSHTTPURLResponse *)response; /* この cast は正しい */
+
+	NSInteger const httpStatus = [httpResponse statusCode];
+	if (httpStatus != 201 && httpStatus != 200) {
+		D(@"statusCode:%d", httpStatus);
+		D(@"ResponseHeader:%@", [[httpResponse allHeaderFields] description]);
+	}
+
+	responseData_ = [[NSMutableData data] retain];
+}
+
+- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
+{
+#pragma unused (connection)
+	[responseData_ appendData:data]; // append data to receive buffer
+}
+
+- (void)connectionDidFinishLoading:(NSURLConnection *)connection
+{
+#pragma unused (connection)
+	if (callback_ != nil) {
+		[self callbackOnMainThread:@selector(posted:) withObject:responseData_];
+	}
+	else {
+		NSError * error = [NSError errorWithDomain:TUMBLRFUL_ERROR_DOMAIN code:-1 userInfo:nil];
+		[self callbackOnMainThread:@selector(failed:) withObject:error];
+	}
+
+	[responseData_ release]; /* release receive buffer */
+	[self release];
+}
+
+- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
+{
+#pragma unused (connection)
+	D0([error description]);
+
+	[responseData_ release], responseData_ = nil;
+
+	[self callbackOnMainThread:@selector(failed:) withObject:error];
+	[self release];
+}
+
 #ifdef SUPPORT_MULTIPART_PORT
 /**
  * create multipart POST request
@@ -594,7 +223,7 @@ static float TIMEOUT = 60.0f;
 	static NSString* HEADER_BOUNDARY = @"0xKhTmLbOuNdArY";
 
 	// create the URL POST Request to tumblr
-	NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:WRITE_URL]];
+	NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:TUMBLRFUL_TUMBLR_WRITE_URL]];
 
 	[request setHTTPMethod:@"POST"];
 
@@ -627,106 +256,405 @@ static float TIMEOUT = 60.0f;
 }
 #endif /* SUPPORT_MULTIPART_PORT */
 
-/**
- * post to Tumblr.
- *	@param params - request parameteres
- */
-- (void)postWith:(NSDictionary *)params
+#pragma mark -
+#pragma mark Private Methods
+
+- (void)callbackOnMainThread:(SEL)selector withObject:(NSObject *)object
 {
-	[self postTo:WRITE_URL params:params];
+	if (callback_ != nil && [callback_ respondsToSelector:selector]) {
+		[callback_ performSelectorOnMainThread:selector withObject:object waitUntilDone:NO];
+	}
 }
 
-- (void)postTo:(NSString *)url params:(NSDictionary *)params
+/**
+ * form HTMLからfieldを得る.
+ *	@param[in] reblogForm フォームデータ
+ *	@return フィールド(DOM要素) autoreleased
+ */
+- (NSArray *)inputElementsWithReblogFrom:(NSData *)reblogForm
+{
+	static NSString * XPath = @"//div[@id=\"container\"]/div[@id=\"content\"]/form[@id=\"edit_post\"]//(input[starts-with(@name, \"post\")] | textarea[starts-with(@name, \"post\")] | input[@id=\"form_key\"])";
+
+	// UTF-8 文字列にしないと後の [attribute stringValue] で日本語がコードポイント表記になってしまう
+	NSString * formString = [[[NSString alloc] initWithData:reblogForm encoding:NSUTF8StringEncoding] autorelease];
+
+	// DOMにする
+	NSError * error = nil;
+	NSXMLDocument * document = [[[NSXMLDocument alloc] initWithXMLString:formString options:NSXMLDocumentTidyHTML error:&error] autorelease];
+	if (document == nil) {
+		NSString * message = [NSString stringWithFormat:@"Couldn't make DOMDocument. %@", [error description]];
+		D0(message);
+		[NSException raise:TUMBLRFUL_EXCEPTION_NAME format:@"%@", message];
+	}
+
+	error = nil;
+	NSArray * elements = [[document rootElement] nodesForXPath:XPath error:&error];
+	if (elements == nil) {
+		NSString * message = [NSString stringWithFormat:@"Failed nodesForXPath. %@", [error description]];
+		D0(message);
+		[NSException raise:TUMBLRFUL_EXCEPTION_NAME format:@"%@", message];
+	}
+
+	D(@"elements retainCount=%d", [elements retainCount]);
+	return elements;
+}
+
+/**
+ * NSXMLElementの配列から post[type] の value を得る
+ */
+- (NSString *)postTypeWithElements:(NSArray *)elements
+{
+	NSEnumerator * enumerator = [elements objectEnumerator];
+	NSXMLElement * element;
+	while ((element = [enumerator nextObject]) != nil) {
+		NSString * name = [[element attributeForName:@"name"] stringValue];
+		if (!NSEqualRanges([name rangeOfString:@"post[type]"], EmptyRange)) {
+			return [[element attributeForName:@"value"] stringValue];
+		}
+	}
+	return @"not-found";
+}
+
+/**
+ * "Link" post type の時の input fields の抽出
+ */
+- (NSMutableDictionary*) collectInputFieldsAsLink:(NSArray*)elements
+{
+	NSMutableDictionary * fields = [NSMutableDictionary dictionaryWithObjectsAndKeys:@"link", @"post[type]", nil];
+
+	NSEnumerator * enumerator = [elements objectEnumerator];
+	NSXMLElement * element;
+	while ((element = [enumerator nextObject]) != nil) {
+
+		NSString * name = [[element attributeForName:@"name"] stringValue];
+
+		if (!NSEqualRanges([name rangeOfString:@"post[one]"], EmptyRange)) {
+			NSXMLNode * attribute = [element attributeForName:@"value"];
+			NSString * value = [attribute stringValue];
+			[fields setObject:value forKey:@"post[one]"];
+		}
+		else if (!NSEqualRanges([name rangeOfString:@"post[two]"], EmptyRange)) {
+			[fields setObject:[[element attributeForName:@"value"] stringValue] forKey:@"post[two]"];
+		}
+		else if (!NSEqualRanges([name rangeOfString:@"post[three]"], EmptyRange)) {
+			[fields setObject:[element stringValue] forKey:@"post[three]"];
+		}
+		else {
+			[self setFormKeyFieldIfExist:element fields:fields];
+		}
+	}
+
+	return fields;
+}
+
+/**
+ * "Photo" post type の時の input fields の抽出
+ */
+- (NSMutableDictionary*) collectInputFieldsAsPhoto:(NSArray*)elements
+{
+	NSMutableDictionary * fields = [NSMutableDictionary dictionaryWithObjectsAndKeys:@"photo", @"post[type]", nil];
+
+	NSEnumerator* enumerator = [elements objectEnumerator];
+	NSXMLElement* element;
+	while ((element = [enumerator nextObject]) != nil) {
+
+		NSString* name = [[element attributeForName:@"name"] stringValue];
+		NSXMLNode* attribute;
+
+		if (!NSEqualRanges([name rangeOfString:@"post[one]"], EmptyRange)) {
+			/* one は出現しない？ */
+			D0(@"post[one] is not implemented in Reblog(Photo).");
+		}
+		else if (!NSEqualRanges([name rangeOfString:@"post[two]"], EmptyRange)) {
+			[fields setObject:[element stringValue] forKey:@"post[two]"];
+		}
+		else if (!NSEqualRanges([name rangeOfString:@"post[three]"], EmptyRange)) {
+			attribute = [element attributeForName:@"value"];
+			[fields setObject:[attribute stringValue] forKey:@"post[three]"];
+		}
+		else {
+			[self setFormKeyFieldIfExist:element fields:fields];
+		}
+	}
+
+	return fields;
+}
+
+/**
+ * "Quote" post type の時の input fields の抽出
+ */
+- (NSMutableDictionary*) collectInputFieldsAsQuote:(NSArray*)elements
+{
+	NSMutableDictionary * fields = [NSMutableDictionary dictionaryWithObjectsAndKeys:@"quote", @"post[type]", nil];
+
+	NSEnumerator* enumerator = [elements objectEnumerator];
+	NSXMLElement* element;
+	while ((element = [enumerator nextObject]) != nil) {
+
+		NSString* name = [[element attributeForName:@"name"] stringValue];
+
+		if (!NSEqualRanges([name rangeOfString:@"post[one]"], EmptyRange)) {
+			[fields setObject:[element stringValue] forKey:@"post[one]"];
+		}
+		else if (!NSEqualRanges([name rangeOfString:@"post[two]"], EmptyRange)) {
+			[fields setObject:[element stringValue] forKey:@"post[two]"];
+		}
+		else if (!NSEqualRanges([name rangeOfString:@"post[three]"], EmptyRange)) {
+			/* three は出現しない？ */
+			D0(@"post[three] is not implemented in Reblog(Quote).");
+		}
+		else {
+			[self setFormKeyFieldIfExist:element fields:fields];
+		}
+	}
+
+	return fields;
+}
+
+/**
+ * "Regular" post type の時の input fields の抽出
+ */
+- (NSMutableDictionary*) collectInputFieldsAsRegular:(NSArray*)elements
+{
+	NSMutableDictionary * fields = [NSMutableDictionary dictionaryWithObjectsAndKeys:@"regular", @"post[type]", nil];
+
+	NSEnumerator* enumerator = [elements objectEnumerator];
+	NSXMLElement* element;
+	while ((element = [enumerator nextObject]) != nil) {
+
+		NSString* name = [[element attributeForName:@"name"] stringValue];
+		NSXMLNode* attribute;
+
+		if (!NSEqualRanges([name rangeOfString:@"post[one]"], EmptyRange)) {
+			attribute = [element attributeForName:@"value"];
+			[fields setObject:[attribute stringValue] forKey:@"post[one]"];
+		}
+		else if (!NSEqualRanges([name rangeOfString:@"post[two]"], EmptyRange)) {
+			[fields setObject:[element stringValue] forKey:@"post[two]"];
+		}
+		else if (!NSEqualRanges([name rangeOfString:@"post[three]"], EmptyRange)) {
+			/* three は出現しない？ */
+			D0(@"post[three] is not implemented in Reblog(Quote).");
+		}
+		else {
+			[self setFormKeyFieldIfExist:element fields:fields];
+		}
+	}
+
+	return fields;
+}
+
+/**
+ * "Conversation" post type の時の input fields の抽出
+ */
+- (NSMutableDictionary*) collectInputFieldsAsChat:(NSArray*)elements
+{
+	NSMutableDictionary * fields = [NSMutableDictionary dictionaryWithObjectsAndKeys:@"conversation", @"post[type]", nil];
+
+	NSEnumerator* enumerator = [elements objectEnumerator];
+	NSXMLElement* element;
+	while ((element = [enumerator nextObject]) != nil) {
+
+		NSString* name = [[element attributeForName:@"name"] stringValue];
+
+		if (!NSEqualRanges([name rangeOfString:@"post[one]"], EmptyRange)) {
+			NSXMLNode* attribute = [element attributeForName:@"value"];
+			[fields setObject:[attribute stringValue] forKey:@"post[one]"];
+		}
+		else if (!NSEqualRanges([name rangeOfString:@"post[two]"], EmptyRange)) {
+			[fields setObject:[element stringValue] forKey:@"post[two]"];
+		}
+		else if (!NSEqualRanges([name rangeOfString:@"post[three]"], EmptyRange)) {
+			/* three は出現しない？ */
+			D0(@"post[three] is not implemented in Reblog(Conversation).");
+		}
+		else {
+			[self setFormKeyFieldIfExist:element fields:fields];
+		}
+	}
+
+	return fields;
+}
+
+/**
+ * "Video" post type の時の input fields の抽出
+ */
+- (NSMutableDictionary *)collectInputFieldsAsVideo:(NSArray *)elements
+{
+	NSMutableDictionary * fields = [NSMutableDictionary dictionaryWithObjectsAndKeys:@"video", @"post[type]", nil];
+
+	NSEnumerator* enumerator = [elements objectEnumerator];
+	NSXMLElement* element;
+	while ((element = [enumerator nextObject]) != nil) {
+
+		NSString* name = [[element attributeForName:@"name"] stringValue];
+
+		if (!NSEqualRanges([name rangeOfString:@"post[one]"], EmptyRange)) {
+			[fields setObject:[element stringValue] forKey:@"post[one]"];
+		}
+		else if (!NSEqualRanges([name rangeOfString:@"post[two]"], EmptyRange)) {
+			[fields setObject:[element stringValue] forKey:@"post[two]"];
+		}
+		else if (!NSEqualRanges([name rangeOfString:@"post[three]"], EmptyRange)) {
+			/* three は出現しない？ */
+			D0(@"post[three] is not implemented in Reblog(Video).");
+		}
+		else {
+			[self setFormKeyFieldIfExist:element fields:fields];
+		}
+	}
+
+	return fields;
+}
+
+/**
+ * "Audio" post type の時の input fields の抽出
+ */
+- (NSMutableDictionary *)collectInputFieldsAsAudio:(NSArray*)elements
+{
+	NSMutableDictionary * fields = [NSMutableDictionary dictionaryWithObjectsAndKeys:@"audio", @"post[type]", nil];
+
+	NSEnumerator * enumerator = [elements objectEnumerator];
+	NSXMLElement * element;
+	while ((element = [enumerator nextObject]) != nil) {
+
+		NSString * name = [[element attributeForName:@"name"] stringValue];
+
+		if (!NSEqualRanges([name rangeOfString:@"post[one]"], EmptyRange)) {
+			[fields setObject:[element stringValue] forKey:@"post[one]"];
+		}
+		else if (!NSEqualRanges([name rangeOfString:@"post[two]"], EmptyRange)) {
+			[fields setObject:[element stringValue] forKey:@"post[two]"];
+		}
+		else {
+			[self setFormKeyFieldIfExist:element fields:fields];
+		}
+	}
+
+	return fields;
+}
+
+/**
+ * elementの要素名がformKeyであれば fields に追加する.
+ */
+- (void)setFormKeyFieldIfExist:(NSXMLElement *)element fields:(NSMutableDictionary *)fields
+{
+	NSString * name = [[element attributeForName:@"name"] stringValue];
+
+	if (!NSEqualRanges([name rangeOfString:@"form_key"], EmptyRange)) {
+		NSXMLNode * attribute = [element attributeForName:@"value"];
+		[fields setObject:[attribute stringValue] forKey:@"form_key"];
+	}
+}
+
+/**
+ * reblogPost.
+ *	@param[in] endpoint ポスト先のURI
+ *	@param[in] formData Reblog画面のHTML
+ */
+- (void)reblogPost:(NSString *)endpoint form:(NSData *)formData
 {
 	D_METHOD;
 
-	responseData_ = [[NSMutableData data] retain];
+	NSArray * elements = [self inputElementsWithReblogFrom:formData];
+	NSString * type = [self postTypeWithElements:elements];
 
-	NSURLRequest * request = [self createRequest:url params:params];	// request は connection に指定した時点で reatin upする
-	NSURLConnection * connection = [NSURLConnection connectionWithRequest:request delegate:self];
+	NSMutableDictionary * fields = nil;
+	if ([type isEqualToString:@"link"])					fields = [self collectInputFieldsAsLink:elements];
+	else if ([type isEqualToString:@"photo"])			fields = [self collectInputFieldsAsPhoto:elements];
+	else if ([type isEqualToString:@"quote"])			fields = [self collectInputFieldsAsQuote:elements];
+	else if ([type isEqualToString:@"regular"])			fields = [self collectInputFieldsAsRegular:elements];
+	else if ([type isEqualToString:@"conversation"])	fields = [self collectInputFieldsAsChat:elements];
+	else if ([type isEqualToString:@"video"])			fields = [self collectInputFieldsAsVideo:elements];
+	else if ([type isEqualToString:@"audio"])			fields = [self collectInputFieldsAsAudio:elements];
 
-	if (connection == nil) {
-		[self invokeCallback:@selector(failed:) withObject:nil];
-		[responseData_ release];
-		responseData_ = nil;
+	if (fields == nil) {
+		NSString * message = [NSString stringWithFormat:@"Unrecognized Reblog form. type:%@", SafetyDescription(type)];
+		D0(message);
+		[NSException raise:TUMBLRFUL_EXCEPTION_NAME format:@"%@", message];
+	}
+	else if ([fields count] < 2) { // type[post] + 1このフィールドは絶対あるはず
+		NSString * message = [NSString stringWithFormat:@"Unrecognized Reblog form. too few fields. type:%@", SafetyDescription(type)];
+		[NSException raise:TUMBLRFUL_EXCEPTION_NAME format:@"%@", message];
 		return;
 	}
 
-	[connection retain];
-}
+	NSMutableDictionary * params = [NSMutableDictionary dictionaryWithObjectsAndKeys:type, @"type", nil];
+	if (queuing_) [params setObject:@"2" forKey:@"post[state]"];	// queuing post
+	[params addEntriesFromDictionary:fields];
 
-- (NSObject *)reblog:(NSString *)postID key:(NSString *)reblogKey
+	// Tumblrへポストする
+	[self postWithEndpoint:endpoint withParams:params];
+}
+@end // TumblrPost
+
+#pragma mark -
+#pragma mark Delegate class implementation
+
+@implementation ReblogDelegate
+
+- (id)initWithEndpoint:(NSString *)endpoint withPostman:(TumblrPost *)postman
 {
-	D_METHOD;
-
-	NSString * endpoint = [NSString stringWithFormat:@"%@/reblog/%@/%@", TUMBLR_URL, postID, reblogKey];
-	NSURLRequest * request = [NSURLRequest requestWithURL:[NSURL URLWithString:endpoint]];
-
-	TumblrReblogDelegate * delegate = [[TumblrReblogDelegate alloc] initWithEndpoint:endpoint continuation:self];
-	[delegate retain];
-
-	NSURLConnection* connection = [NSURLConnection connectionWithRequest:request delegate:delegate];
-
-	if (connection == nil) {
-		[NSException raise:EXCEPTION_NAME format:@"Couldn't get Reblog form. endpoint: %@", endpoint];
+	if ((self = [super init]) != nil) {
+		endpoint_ = [endpoint retain];
+		postman_ = [postman retain];
+		data_ = nil;
 	}
-
-	return @""; /* なんとかならんかなぁ */
+	return self;
 }
 
-/**
- * didReceiveResponse デリゲートメソッド
- *	@param connection NSURLConnection オブジェクト
- *	@param response NSURLResponse オブジェクト
- *
- *	正常なら statusCode は 201
- *	Account 不正なら 403
- */
+- (void)dealloc
+{
+	[endpoint_ release], endpoint_ = nil;
+	[postman_ release], postman_ = nil;
+	[data_ release], data_ = nil;
+
+	[super dealloc];
+}
+
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
 #pragma unused (connection)
-	NSHTTPURLResponse * httpResponse = (NSHTTPURLResponse *)response; /* この cast は正しい */
+	NSHTTPURLResponse * httpResponse = (NSHTTPURLResponse *)response;
 
-	NSInteger const httpStatus = [httpResponse statusCode];
-	if (httpStatus != 201 && httpStatus != 200) {
-		D(@"statusCode:%d", httpStatus);
-		D(@"ResponseHeader:%@", [[httpResponse allHeaderFields] description]);
+	D(@"HTTP status=%d", [httpResponse statusCode]);;
+
+	if ([httpResponse statusCode] == 200) {
+		data_ = [[NSMutableData data] retain];
 	}
-
-	[responseData_ setLength:0]; // initialize receive buffer
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
 {
 #pragma unused (connection)
-	[responseData_ appendData:data]; // append data to receive buffer
+	D_METHOD;
+
+	if (data_ != nil) {
+		[data_ appendData:data];
+	}
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
-	[connection release];
+#pragma unused (connection)
+	D_METHOD;
 
-	if (callback_ != nil) {
-		[self invokeCallback:@selector(posted:) withObject:responseData_];
+	if (postman_ != nil) {
+		[postman_ reblogPost:endpoint_ form:data_];
 	}
 	else {
-		NSError * error = [NSError errorWithDomain:@"TumblrfulErrorDomain" code:-1 userInfo:nil];
-		[self invokeCallback:@selector(failed:) withObject:error];
+		NSError * error = [NSError errorWithDomain:TUMBLRFUL_ERROR_DOMAIN code:-1 userInfo:nil];
+		[postman_ callbackOnMainThread:@selector(failed:) withObject:error];
 	}
 
-	[responseData_ release]; /* release receive buffer */
 	[self release];
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
+#pragma unused (connection, error)
 	D0([error description]);
 
-	[connection release];
-
-	[responseData_ release];	/* release receive buffer */
-
-	[self invokeCallback:@selector(failed:) withObject:error];
 	[self release];
 }
-@end
+@end // ReblogDelegate

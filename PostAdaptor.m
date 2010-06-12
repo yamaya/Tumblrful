@@ -142,10 +142,9 @@
 	[self doesNotRecognizeSelector:_cmd];
 }
 
-- (NSObject *)postEntry:(NSDictionary *)params
+- (void)postEntry:(NSDictionary *)params
 {
 #pragma unused (params)
 	[self doesNotRecognizeSelector:_cmd];
-	return nil;
 }
 @end

@@ -15,14 +15,10 @@
 
 #pragma mark -
 @implementation TumblrPostAdaptor
+
 - (void)postLink:(Anchor *)anchor description:(NSString *)description
 {
-	NSMutableDictionary* params = [[[NSMutableDictionary alloc] init] autorelease];
-	[params setValue:[anchor URL] forKey:@"url"];
-	[params setValue:[anchor title] forKey:@"name"];
-	[params setValue:description forKey:@"description"];
-
-	[self postWithType:@"link" withParams:params];
+	[self postWithType:@"link" withParams:[NSDictionary dictionaryWithObjectsAndKeys:anchor.URL, @"url", anchor.title, @"name", description, @"description", nil]];
 }
 
 - (void)postQuote:(NSString *)quote source:(NSString *)source;
@@ -40,20 +36,9 @@
 	[self postWithType:@"video" withParams:[NSMutableDictionary dictionaryWithObjectsAndKeys:embed, @"embed", caption, @"caption", nil]];
 }
 
-- (NSObject *)postEntry:(NSDictionary *)params
+- (void)postEntry:(NSDictionary *)params
 {
-	@try {
-		// Tumblrへポストするオブジェクトを生成する
-		TumblrPost * tumblr = [[TumblrPost alloc] initWithCallback:callback_];
-
-		// Reblog する
-		return [tumblr reblog:[params objectForKey:@"pid"] key:[params objectForKey:@"rk"]];
-	}
-	@catch (NSException * e) {
-		D0([e description]);
-		[self callbackWithException:e];
-	}
-	return nil;
+	[self postWithType:@"reblog" withParams:[NSMutableDictionary dictionaryWithObjectsAndKeys:[params objectForKey:@"pid"], @"pid", [params objectForKey:@"rk"], @"rk", nil]];
 }
 
 - (void)postWithType:(NSString *)type withParams:(NSDictionary *)params
@@ -69,7 +54,7 @@
 
 		// リクエストパラメータを構築する
 		NSMutableDictionary * requestParams = [tumblr createMinimumRequestParams];
-		[requestParams setValue:type forKey:@"type"];
+		[requestParams setObject:type forKey:@"type"];
 		[requestParams addEntriesFromDictionary:params];
 
 		// Tumblrへポストする

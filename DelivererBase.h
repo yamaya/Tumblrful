@@ -79,10 +79,8 @@
 /**
  * "Reblog" post.
  *	@param[in] params	contents of Reblog. Determined by the target service.
- *	@return Reblog such a string indicating the type of post. Returns or
- *	derived class depends on what PostAdaptor.
  */
-- (NSObject *)postEntry:(NSDictionary *)params;
+- (void)postEntry:(NSDictionary *)params;
 
 /* PostCallback overrides */
 - (void) successed:(NSString*)response;

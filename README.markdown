@@ -3,6 +3,7 @@
 Tumblrful is Safari [SIMBL](http://www.culater.net/software/SIMBL/SIMBL.php) Plugin for [Tumblr](www.tumblr.com).
 
 - Do *not* support Dashbord reblogging and liking.
+- Do *not* support "Regular", "Conversation", "Audo" post.
 - Post Editting sheet work in progress.
 
 # Requirement

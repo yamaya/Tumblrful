@@ -51,7 +51,7 @@ static NSString * TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 	LDRDelivererContext * context = [[[LDRDelivererContext alloc] initWithDocument:document target:clickedElement] autorelease];
 	if (context == nil) return nil;
 
-	NSURL* url = [NSURL URLWithString:[context documentURL]];
+	NSURL * url = [NSURL URLWithString:[context documentURL]];
 	if (url == nil) 
 		return nil;
 

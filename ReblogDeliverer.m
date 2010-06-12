@@ -35,7 +35,6 @@ static NSString * TYPE = @"Reblog";
 - (id)initWithDocument:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement postID:(NSString *)postID reblogKey:(NSString *)reblogKey
 {
 	if ((self = [super initWithDocument:document target:targetElement]) != nil) {
-		type_ = nil;
 		if (postID != nil) postID_ = [postID retain];
 		if (reblogKey != nil) reblogKey_ = [reblogKey retain];
 		D(@"postID:%@", postID_);
@@ -51,7 +50,6 @@ static NSString * TYPE = @"Reblog";
 - (id)initWithContext:(DelivererContext *)context postID:(NSString *)postID reblogKey:(NSString *)reblogKey
 {
 	if ((self = [super initWithContext:context]) != nil) {
-		type_ = nil;
 		if (postID != nil) postID_ = [postID retain];
 		if (reblogKey != nil) reblogKey_ = [reblogKey retain];
 		D(@"postID:%@", postID_);
@@ -68,19 +66,18 @@ static NSString * TYPE = @"Reblog";
 {
 	[postID_ release], postID_ = nil;
 	[reblogKey_ release], reblogKey_ = nil;
-	[type_ release], type_ = nil;
 
 	[super dealloc];
 }
 
 - (NSString *)postType
 {
-	return type_;
+	return [TYPE lowercaseString];
 }
 
 - (NSString *)titleForMenuItem
 {
-	return TYPE; // この時点では type_ は nil なので使えないん
+	return TYPE;
 }
 
 - (void)action:(id)sender
@@ -89,7 +86,7 @@ static NSString * TYPE = @"Reblog";
 	@try {
 		NSDictionary * params = [NSDictionary dictionaryWithObjectsAndKeys:postID_, @"pid", reblogKey_, @"rk", nil];
 		D(@"params=%@", [params description]);
-		type_ = (NSString*)[self postEntry:params];
+		[self postEntry:params];
 	}
 	@catch (NSException * e) {
 		D0([e description]);
@@ -160,7 +157,7 @@ static NSString * TYPE = @"Reblog";
 - (void)posted:(NSData *)response
 {
 #pragma unused (response)
-	D(@"posted) retain=%x", [self retainCount]);
+	D(@"self.retainCount=%x", [self retainCount]);
 
 	@try {
 		NSString * message = [NSString stringWithFormat:@"%@\nPost ID: %@", [context_ documentTitle], postID_];
@@ -173,7 +170,7 @@ static NSString * TYPE = @"Reblog";
 
 - (void)notify:(NSString *)message
 {
-	NSString* typeDescription = [NSString stringWithFormat:@"%@ %@", TYPE, [[self postType] capitalizedString]];
+	NSString * typeDescription = [NSString stringWithFormat:@"%@ %@", TYPE, [[self postType] capitalizedString]];
 	[GrowlSupport notify:typeDescription description:message];
 }
 @end

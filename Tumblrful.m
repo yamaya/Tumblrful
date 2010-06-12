@@ -19,49 +19,46 @@
 #define DEBUG_LOG_SWITCH	false
 #endif
 
-#define V(format, ...)	Log(format, __VA_ARGS__)
-//#define V(format, ...)
-
 /**
  * Original code is from http://github.com/rentzsch/jrswizzle
  * Copyright (c) 2007 Jonathan 'Wolf' Rentzsch: <http://rentzsch.com>
  */
-static BOOL jr_swizzleMethod(Class klass, SEL origSel, SEL altSel)
+static BOOL jr_swizzleMethod(Class klass, SEL orgSel, SEL altSel)
 {
-	Method origMethod = class_getInstanceMethod(klass, origSel);
-	V(@"original method=%p", origMethod);
-	if (origMethod == NULL) {
+	Method orgMethod = class_getInstanceMethod(klass, orgSel);
+	if (orgMethod == NULL) {
+		D0(@"failed class_getInstanceMethod for orignal");
 		return NO;
 	}
 
 	Method altMethod = class_getInstanceMethod(klass, altSel);
-	V(@"replacement method=%p", altMethod);
 	if (altMethod == NULL) {
+		D0(@"failed class_getInstanceMethod for alternate");
 		return NO;
 	}
 
-	class_addMethod(klass, origSel, class_getMethodImplementation(klass, origSel), method_getTypeEncoding(origMethod));
+	class_addMethod(klass, orgSel, class_getMethodImplementation(klass, orgSel), method_getTypeEncoding(orgMethod));
 	class_addMethod(klass, altSel, class_getMethodImplementation(klass, altSel), method_getTypeEncoding(altMethod));
 
-	method_exchangeImplementations(class_getInstanceMethod(klass, origSel), class_getInstanceMethod(klass, altSel));
+	method_exchangeImplementations(class_getInstanceMethod(klass, orgSel), class_getInstanceMethod(klass, altSel));
 	return YES;
 }
 
-static BOOL jr_swizzleClassMethod(Class klass, SEL origSel, SEL altSel)
+static BOOL jr_swizzleClassMethod(Class klass, SEL orgSel, SEL altSel)
 {
-	Method origMethod = class_getClassMethod(klass, origSel);
-	V(@"original ClassMethod=%p", origMethod);
-	if (origMethod == NULL) {
+	Method orgMethod = class_getClassMethod(klass, orgSel);
+	if (orgMethod == NULL) {
+		D0(@"failed class_getClassMethod for orignal");
 		return NO;
 	}
 
 	Method altMethod = class_getClassMethod(klass, altSel);
-	V(@"replacement ClassMethod=%p", altMethod);
 	if (altMethod == NULL) {
+		D0(@"failed class_getClassMethod for alternate");
 		return NO;
 	}
 
-	method_exchangeImplementations(origMethod, altMethod);
+	method_exchangeImplementations(orgMethod, altMethod);
 	return YES;
 }
 
@@ -71,7 +68,7 @@ static BOOL jr_swizzleClassMethod(Class klass, SEL origSel, SEL altSel)
  *	A special method called by SIMBL once the application has started and
  *	all classes are initialized.
  */
-+ (void) load
++ (void)load
 {
 	NSString * bundleInfoString = [[[NSBundle bundleWithIdentifier:TUMBLRFUL_BUNDLE_ID] infoDictionary] objectForKey:@"CFBundleGetInfoString"];
 	LogEnable(DEBUG_LOG_SWITCH);
@@ -109,18 +106,14 @@ static BOOL jr_swizzleClassMethod(Class klass, SEL origSel, SEL altSel)
  *	invoke by SIMBL, after 'load' method.
  * @note need NSPricipalClass description in Info.plist.
  */
-+ (void) install
++ (void)install
 {
 	// do nothing.
 }
 
-/**
- * 'sharedInstance' class method
- * @return the single static instance of the plugin object
- */
-+ (Tumblrful*) sharedInstance
++ (Tumblrful *)sharedInstance
 {
-	static Tumblrful* plugin = nil;
+	static Tumblrful * plugin = nil;
 
 	if (plugin == nil) {
 		plugin = [[Tumblrful alloc] init];

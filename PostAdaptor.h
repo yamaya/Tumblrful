@@ -78,5 +78,9 @@
  */
 - (void)postVideo:(NSString *)embed caption:(NSString*)caption;
 
-- (NSObject*)postEntry:(NSDictionary*)params;
+/**
+ * "Reblog" post.
+ *	@param[in] params	contents of Reblog. Determined by the target service.
+ */
+- (void)postEntry:(NSDictionary *)params;
 @end

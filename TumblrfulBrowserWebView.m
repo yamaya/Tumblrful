@@ -235,7 +235,7 @@ static const NSUInteger POST_MASK_ALL = 0x7;
  * @param event NSEvent object for Event.
  * @return イベントに応答した場合 YES。
  */
-- (BOOL)performKeyEquivalent_SwizzledByTumblrful:(NSEvent*)event
+- (BOOL)performKeyEquivalent_SwizzledByTumblrful:(NSEvent *)event
 {
 	// キー入力に対応するエンドポイントを得る。
 	NSUInteger endpoint = [self endpointByKeyPress:event];
@@ -245,22 +245,18 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 	}
 
 	// このビューに関する HTMLドキュメントの URL を得る
-	DOMHTMLDocument* document = (DOMHTMLDocument*)[self mainFrameDocument];
+	DOMHTMLDocument * document = (DOMHTMLDocument *)[self mainFrameDocument];
 	if (document == nil) {
 		// 無ければオリジナルのメソッドを呼び出して終わり
 		return [self performKeyEquivalent_SwizzledByTumblrful:event];
 	}
 
 	BOOL processed = NO;
-	//FIXME: DeliverBase にも同じ配列を生成していて無駄
-	NSArray* contexts = [NSArray arrayWithObjects:
-		  [GoogleReaderDelivererContext class]
-		, [LDRDelivererContext class]
-		, nil];
-	for (Class c in contexts) {
+
+	NSArray * contextClasses = [NSArray arrayWithObjects:[GoogleReaderDelivererContext class], [LDRDelivererContext class], nil];
+	for (Class contextClass in contextClasses) {
 		// 処理すべき HTMLドキュメントかどうかを判定させる
-		DOMHTMLElement* element = [c matchForAutoDetection:document
-										windowScriptObject:[self windowScriptObject]];
+		DOMHTMLElement * element = [contextClass matchForAutoDetection:document windowScriptObject:[self windowScriptObject]];
 
 		// アクションを実行を試みる
 		processed = [self invokeAction:element document:document endpoint:endpoint];
