@@ -5,11 +5,13 @@
  * @date 2008-03-07
  */
 #import "Post.h"
+#import "PostCallback.h"
+#import "TumblrReblogExtractor.h"
 
 /**
  * TumblrPost class
  */
-@interface TumblrPost : NSObject<Post>
+@interface TumblrPost : NSObject<Post, TumblrReblogExtractorDelegate>
 {
 	BOOL private_;
 	BOOL queuing_;
@@ -42,12 +44,4 @@
  *	@param[in] params	request parameteres
  */
 - (void)postWith:(NSDictionary *)params;
-#if 0
-/**
- * post reblog contents to Tumblr.
- *	@param[in] postID	ID of Post
- *	@param[in] reblogKey	ReblogKey
- */
-- (void)reblogPostWithPostID:(NSString *)postID reblogKey:(NSString *)reblogKey;
-#endif
 @end

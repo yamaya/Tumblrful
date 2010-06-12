@@ -239,6 +239,7 @@
 - (void)successed:(NSString *)response
 {
 	D0(response);
+	D(@"self.retainCount=%x", [self retainCount]);
 
 	@try {
 		NSString * message = [NSString stringWithFormat:@"%@\n--- %@", [context_ documentTitle], response];
@@ -254,41 +255,18 @@
 /**
  * ポスト失敗時のコールバック(NSError)
  */
-- (void) failedWithError:(NSError*)error
+- (void)failedWithError:(NSError *)error
 {
-	[self failed:error];
+	NSString* msg = error != nil ? [error description] : @"";
+	[self notify:[DelivererRules errorMessageWith:msg]];
 }
 
 /**
  * ポスト失敗時のコールバック(NSException)
  */
-- (void) failedWithException:(NSException*)exception
+- (void)failedWithException:(NSException *)exception
 {
 	[self notify:[DelivererRules errorMessageWith:[exception description]]];
-}
-
-/**
- * ポストが成功した時
- */
-- (void)posted:(NSData*)response
-{
-	@try {
-		NSString* replyMessage = [[[NSString alloc] initWithData:response encoding:NSUTF8StringEncoding] autorelease];
-		NSString* message = [NSString stringWithFormat:@"%@\n--- %@", [context_ documentTitle], replyMessage];
-		[self notify:message];
-	}
-	@catch (NSException * e) {
-		D0([e description]);
-	}
-}
-
-/**
- * ポストが失敗した時
- */
-- (void)failed:(NSError*)error
-{
-	NSString* msg = error != nil ? [error description] : @"";
-	[self notify:[DelivererRules errorMessageWith:msg]];
 }
 
 /**

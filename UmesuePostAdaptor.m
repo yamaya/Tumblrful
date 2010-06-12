@@ -58,7 +58,7 @@
 - (void)postEntry:(NSDictionary *)params
 {
 	TumblrReblogExtractor * extractor = [[TumblrReblogExtractor alloc] initWithDelegate:self];
-	[extractor startWithPID:[params objectForKey:@"pid"] withReblogKey:[params objectForKey:@"rk"]];
+	[extractor startWithPostID:[params objectForKey:@"pid"] withReblogKey:[params objectForKey:@"rk"]];
 }
 
 - (void)extractor:(TumblrReblogExtractor *)extractor didFinishExtract:(NSDictionary *)contents
@@ -91,6 +91,12 @@
 			[self callbackWith:[NSString stringWithFormat:@"\"%@\" post not supported yet", type]];
 		}
 	}
+}
+
+- (void)extractor:(TumblrReblogExtractor *)extractor didFailExtractWithError:(NSError *)error
+{
+#pragma unused (extractor)
+	[self callbackWithError:error];
 }
 
 - (void)postWithType:(NSString *)type withParams:(NSDictionary *)params

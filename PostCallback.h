@@ -7,7 +7,11 @@
 #import <Foundation/Foundation.h>
 
 @protocol PostCallback <NSObject>
-- (void) successed:(NSString*)response;
-- (void) failedWithError:(NSError*)error;
-- (void) failedWithException:(NSException*)exception;
+
+- (void)successed:(NSString *)response;
+
+- (void)failedWithError:(NSError *)error;
+
+- (void)failedWithException:(NSException *)exception;
+
 @end

@@ -10,7 +10,7 @@
  * Deliverer concrete class for Tumblr service
  *	Tumblr's page can be used only
  */
-@interface ReblogDeliverer : DelivererBase<PostCallback>
+@interface ReblogDeliverer : DelivererBase
 {
 	NSString * postID_;
 	NSString * reblogKey_;

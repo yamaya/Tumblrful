@@ -14,24 +14,12 @@
 /**
  * DelivererBase abstract class
  */
-@interface DelivererBase : NSObject <Deliverer, PostCallback>
+@interface DelivererBase : NSObject<Deliverer, PostCallback>
 {
 	DelivererContext * context_;
 	NSUInteger filterMask_;
 	BOOL needEdit_;
 }
-
-/**
- * Callback when contents post successed
- *	@param[in] response	HTTP response
- */
-- (void)posted:(NSData *)response;
-
-/**
- * Callback when contents post failed
- *	@param[in] error	error from NSURLConnection
- */
-- (void)failed:(NSError *)error;
 
 /**
  * Initialize object
@@ -82,13 +70,7 @@
  */
 - (void)postEntry:(NSDictionary *)params;
 
-/* PostCallback overrides */
-- (void) successed:(NSString*)response;
-- (void) failedWithError:(NSError*)error;
-- (void) failedWithException:(NSException*)exception;
-
-- (void) notify:(NSString*)message;
-- (void) failedWithException:(NSException*)exception;
+- (void)notify:(NSString *)message;
 
 /**
  * MenuItem's title

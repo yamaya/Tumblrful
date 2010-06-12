@@ -13,6 +13,7 @@
  */
 @protocol TumblrReblogExtractorDelegate <NSObject>
 - (void)extractor:(TumblrReblogExtractor *)extracter didFinishExtract:(NSDictionary *)contents;
+- (void)extractor:(TumblrReblogExtractor *)extracter didFailExtractWithError:(NSError *)error;
 @end
 
 /**
@@ -21,9 +22,11 @@
 @interface TumblrReblogExtractor : NSObject
 {
 	NSObject<TumblrReblogExtractorDelegate> * delegate_;
-	NSMutableData * responseData_;
+	NSMutableData * data_;
 	NSString * endpoint_;
 }
+
+@property (nonatomic, readonly) NSString * endpoint;
 
 /**
  * Initialize object
@@ -31,5 +34,5 @@
  */
 - (id)initWithDelegate:(NSObject<TumblrReblogExtractorDelegate> *)delegate;
 
-- (void)startWithPID:(NSString*)pid withReblogKey:(NSString*)rk;
+- (void)startWithPostID:(NSString*)pid withReblogKey:(NSString*)rk;
 @end

@@ -154,7 +154,9 @@ static NSString * TYPE = @"Reblog";
 }
 
 #pragma mark -
-- (void)posted:(NSData *)response
+#pragma mark Override Methods
+
+- (void)successed:(NSString *)response
 {
 #pragma unused (response)
 	D(@"self.retainCount=%x", [self retainCount]);
@@ -163,7 +165,7 @@ static NSString * TYPE = @"Reblog";
 		NSString * message = [NSString stringWithFormat:@"%@\nPost ID: %@", [context_ documentTitle], postID_];
 		[self notify:message];
 	}
-	@catch(NSException * e) {
+	@catch (NSException * e) {
 		D0([e description]);
 	}
 }
