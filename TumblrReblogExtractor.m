@@ -38,10 +38,6 @@ static const NSRange EmptyRange = {NSNotFound, 0};
 		D0(@"delegate_ is nil");
 		return;
 	}
-	if (![delegate_ respondsToSelector:@selector(extractor:didFinishExtract:)]) {
-		D(@"failed respondsToSelector. delegate_=%@", [delegate_ description]);
-		return;
-	}
 
 	endpoint_ = [NSString stringWithFormat:@"%@/reblog/%@/%@", TUMBLRFUL_TUMBLR_URL, postID, reblogKey];
 	[endpoint_ retain];
@@ -115,12 +111,11 @@ static const NSRange EmptyRange = {NSNotFound, 0};
 			D0(message);
 		}
 		else {
-			[fields setObject:endpoint_ forKey:@"endpoint"];
 			[fields setObject:type forKey:@"type"];
 		}
 
 		// デリゲートメソッドをメインスレッド上で呼び出す
-		[self performSelectorOnMainThread:@selector(delegateDidFinishExtractMethod:) withObject:fields waitUntilDone:NO];
+		[self performSelectorOnMainThread:@selector(delegateDidFinishExtractMethod:) withObject:fields waitUntilDone:YES];
 	}
 	@catch (NSException * e) {
 		D0([e description]);
@@ -137,7 +132,7 @@ static const NSRange EmptyRange = {NSNotFound, 0};
 		D0([error description]);
 
 		// デリゲートメソッドをメインスレッド上で呼び出す
-		[self performSelectorOnMainThread:@selector(delegateDidFailExtractMethod:) withObject:error waitUntilDone:NO];
+		[self performSelectorOnMainThread:@selector(delegateDidFailExtractMethod:) withObject:error waitUntilDone:YES];
 	}
 	@finally {
 		[self release];
