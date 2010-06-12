@@ -10,9 +10,10 @@
 #import "DebugLog.h"
 #import <WebKit/WebKit.h>
 #import <Foundation/NSXMLDocument.h>
+#import <objc/objc-runtime.h>
 
-static NSString* TUMBLR_DOMAIN = @".tumblr.com";
-static NSString* TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
+static NSString * TUMBLR_DOMAIN = @".tumblr.com";
+static NSString * TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 
 #pragma mark -
 /**
@@ -30,93 +31,87 @@ static NSString* TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 
 #pragma mark -
 @implementation LDRReblogDeliverer
-/**
- * create.
- *	@param document DOMHTMLDocument オブジェクト
- *	@param clickedElement クリックしたDOM要素の情報
- *	@return Deliverer オブジェクト
- */
-+ (id<Deliverer>) create:(DOMHTMLDocument*)document element:(NSDictionary*)clickedElement
-{
-	if (![LDRDelivererContext match:document target:clickedElement]) {
-		return nil;
-	}
 
-	/* あーあ、しょうがないので自力で LDRDelivererContext を生成するよ */
-	LDRDelivererContext* context =
-		[[LDRDelivererContext alloc] initWithDocument:document
-											   target:clickedElement];
-	if (context == nil) {
-		return nil;
-	}
-	[context autorelease];
++ (NSString *)sitePostfix
+{
+	return TUMBLR_DOMAIN;
+}
+
++ (NSString *)dataSiteURL
+{
+	return TUMBLR_DATA_URI;
+}
+
++ (id<Deliverer>)create:(DOMHTMLDocument *)document element:(NSDictionary *)clickedElement
+{
+	// Tumblr ポストかどうかのチェック
+	if (![LDRDelivererContext match:document target:clickedElement]) return nil;
+
+	// LDRDelivererContext を生成する
+	LDRDelivererContext * context = [[[LDRDelivererContext alloc] initWithDocument:document target:clickedElement] autorelease];
+	if (context == nil) return nil;
 
 	NSURL* url = [NSURL URLWithString:[context documentURL]];
-	if (url == nil) {
+	if (url == nil) 
 		return nil;
-	}
 
 	NSRange range;
-	DOMNode* node = [clickedElement objectForKey:WebElementImageURLKey];
+	DOMNode * node = [clickedElement objectForKey:WebElementImageURLKey];
 	if (node != nil && [[node className] isEqualToString:@"DOMHTMLImageElement"]) {
-		DOMHTMLImageElement* img = (DOMHTMLImageElement*)node;
-		range = [[img src] rangeOfString:TUMBLR_DATA_URI];
-		if (!(range.location == 0 && range.length >= [TUMBLR_DATA_URI length])) {
+		DOMHTMLImageElement * img = (DOMHTMLImageElement *)node;
+		range = [[img src] rangeOfString:[self dataSiteURL]];
+		if (!(range.location == 0 && range.length >= [[self dataSiteURL] length])) {
 			return nil;
 		}
 	}
 	else {
-		range = [[url host] rangeOfString:TUMBLR_DOMAIN];
-		if (!(range.location > 0 && range.length == [TUMBLR_DOMAIN length])) {
+		range = [[url host] rangeOfString:[self sitePostfix]];
+		if (!(range.location > 0 && range.length == [[self sitePostfix] length])) {
 			return nil;
 		}
 	}
 
-	LDRReblogDeliverer* deliverer = nil;
-
-	NSString* postID = [[context documentURL] lastPathComponent];
+	NSString * postID = [[context documentURL] lastPathComponent];
 	if (postID == nil) {
+		D(@"Could not get PostID. element:%@", [clickedElement description]);
 		return nil;
 	}
 
-	/* LDR ではこの時点で ReblogKey は得られないので nil を指定する */
-	deliverer =
-		[[LDRReblogDeliverer alloc] initWithDocument:document
-											  target:clickedElement
-											  postID:postID
-										   reblogKey:nil];
-	if (deliverer != nil) {
-		[deliverer retain];	//TODO: need?
+	// LDR ではこの時点で ReblogKey は得られないので未指定で
+	LDRReblogDeliverer * deliverer = [[LDRReblogDeliverer alloc] initWithContext:context postID:postID];
+	if (deliverer == nil) {
+		D(@"Could not alloc+init %@.", [LDRReblogDeliverer className]);
 	}
-	else {
-		Log(@"Could not alloc+init %@.", [LDRReblogDeliverer className]);
-	}
+
 	return deliverer;
 }
 
-/**
- * メニューのアクション
- *	@param sender アクションを起こしたオブジェクト
- *
- *	1. Reblog 先のHTMLをdownloadして、そのiframeから reblogkey を得る
- *	2. reblogkey を得たら、このインスタンスを invokeする
- */
-- (void) action:(id)sender
+- (void)action:(id)sender
 {
 #pragma unused (sender)
-	NSString* endpoint = [context_ documentURL];
+	D_METHOD;
 
-	DelegateForReblogKey* delegate =
-		[[DelegateForReblogKey alloc] initWithEndpoint:endpoint
-																			continuation:self];
-	[delegate retain];
+	@try {
+		// DelegateForReblogKeyから(その通信後に)呼び出された場合
+		if (object_getClass(sender) == [DelegateForReblogKey class]) {
+			[super action:sender];
+		}
+		else {
+			// メニューから呼び出された場合
+			NSString* endpoint = [context_ documentURL];
 
-	NSURLRequest* request =
-		[NSURLRequest requestWithURL:[NSURL URLWithString:endpoint]];
+			NSURLRequest* request = [NSURLRequest requestWithURL:[NSURL URLWithString:endpoint]];
 
-	NSURLConnection* connection =
-		[NSURLConnection connectionWithRequest:request delegate:delegate];
-	connection = connection;	// for compiler warning
+			DelegateForReblogKey * delegate = [[DelegateForReblogKey alloc] initWithEndpoint:endpoint continuation:self];
+			[delegate retain];	// 通信後、このオブジェクト自身でreleaseする
+
+			NSURLConnection * connection;
+			connection = [NSURLConnection connectionWithRequest:request delegate:delegate];
+		}
+	}
+	@catch (NSException * e) {
+		D0([e description]);
+	}
 }
 @end
 
@@ -126,7 +121,7 @@ static NSString* TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
  *	@param endpoint
  *	@return 初期化済みオブジェクト
  */
-- (id) initWithEndpoint:(NSString*)endpoint continuation:(LDRReblogDeliverer*)continuation
+- (id)initWithEndpoint:(NSString*)endpoint continuation:(LDRReblogDeliverer*)continuation
 {
 	if ((self = [super init]) != nil) {
 		endpoint_ = [endpoint retain];
@@ -196,26 +191,24 @@ static NSString* TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
  *	れるということなんだろう。DOMHTMLDocument を使いたいのだけれど NSDataから
  *	の生成方法がわからないよ。
  */
-- (void) connectionDidFinishLoading:(NSURLConnection*)connection
+- (void)connectionDidFinishLoading:(NSURLConnection*)connection
 {
 #pragma unused (connection)
-	if (responseData_ != nil) {
+	D_METHOD;
 
-		/* DOMにする */
-		NSError* error = nil;
-		NSXMLDocument* document =
-			[[NSXMLDocument alloc] initWithData:responseData_
-										options:NSXMLDocumentTidyHTML
-										  error:&error];
+	if (responseData_ != nil) {
+		// DOMにする
+		NSError * error = nil;
+		NSXMLDocument * document = [[NSXMLDocument alloc] initWithData:responseData_ options:NSXMLDocumentTidyHTML error:&error];
 		if (document != nil) {
 			NSArray* elements = [[document rootElement] nodesForXPath:@"//iframe[@id=\"tumblr_controls\"]" error:&error];
 			if (elements != nil && [elements count] > 0) {
-				NSXMLElement* element = [elements objectAtIndex:0];
+				NSXMLElement * element = [elements objectAtIndex:0];
 				NSString* src = [[[element attributeForName:@"src"] stringValue] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 				NSRange range = [src rangeOfString:@"&pid="];
 				NSString* s = [src substringFromIndex:range.location + 1];
 				NSArray* segments = [s componentsSeparatedByString:@"&"];
-				
+
 				NSEnumerator* enumerator = [segments objectEnumerator];
 				while ((s = [enumerator nextObject]) != nil) {
 					range = [s rangeOfString:@"pid="];
@@ -233,14 +226,13 @@ static NSString* TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 		}
 		[responseData_ release];
 
-		[continuation_ reblog];
+		// メニューから呼び出されたのと同じ事をする
+		[continuation_ performSelector:@selector(action:) withObject:self];
 	}
 
 	[self release];
 }
 
-/**
- */
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
 #pragma unused (connection, error)

@@ -1,6 +1,6 @@
 /**
  * @file ReblogDeliverer.m
- * @brief ReblogDeliverer implementation
+ * @brief ReblogDeliverer class implementation
  * @author Masayuki YAMAYA
  * @date 2008-03-03
  */
@@ -8,200 +8,170 @@
 #import "ReblogDeliverer.h"
 #import "DelivererRules.h"
 #import "GrowlSupport.h"
-#import "Log.h"
+#import "DebugLog.h"
 
-//#define V(format, ...)	Log(format, __VA_ARGS__)
-#define V(format, ...)
+static NSString * TYPE = @"Reblog";
 
-static NSString* TYPE = @"Reblog";
+@interface ReblogDeliverer ()
++ (NSDictionary *)reblogTokensFromIFrame:(DOMHTMLDocument *)document;
+@end
 
 #pragma mark -
 @implementation ReblogDeliverer
-/**
- * IFrameが存在するか調べる
- */
-+ (NSDictionary*) tokensFromIFrame:(DOMHTMLDocument*)document
+
++ (id<Deliverer>)create:(DOMHTMLDocument *)document element:(NSDictionary *)clickedElement
+{
+	NSDictionary * tokens = [ReblogDeliverer reblogTokensFromIFrame:document];
+	if (tokens == nil) return nil;
+
+	ReblogDeliverer * deliverer = [[ReblogDeliverer alloc] initWithDocument:document target:clickedElement postID:[tokens objectForKey:@"pid"] reblogKey:[tokens objectForKey:@"rk"]];
+	if (deliverer == nil) {
+		D(@"Could not alloc+init %@Deliverer.", TYPE);
+	}
+
+	return deliverer;
+}
+
+- (id)initWithDocument:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement postID:(NSString *)postID reblogKey:(NSString *)reblogKey
+{
+	if ((self = [super initWithDocument:document target:targetElement]) != nil) {
+		type_ = nil;
+		if (postID != nil) postID_ = [postID retain];
+		if (reblogKey != nil) reblogKey_ = [reblogKey retain];
+		D(@"postID:%@", postID_);
+	}
+	return self;
+}
+
+- (id)initWithDocument:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement postID:(NSString *)postID
+{
+	return [self initWithDocument:document target:targetElement postID:postID reblogKey:nil];
+}
+
+- (id)initWithContext:(DelivererContext *)context postID:(NSString *)postID reblogKey:(NSString *)reblogKey
+{
+	if ((self = [super initWithContext:context]) != nil) {
+		type_ = nil;
+		if (postID != nil) postID_ = [postID retain];
+		if (reblogKey != nil) reblogKey_ = [reblogKey retain];
+		D(@"postID:%@", postID_);
+	}
+	return self;
+}
+
+- (id)initWithContext:(DelivererContext *)context postID:(NSString *)postID
+{
+	return [self initWithContext:context postID:postID reblogKey:nil];
+}
+
+- (void)dealloc
+{
+	[postID_ release], postID_ = nil;
+	[reblogKey_ release], reblogKey_ = nil;
+	[type_ release], type_ = nil;
+
+	[super dealloc];
+}
+
+- (NSString *)postType
+{
+	return type_;
+}
+
+- (NSString *)titleForMenuItem
+{
+	return TYPE; // この時点では type_ は nil なので使えないん
+}
+
+- (void)action:(id)sender
+{
+#pragma unused (sender)
+	@try {
+		NSDictionary * params = [NSDictionary dictionaryWithObjectsAndKeys:postID_, @"pid", reblogKey_, @"rk", nil];
+		D(@"params=%@", [params description]);
+		type_ = (NSString*)[self postEntry:params];
+	}
+	@catch (NSException * e) {
+		D0([e description]);
+	}
+}
+
++ (NSDictionary *)reblogTokensFromIFrame:(DOMHTMLDocument *)document
 {
 	static NSString* IFRAME_ID = @"tumblr_controls";
 
-	V(@"tokensFromIFrame: document=%@", SafetyDescription(document));
+	D(@"document=%@", SafetyDescription(document));
 
-	/* document content から iframe を探す */
-	DOMElement* element = [document getElementById:IFRAME_ID];
-	V(@"tokensFromIFrame: element=%@", SafetyDescription(element));
+	// document content から iframe を探す
+	DOMElement * element = [document getElementById:IFRAME_ID];
+	D(@"element=%@", SafetyDescription(element));
 	if (element == nil) {
 		return nil;
 	}
 
-	NSDictionary* tokens = nil;
-	DOMHTMLIFrameElement* iframe = (DOMHTMLIFrameElement*)element;
+	NSMutableDictionary * tokens = nil;
+	DOMHTMLIFrameElement * iframe = (DOMHTMLIFrameElement *)element;
 	/*
 	 * <iframe
 	 *	src="http://www.tumblr.com/dashboard/iframe?src=http://suwaowalog.tumblr.com/post/31541959&pid=31541959&rk=2e9uZXxz"
 	 *	id="tumblr_controls">
 	 * </iframe>
 	 */
-	NSString* src = [[iframe src] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-	V(@"iframe src=%@", src);
+	NSString * src = [[iframe src] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+	D(@"iframe src=%@", src);
 	NSRange range = [src rangeOfString:@"&pid="];
 	if (range.location != NSNotFound) {
-		NSString* segmentString = [src substringFromIndex:range.location + 1];
-		V(@"segmentString=%@", segmentString);
-		NSArray* segments = [segmentString componentsSeparatedByString:@"&"];
-		NSEnumerator* enumerator = [segments objectEnumerator];
-		NSString* segment;
+		NSString * segmentString = [src substringFromIndex:range.location + 1];
+		D(@"segmentString=%@", segmentString);
+		NSArray * segments = [segmentString componentsSeparatedByString:@"&"];
+		NSEnumerator * enumerator = [segments objectEnumerator];
+		NSString * segment;
 		tokens = [[[NSMutableDictionary alloc] init] autorelease];
 		while ((segment = [enumerator nextObject]) != nil) {
 			range = [segment rangeOfString:@"pid="];
-			if (range.location != NSNotFound) { /* post id */
-				[tokens setValue:[segment substringFromIndex:range.location + range.length] forKey:@"pid"];
+			if (range.location != NSNotFound) { // post id
+				[tokens setObject:[segment substringFromIndex:range.location + range.length] forKey:@"pid"];
 				continue;
 			}
 			range = [segment rangeOfString:@"rk="];
-			if (range.location != NSNotFound) { /* rk */
-				[tokens setValue:[segment substringFromIndex:range.location + range.length] forKey:@"rk"];
+			if (range.location != NSNotFound) { // rk
+				[tokens setObject:[segment substringFromIndex:range.location + range.length] forKey:@"rk"];
 				continue;
 			}
 		}
-		V(@"tokens=%@", [tokens description]);
+		D(@"tokens=%@", [tokens description]);
 	}
 	return tokens;
 }
 
-/**
- * Deliverer のファクトリ
- */
-+ (id<Deliverer>) create:(DOMHTMLDocument*)document element:(NSDictionary*)clickedElement
+- (void)setPostID:(NSString *)postID
 {
-	ReblogDeliverer* deliverer = nil;
-
-	NSDictionary* tokens = [ReblogDeliverer tokensFromIFrame:document];
-	if (tokens == nil) {
-		return nil;
-	}
-	deliverer = [[ReblogDeliverer alloc] initWithDocument:document target:clickedElement postID:[tokens objectForKey:@"pid"] reblogKey:[tokens objectForKey:@"rk"]];
-	if (deliverer != nil) {
-		[deliverer retain];	//TODO: need?
-	}
-	else {
-		V(@"Could not alloc+init %@Deliverer.", TYPE);
-	}
-	return deliverer;
-}
-
-/**
- * オブジェクトを初期化する
- */
-- (id) initWithDocument:(DOMHTMLDocument*)document target:(NSDictionary*)targetElement postID:(NSString*)postID reblogKey:(NSString*)rk
-{
-	if ((self = [super initWithDocument:document target:targetElement]) != nil) {
-		type_ = nil;
-		postID_ = [postID retain];
-		if (rk != nil) {
-			reblogKey_ = [rk retain];
-		}
-		else {
-			reblogKey_ = nil;
-		}
-		V(@"initWith) postID:%@", postID_);
-	}
-	return self;
-}
-
-/**
- * オブジェクトの解放
- */
-- (void) dealloc
-{
-	if (postID_ != nil) {
-		[postID_ release];
-		postID_ = nil;
-	}
-	if (reblogKey_ != nil) {
-		[reblogKey_ release];
-		reblogKey_ = nil;
-	}
-	if (type_ != nil) {
-		[type_ release];
-		type_ = nil;
-	}
-
-	[super dealloc];
-}
-
-/**
- * Tumblr APIが規定するポストのタイプ
- */
-- (NSString*) postType
-{
-	return type_;
-}
-
-- (NSString*) titleForMenuItem
-{
-	return TYPE; /* この時点では type_ は nil なので使えないんだな */
-}
-
-/**
- * メニューのアクション
- *	@param sender アクションを起こしたオブジェクト
- */
-- (void) action:(id)sender
-{
-#pragma unused (sender)
-	[self reblog];
-}
-
-- (void) reblog
-{
-	NSDictionary* params = [NSDictionary dictionaryWithObjectsAndKeys:postID_, @"pid", reblogKey_, @"rk", nil];
-	V(@"params=%@", [params description]);
-	type_ = (NSString*)[self postEntry:params];
-}
-
-/**
- * PostID を設定する.
- *	@param postID ポストID
- */
-- (void) setPostID:(NSString*)postID
-{
-	if (postID_ != nil) [postID_ release];
+	[postID_ release];
 	postID_ = [postID retain];
 }
 
-/**
- * ReblogKey を設定する.
- *	@param reblogKey Reblogキー
- */
-- (void) setReblogKey:(NSString*)reblogKey
+- (void)setReblogKey:(NSString *)reblogKey
 {
-	if (reblogKey_ != nil)
-		[reblogKey_ release];
+	[reblogKey_ release];
 	reblogKey_ = [reblogKey retain];
 }
 
 #pragma mark -
-/**
- * ポストが成功した時
- */
-- (void) posted:(NSData *)responseData
+- (void)posted:(NSData *)response
 {
-#pragma unused (responseData)
-	V(@"posted) retain=%x", [self retainCount]);
+#pragma unused (response)
+	D(@"posted) retain=%x", [self retainCount]);
 
 	@try {
-		NSString* message = [NSString stringWithFormat:@"%@\nPost ID: %@", [context_ documentTitle], postID_];
+		NSString * message = [NSString stringWithFormat:@"%@\nPost ID: %@", [context_ documentTitle], postID_];
 		[self notify:message];
 	}
-	@catch(NSException* e) {
-		Log([e description]);
+	@catch(NSException * e) {
+		D0([e description]);
 	}
 }
 
-/**
- * 汎用メッセージ処理
- */
-- (void) notify:(NSString*)message
+- (void)notify:(NSString *)message
 {
 	NSString* typeDescription = [NSString stringWithFormat:@"%@ %@", TYPE, [[self postType] capitalizedString]];
 	[GrowlSupport notify:typeDescription description:message];

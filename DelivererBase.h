@@ -12,7 +12,7 @@
 #define MENUITEM_TAG_MASK		0x00FF
 
 /**
- * DeliverBase abstract class
+ * DelivererBase abstract class
  */
 @interface DelivererBase : NSObject <Deliverer, PostCallback>
 {
@@ -21,18 +21,31 @@
 	BOOL needEdit_;
 }
 
-/* Deliverer protocols */
-+ (id<Deliverer>)create:(DOMHTMLDocument *)document element:(NSDictionary *)clickedElement;
+/**
+ * Callback when contents post successed
+ *	@param[in] response	HTTP response
+ */
+- (void)posted:(NSData *)response;
 
-- (NSMenuItem *)createMenuItem;
+/**
+ * Callback when contents post failed
+ *	@param[in] error	error from NSURLConnection
+ */
+- (void)failed:(NSError *)error;
 
-- (void)action:(id)sender;
+/**
+ * Initialize object
+ *	@param[in] context DelivererContext object
+ */
+- (id)initWithContext:(DelivererContext *)context;
 
-/* common process for PostCallback */
-- (void) posted:(NSData*)response;
-- (void) failed:(NSError*)error;
-
-- (id)initWithDocument:(DOMHTMLDocument*)document target:(NSDictionary*)targetElement;
+/**
+ * Initialize object
+ *	creates an object inside DelivererContext.
+ *	@param[in] document 現在表示しているビューの DOMHTMLDocumentオブジェクト
+ *	@param[in] targetElement 選択していた要素の情報
+ */
+- (id)initWithDocument:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement;
 
 /**
  * post "Link" contents
@@ -63,7 +76,13 @@
  */
 - (void)postVideo:(NSString *)embed caption:(NSString *)caption;
 
-- (NSObject*) postEntry:(NSDictionary*)params;
+/**
+ * "Reblog" post.
+ *	@param[in] params	contents of Reblog. Determined by the target service.
+ *	@return Reblog such a string indicating the type of post. Returns or
+ *	derived class depends on what PostAdaptor.
+ */
+- (NSObject *)postEntry:(NSDictionary *)params;
 
 /* PostCallback overrides */
 - (void) successed:(NSString*)response;
@@ -74,14 +93,14 @@
 - (void) failedWithException:(NSException*)exception;
 
 /**
- * メニューアイテムのタイトルを取得する
- *	@return タイトル
+ * MenuItem's title
+ *	@return title
  */
 - (NSString *)titleForMenuItem;
 
 /**
- * メニューアイテム(複数)を生成する.
- *	@return メニューアイテムを格納した配列
+ * Create the some Menu items
+ *	@return array of NSMenuItem objet
  */
 - (NSArray *)createMenuItems;
 

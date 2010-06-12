@@ -1,11 +1,26 @@
 /**
  * @file LDRReblogDeliverer.h
- * @brief LDRReblogDeliverer declaration
+ * @brief LDRReblogDeliverer class declaration
  * @author Masayuki YAMAYA
  * @date 2008-03-03
  */
 #import "ReblogDeliverer.h"
 
+/**
+ * Tumblr post in the Livedoor Reader to reblog
+ */
 @interface LDRReblogDeliverer : ReblogDeliverer
-+ (id<Deliverer>) create:(DOMHTMLDocument*)document element:(NSDictionary*)clickedElement;
+
+/**
+ * return ".tumblr.com"
+ *	@return site postfix
+ */
++ (NSString *)sitePostfix;
+
+/**
+ * return "htpp://data.tumblr.com/"
+ * @return return data site URL
+ */
++ (NSString *)dataSiteURL;
+
 @end

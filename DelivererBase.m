@@ -13,9 +13,9 @@
 #import "PostAdaptorCollection.h"
 #import "PostAdaptor.h"
 #import "GrowlSupport.h"
-#import "DebugLog.h"
 #import "PostEditWindow.h"
 #import "NSString+Tumblrful.h"
+#import "DebugLog.h"
 
 @interface DelivererBase ()
 - (NSArray *)sharedContexts;
@@ -33,26 +33,29 @@
 	return nil;
 }
 
-/**
- * オブジェクトを初期化する.
- *	@param document 現在表示しているビューの DOMHTMLDocumentオブジェクト
- *	@param targetElement 選択していた要素の情報
- */
 - (id)initWithDocument:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement
 {
-	context_ = nil;
-	filterMask_ = 0;
-	needEdit_ = NO;
-
-	if ((self = [super init]) != nil) {
-		NSEnumerator * enumerator = [[self sharedContexts] objectEnumerator];
-		id clazz;
-		while ((clazz = [enumerator nextObject]) != nil) {
-			if ([clazz match:document target:targetElement]) {
-				context_ = [[[clazz alloc] initWithDocument:document target:targetElement] retain];
-				break;
-			}
+	// targetにマッチするコンテキストを探す
+	DelivererContext * context = nil;
+	NSEnumerator * enumerator = [[self sharedContexts] objectEnumerator];
+	id contextClass;
+	while ((contextClass = [enumerator nextObject]) != nil) {
+		if ([contextClass match:document target:targetElement]) {
+			context = [[contextClass alloc] initWithDocument:document target:targetElement];
+			break;
 		}
+	}
+
+	// 初期化
+	return [self initWithContext:context];
+}
+
+- (id)initWithContext:(DelivererContext *)context
+{
+	if ((self = [super init]) != nil) {
+		context_ = [context retain];
+		filterMask_ = 0;
+		needEdit_ = NO;
 	}
 	return self;
 }
@@ -130,10 +133,10 @@
 		Anchor * anchor = [Anchor anchorWithURL:url title:title];
 		NSUInteger i = 0;
 		NSEnumerator * enumerator = [PostAdaptorCollection enumerator];
-		Class postClass;
-		while ((postClass = [enumerator nextObject]) != nil) {
+		Class adaptorClass;
+		while ((adaptorClass = [enumerator nextObject]) != nil) {
 			if ((1 << i) & filterMask_) { // do filter
-				PostAdaptor * adaptor = [[postClass alloc] initWithCallback:self];
+				PostAdaptor * adaptor = [[[adaptorClass alloc] initWithCallback:self] autorelease];
 				NSInvocation * invocation = [self typedInvocation:@selector(postLink:description:) withAdaptor:adaptor];
 				[invocation setArgument:&anchor atIndex:2];
 				[invocation setArgument:&EmptyString atIndex:3];
@@ -155,10 +158,10 @@
 		NSString * source = [Anchor htmlWithURL:[context_ documentURL] title:[context_ documentTitle]];
 		NSUInteger i = 0;
 		NSEnumerator * enumerator = [PostAdaptorCollection enumerator];
-		Class postClass;
-		while ((postClass = [enumerator nextObject]) != nil) {
+		Class adaptorClass;
+		while ((adaptorClass = [enumerator nextObject]) != nil) {
 			if ((1 << i) & filterMask_) {	// フィルタリング
-				PostAdaptor * adaptor = [[postClass alloc] initWithCallback:self];
+				PostAdaptor * adaptor = [[[adaptorClass alloc] initWithCallback:self] autorelease];
 				NSInvocation * invocation = [self typedInvocation:@selector(postQuote:source:) withAdaptor:adaptor];
 				[invocation setArgument:&quote atIndex:2];
 				[invocation setArgument:&source atIndex:3];
@@ -183,10 +186,10 @@
 
 	NSUInteger i = 0;
 	NSEnumerator * enumerator = [PostAdaptorCollection enumerator];
-	Class postClass;
-	while ((postClass = [enumerator nextObject]) != nil) {
+	Class adaptorClass;
+	while ((adaptorClass = [enumerator nextObject]) != nil) {
 		if ((1 << i) & filterMask_) {	// do filter
-			PostAdaptor * adaptor = [[postClass alloc] initWithCallback:self];
+			PostAdaptor * adaptor = [[[adaptorClass alloc] initWithCallback:self] autorelease];
 			NSInvocation * invocation = [self typedInvocation:@selector(postPhoto:caption:throughURL:) withAdaptor:adaptor];
 			[invocation setArgument:&source atIndex:2];
 			[invocation setArgument:&caption atIndex:3];
@@ -202,10 +205,10 @@
 {
 	NSUInteger i = 0;
 	NSEnumerator * enumerator = [PostAdaptorCollection enumerator];
-	Class postClass;
-	while ((postClass = [enumerator nextObject]) != nil) {
+	Class adaptorClass;
+	while ((adaptorClass = [enumerator nextObject]) != nil) {
 		if ((1 << i) & filterMask_) {	// do filter
-			PostAdaptor * adaptor = [[postClass alloc] initWithCallback:self];
+			PostAdaptor * adaptor = [[[adaptorClass alloc] initWithCallback:self] autorelease];
 			NSInvocation * invocation = [self typedInvocation:@selector(postVideo:caption:) withAdaptor:adaptor];
 			[invocation setArgument:&embed atIndex:2];
 			[invocation setArgument:&caption atIndex:3];
@@ -216,30 +219,23 @@
 	}
 }
 
-/**
- * "Reblog".
- *	@param entryID エントリID
- *	@return Reblog したポストのタイプを示す文字列等。
- *					何を返すかは PostAdaptor の派生クラスで決まる。
- */
 - (NSObject *)postEntry:(NSDictionary *)params
 {
-	NSObject* result = nil;
+	NSObject * lastResult = nil;
 	NSUInteger i = 0;
-	NSEnumerator* enumerator = [PostAdaptorCollection enumerator];
-	Class postClass;
-	while ((postClass = [enumerator nextObject]) != nil) {
+	NSEnumerator * enumerator = [PostAdaptorCollection enumerator];
+	Class adaptorClass;
+	while ((adaptorClass = [enumerator nextObject]) != nil) {
 		if ((1 << i) & filterMask_) { // do filter
-			PostAdaptor * adaptor = [postClass alloc];
-			[adaptor initWithCallback:self];
-			NSObject * tmp = [adaptor postEntry:params];
-			if (tmp != nil && result == nil) {
-				result = tmp;
+			PostAdaptor * adaptor = [[adaptorClass alloc] initWithCallback:self];
+			NSObject * result = [adaptor postEntry:params];
+			if (result != nil && lastResult == nil) {
+				lastResult = result;
 			}
 		}
 		i++;
 	}
-	return result;
+	return lastResult;
 }
 
 /**
@@ -279,7 +275,7 @@
 /**
  * ポストが成功した時
  */
-- (void) posted:(NSData*)response
+- (void)posted:(NSData*)response
 {
 	@try {
 		NSString* replyMessage = [[[NSString alloc] initWithData:response encoding:NSUTF8StringEncoding] autorelease];
@@ -323,16 +319,16 @@
 	D(@"initial count:%d", [PostAdaptorCollection count]);
 
 	NSEnumerator* enumerator = [PostAdaptorCollection enumerator];
-	Class postClass;
-	while ((postClass = [enumerator nextObject]) != nil) {
-		if ([postClass enableForMenuItem]) {
+	Class adaptorClass;
+	while ((adaptorClass = [enumerator nextObject]) != nil) {
+		if ([adaptorClass enableForMenuItem]) {
 			NSMenuItem * menuItem = [self createMenuItem];
-			NSString* suffix = [postClass titleForMenuItem];
+			NSString* suffix = [adaptorClass titleForMenuItem];
 			if (suffix != nil) {
 				NSString* title = [menuItem title];
 				[menuItem setTitle:[NSString stringWithFormat:@"%@ to %@", title, suffix]];
 			}
-			D(@"%@'s mask: 0x%x", [postClass className], mask);
+			D(@"%@'s mask: 0x%x", [adaptorClass className], mask);
 			[menuItem setTag:mask];
 			[items addObject:menuItem];
 		}

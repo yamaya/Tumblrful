@@ -309,7 +309,7 @@
  * @param [in] targetElement 選択している要素
  * @return 自身のオブジェクト
  */
-- (id) initWithDocument:(DOMHTMLDocument*)document target:(NSDictionary*)targetElement
+- (id)initWithDocument:(DOMHTMLDocument*)document target:(NSDictionary*)targetElement
 {
 	if ((self = [super initWithDocument:document target:targetElement]) != nil) {
 		DOMNode* target = [GoogleReaderDelivererContext getEntryMain:document target:targetElement];

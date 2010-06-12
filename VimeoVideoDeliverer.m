@@ -45,10 +45,7 @@
 			D(@"no = %d", no);
 			if (no != 0) {
 				deliverer = [[VimeoVideoDeliverer alloc] initWithDocument:document element:clickedElement];
-				if (deliverer != nil) {
-					[deliverer retain]; //TODO: need?
-				}
-				else {
+				if (deliverer == nil) {
 					D(@"could not alloc+init %@Deliverer.", [self name]);
 				}
 			}

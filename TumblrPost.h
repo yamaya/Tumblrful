@@ -41,6 +41,10 @@
 
 - (void)postTo:(NSString *)url params:(NSDictionary *)params;
 
+/**
+ * reblog
+ *	@param postID ポストのID(整数値)
+ */
 - (NSObject *)reblog:(NSString *)postID key:(NSString *)reblogKey;
 
 @end

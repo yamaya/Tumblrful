@@ -1,6 +1,6 @@
 /**
  * @file PhotoDeliverer.h
- * @brief PhotoDeliverer declaration
+ * @brief PhotoDeliverer class declaration
  * @author Masayuki YAMAYA
  * @date 2008-03-03
  */
@@ -10,10 +10,6 @@
 {
 	NSDictionary * clickedElement_;
 }
-
-//TODO これ DeliverBaseに持ち上げられないの？
-//できる clickedElement_を DeliverBaseに持たせればいい
-- (id)initWithDocument:(DOMHTMLDocument *)document element:(NSDictionary *)clickedElement;
 
 /**
  * contents for Photo post.

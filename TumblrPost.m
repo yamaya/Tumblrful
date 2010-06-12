@@ -558,10 +558,9 @@ static float TIMEOUT = 60.0f;
 
 - (NSURLRequest *)createRequest:(NSString *)url params:(NSDictionary *)params
 {
-	NSMutableString * escaped = [[[NSMutableString alloc] init] autorelease];
+	NSMutableString * escaped = [NSMutableString string];
 
-	/* create the body */
-	/* add key-values from the NSDictionary object */
+	// create the body. add key-values paire from the NSDictionary object
 	NSEnumerator * enumerator = [params keyEnumerator];
 	NSString * key;
 	while ((key = [enumerator nextObject]) != nil) {
@@ -571,18 +570,15 @@ static float TIMEOUT = 60.0f;
             value = [(NSURL *)any absoluteString];
         }
         else {
-            value = (NSString*)any;
+            value = (NSString *)any;
         }
 		value = [value stringByURLEncoding:NSUTF8StringEncoding];
 		[escaped appendFormat:@"&%@=%@", key, value];
 		D0(escaped);
 	}
 
-	/* create the POST request */
-	NSMutableURLRequest * request =
-		[NSMutableURLRequest requestWithURL:[NSURL URLWithString:url]
-								cachePolicy:NSURLRequestReloadIgnoringCacheData
-							timeoutInterval:TIMEOUT];
+	// create the POST request
+	NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:url] cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:TIMEOUT];
 	[request setHTTPMethod:@"POST"];
 	[request setHTTPBody:[escaped dataUsingEncoding:NSUTF8StringEncoding]];
 
@@ -642,6 +638,8 @@ static float TIMEOUT = 60.0f;
 
 - (void)postTo:(NSString *)url params:(NSDictionary *)params
 {
+	D_METHOD;
+
 	responseData_ = [[NSMutableData data] retain];
 
 	NSURLRequest * request = [self createRequest:url params:params];	// request は connection に指定した時点で reatin upする
@@ -657,12 +655,10 @@ static float TIMEOUT = 60.0f;
 	[connection retain];
 }
 
-/**
- * reblog
- *	@param postID ポストのID(整数値)
- */
 - (NSObject *)reblog:(NSString *)postID key:(NSString *)reblogKey
 {
+	D_METHOD;
+
 	NSString * endpoint = [NSString stringWithFormat:@"%@/reblog/%@/%@", TUMBLR_URL, postID, reblogKey];
 	NSURLRequest * request = [NSURLRequest requestWithURL:[NSURL URLWithString:endpoint]];
 

@@ -1,14 +1,13 @@
 /**
  * @file GoogleReaderReblogDeliverer.h
- * @brief GoogleReaderReblogDeliverer declaration
+ * @brief GoogleReaderReblogDeliverer class declaration
  * @author Masayuki YAMAYA
  * @date 2008-11-16
  */
 #import "LDRReblogDeliverer.h"
 
 /**
- * @class GoogleReaderReblogDeliverer
+ * Tumblr post in the Google reader to reblog
  */
 @interface GoogleReaderReblogDeliverer : LDRReblogDeliverer
-+ (id<Deliverer>) create:(DOMHTMLDocument*)document element:(NSDictionary*)clickedElement;
 @end

@@ -1,6 +1,6 @@
 /**
  * @file:   PhotoDeliverer.m
- * @brief:	PhotoDeliverer implementation
+ * @brief:	PhotoDeliverer class implementation
  * @author:	Masayuki YAMAYA
  * @date:   2008-03-03
  */
@@ -23,21 +23,19 @@ static NSString * TYPE = @"Photo";
 
 	id imageURL = [clickedElement objectForKey:WebElementImageURLKey];
 	if (imageURL != nil) {
-		deliverer = [[PhotoDeliverer alloc] initWithDocument:document element:clickedElement];
-		if (deliverer != nil) {
-			[deliverer retain]; //need? FIXME ここでretainするんじゃなくて呼び出し側でやるようにする
-		}
-		else {
+		deliverer = [[PhotoDeliverer alloc] initWithDocument:document target:clickedElement];
+		if (deliverer == nil) {
 			D(@"Could not alloc+init %@Deliverer.", TYPE);
 		}
 	}
+
 	return deliverer;
 }
 
-- (id)initWithDocument:(DOMHTMLDocument *)document element:(NSDictionary *)clickedElement
+- (id)initWithDocument:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement
 {
-	if ((self = [super initWithDocument:document target:clickedElement]) != nil) {
-		clickedElement_ = [clickedElement retain];
+	if ((self = [super initWithDocument:document target:targetElement]) != nil) {
+		clickedElement_ = [targetElement retain];
 	}
 	return self;
 }
@@ -101,11 +99,11 @@ static NSString * TYPE = @"Photo";
 
 - (NSString *)selectedStringWithBlockquote
 {
-	NSString * s = [self selectedString];
-	if (s != nil && [s length] > 0) {
-		s = [s stringByAppendingFormat:@"<blockquote>%@</blockquote>", s];
+	NSString * ss = [self selectedString];
+	if (ss != nil && [ss length] > 0) {
+		ss = [NSString stringWithFormat:@"<blockquote>%@</blockquote>", ss];
 	}
-	return s;
+	return ss;
 }
 
 - (NSString *)selectedString

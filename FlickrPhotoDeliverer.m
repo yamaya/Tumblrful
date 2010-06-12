@@ -24,8 +24,9 @@
 #pragma mark -
 @implementation FlickrPhotoDeliverer
 
-+ (id<Deliverer>)create:(DOMHTMLDocument*)document element:(NSDictionary*)clickedElement
++ (id<Deliverer>)create:(DOMHTMLDocument *)document element:(NSDictionary *)clickedElement
 {
+	// URL of clicked image
 	id imageURL = [clickedElement objectForKey:WebElementImageURLKey];
 	if (imageURL == nil) {
 		return nil;
@@ -37,15 +38,14 @@
 		return nil;
 	}
 
-	// create object
-	FlickrPhotoDeliverer* deliverer = nil;
-	deliverer = [[FlickrPhotoDeliverer alloc] initWithDocument:document element:clickedElement];
-	if (deliverer != nil) {
-		return [deliverer retain]; //need?
+	// create a object of this class
+	FlickrPhotoDeliverer * deliverer = nil;
+	deliverer = [[FlickrPhotoDeliverer alloc] initWithDocument:document target:clickedElement];
+	if (deliverer == nil) {
+		D(@"Could not alloc+init %@.", [self className]);
 	}
 
-	D(@"Could not alloc+init %@.", [self className]);
-	return nil;
+	return deliverer;
 }
 
 - (NSString *)titleForMenuItem
