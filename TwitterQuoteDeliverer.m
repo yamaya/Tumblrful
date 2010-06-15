@@ -96,13 +96,13 @@ static NSString * TWITTER_HOSTNAME = @"twitter.com";
 		quote = [quote stringByTrimmingWhitespace];
 	}
 	{	// source
-		NSString * title = context_.titleOfDocument;
+		NSString * title = context_.documentTitle;
 		title = [title stringByTrimmingWhitespace];
 		NSRange range = [title rangeOfString:@": "];
 		if (range.location != NSNotFound) {
 			title = [title substringToIndex:range.location];
 		}
-		source = [DelivererRules anchorTagWithName:context_.URLOfDocument name:title];
+		source = [DelivererRules anchorTagWithName:context_.documentURL name:title];
 	}
 
 	return [NSDictionary dictionaryWithObjectsAndKeys:quote, @"quote", source, @"source", nil];

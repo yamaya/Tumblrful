@@ -14,10 +14,10 @@
 @implementation DelivererContext
 
 @synthesize document = document_;
-@dynamic titleOfDocument;
-@dynamic URLOfDocument;
-@dynamic anchorOfDocument;
-@dynamic titleOfMenuItem;
+@dynamic documentTitle;
+@dynamic documentURL;
+@dynamic anchorToDocument;
+@dynamic menuTitle;
 
 + (BOOL)match:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement
 {
@@ -87,22 +87,22 @@
 	[super dealloc];
 }
 
-- (NSString *)titleOfDocument
+- (NSString *)documentTitle
 {
 	return [document_ title];
 }
 
-- (NSString *)URLOfDocument
+- (NSString *)documentURL
 {
 	return [document_ URL];
 }
 
-- (NSString *)anchorOfDocument
+- (NSString *)anchorToDocument
 {
-	return [DelivererRules anchorTagWithName:self.URLOfDocument name:self.titleOfDocument];
+	return [DelivererRules anchorTagWithName:self.documentURL name:self.documentTitle];
 }
 
-- (NSString *)titleOfMenuItem
+- (NSString *)menuTitle
 {
 	return @"";
 }

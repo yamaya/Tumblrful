@@ -19,13 +19,13 @@
 
 @property (nonatomic, readonly) DOMHTMLDocument * document;
 
-@property (nonatomic, readonly) NSString * titleOfDocument;
+@property (nonatomic, readonly) NSString * documentTitle;
 
-@property (nonatomic, readonly) NSString * URLOfDocument;
+@property (nonatomic, readonly) NSString * documentURL;
 
-@property (nonatomic, readonly) NSString * anchorOfDocument;
+@property (nonatomic, readonly) NSString * anchorToDocument;
 
-@property (nonatomic, readonly) NSString * titleOfMenuItem;
+@property (nonatomic, readonly) NSString * menuTitle;
 
 /**
  * To process HTML documents to determine whether.

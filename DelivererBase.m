@@ -155,8 +155,8 @@
 - (void)postQuote:(NSString *)quote source:(NSString *)source
 {
 	@try {
-		if (source == nil)
-			source = [Anchor htmlWithURL:context_.URLOfDocument title:context_.titleOfDocument];
+		if (source == nil || [source length] == 0)
+			source = context_.anchorToDocument;
 
 		NSUInteger i = 0;
 		NSEnumerator * enumerator = [PostAdaptorCollection enumerator];
@@ -244,7 +244,7 @@
 	D(@"self.retainCount=%x", [self retainCount]);
 
 	@try {
-		NSString * message = [NSString stringWithFormat:@"%@\n--- %@", context_.titleOfDocument, response];
+		NSString * message = [NSString stringWithFormat:@"%@\n--- %@", context_.documentTitle, response];
 		[self notify:message];
 	}
 	@catch (NSException * e) {
@@ -289,7 +289,6 @@
 	NSMutableArray * items = [[[NSMutableArray alloc] init] autorelease];
 	NSUInteger i = 0;
 	NSUInteger mask = 1;
-	D(@"initial count:%d", [PostAdaptorCollection count]);
 
 	NSEnumerator* enumerator = [PostAdaptorCollection enumerator];
 	Class adaptorClass;
@@ -347,7 +346,7 @@
 // メニュータイトルを作る
 - (NSString *)makeMenuTitle
 {
-	NSString * title = [NSString stringWithFormat:@"%@%@", [self titleForMenuItem], context_.titleOfMenuItem];
+	NSString * title = [NSString stringWithFormat:@"%@%@", [self titleForMenuItem], context_.menuTitle];
 	return [DelivererRules menuItemTitleWith:title];
 }
 

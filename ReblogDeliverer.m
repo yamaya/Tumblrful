@@ -162,7 +162,7 @@ static NSString * TYPE = @"Reblog";
 	D(@"self.retainCount=%x", [self retainCount]);
 
 	@try {
-		NSString * message = [NSString stringWithFormat:@"%@\nPost ID: %@", context_.titleOfDocument, postID_];
+		NSString * message = [NSString stringWithFormat:@"%@\nPost ID: %@", context_.documentTitle, postID_];
 		[self notify:message];
 	}
 	@catch (NSException * e) {

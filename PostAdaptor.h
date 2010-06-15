@@ -38,19 +38,11 @@
 @property (nonatomic, retain) NSDictionary * options;
 
 /**
- * initialize object
- * @param[in] callback PostCallback オブジェクト
- * @return 初期かが完了した自分自身
+ * Initialize object
+ *	@param[in] callback PostCallback object
+ *	@return Initialized object
  */
 - (id)initWithCallback:(id<PostCallback>)callback;
-
-/**
- * initialize object
- * @param[in] callback PostCallback オブジェクト
- * @param[in] private 非公開ポストの場合YES
- * @return 初期化が完了した自分自身
- */
-- (id)initWithCallback:(id<PostCallback>)callback private:(BOOL)private;
 
 /**
  * title for Contextual menu item

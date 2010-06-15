@@ -74,7 +74,7 @@ static NSString * VIMEO_HOSTNAME = @"vimeo.com";
 	NSString * embed = nil;
 
 	// videoID をURLから得る http://www.vimeo.com/1237052?pg=embed&sec=1237052
-	NSString * videoID = [self vimeoVideoIDWithURL:context_.URLOfDocument];
+	NSString * videoID = [self vimeoVideoIDWithURL:context_.documentURL];
 	D(@"videoID=%@", videoID);
 
 	// Vimeo API 経由で Video 情報を XML 形式で得る

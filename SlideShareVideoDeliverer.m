@@ -106,7 +106,7 @@ static NSString * SLIDESHARE_HOSTNAME = @"slideshare.net";
 	}
 	NSString* caption =
 	 	[NSString stringWithFormat:@"%@ (via %@)",
-						[DelivererRules anchorTagWithName:context_.URLOfDocument name:title],
+						[DelivererRules anchorTagWithName:context_.documentURL name:title],
 						[DelivererRules anchorTagWithName:[[anchor absoluteLinkURL] absoluteString] name:[anchor textContent]]];
 	D(@"caption: [%@]", caption);
 

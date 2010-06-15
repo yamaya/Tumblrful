@@ -50,6 +50,7 @@
 		546A0759105A7E60009DE2D1 /* Growl.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 546A0750105A7E57009DE2D1 /* Growl.framework */; };
 		546A07AC105A8A4B009DE2D1 /* SafariSingleWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 546A07AB105A8A4B009DE2D1 /* SafariSingleWindow.m */; };
 		54845E8111C79DF1004E9D91 /* PostEditWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 54845E8011C79DF1004E9D91 /* PostEditWindowController.m */; };
+		548C398B11C7AD11000BF1BD /* AggregatorDeliverContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 548C398A11C7AD11000BF1BD /* AggregatorDeliverContext.m */; };
 		54A0537A11A82A4000D5502E /* TumblrfulConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = 54A0537911A82A4000D5502E /* TumblrfulConstants.m */; };
 		54A3ABBD11C264DE003B6C67 /* VideoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 54A3ABBC11C264DE003B6C67 /* VideoViewController.m */; };
 		54AD366F11C76F0500CD1DF8 /* TwitterQuoteDeliverer.m in Sources */ = {isa = PBXBuildFile; fileRef = 54AD366E11C76F0500CD1DF8 /* TwitterQuoteDeliverer.m */; };
@@ -163,6 +164,8 @@
 		546A07AB105A8A4B009DE2D1 /* SafariSingleWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SafariSingleWindow.m; sourceTree = "<group>"; };
 		54845E7F11C79DF1004E9D91 /* PostEditWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PostEditWindowController.h; path = EditWindow/PostEditWindowController.h; sourceTree = "<group>"; };
 		54845E8011C79DF1004E9D91 /* PostEditWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = PostEditWindowController.m; path = EditWindow/PostEditWindowController.m; sourceTree = "<group>"; };
+		548C398911C7AD11000BF1BD /* AggregatorDeliverContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AggregatorDeliverContext.h; sourceTree = "<group>"; };
+		548C398A11C7AD11000BF1BD /* AggregatorDeliverContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AggregatorDeliverContext.m; sourceTree = "<group>"; };
 		54A0537811A82A4000D5502E /* TumblrfulConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TumblrfulConstants.h; sourceTree = "<group>"; };
 		54A0537911A82A4000D5502E /* TumblrfulConstants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TumblrfulConstants.m; sourceTree = "<group>"; };
 		54A3ABBA11C264DE003B6C67 /* PostEditConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PostEditConstants.h; path = EditWindow/PostEditConstants.h; sourceTree = "<group>"; };
@@ -237,6 +240,8 @@
 		08FB77AFFE84173DC02AAC07 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				548C398911C7AD11000BF1BD /* AggregatorDeliverContext.h */,
+				548C398A11C7AD11000BF1BD /* AggregatorDeliverContext.m */,
 				54AD366D11C76F0500CD1DF8 /* TwitterQuoteDeliverer.h */,
 				54AD366E11C76F0500CD1DF8 /* TwitterQuoteDeliverer.m */,
 				5459AE7811C3599D00A6ADE3 /* TumblrReblogExtractor.h */,
@@ -513,6 +518,7 @@
 				5459AE7A11C3599D00A6ADE3 /* TumblrReblogExtractor.m in Sources */,
 				54AD366F11C76F0500CD1DF8 /* TwitterQuoteDeliverer.m in Sources */,
 				54845E8111C79DF1004E9D91 /* PostEditWindowController.m in Sources */,
+				548C398B11C7AD11000BF1BD /* AggregatorDeliverContext.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

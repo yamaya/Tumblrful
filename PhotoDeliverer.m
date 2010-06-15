@@ -85,13 +85,13 @@ static NSString * TYPE = @"Photo";
 	NSString * source = [[clickedElement_ objectForKey:WebElementImageURLKey] absoluteString];
 
 	// キャプション - セレクションがあればそれを blockquoteで囲って追加する
-	NSString * caption = context_.anchorOfDocument;
+	NSString * caption = context_.anchorToDocument;
 	NSString * selection = [self selectedStringWithBlockquote];
 	if (selection != nil && [selection length] > 0) {
 		caption = [caption stringByAppendingFormat:@"\r%@", selection];
 	}
 
-	return [NSDictionary dictionaryWithObjectsAndKeys:source, @"source", caption, @"caption", context_.URLOfDocument, @"throughURL", nil];
+	return [NSDictionary dictionaryWithObjectsAndKeys:source, @"source", caption, @"caption", context_.documentURL, @"throughURL", nil];
 }
 
 - (NSString *)selectedStringWithBlockquote

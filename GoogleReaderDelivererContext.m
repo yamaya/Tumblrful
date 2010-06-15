@@ -13,322 +13,111 @@ static NSString * GOOGLEREADER_HOSTNAME	= @"www.google.com";
 static NSString * GOOGLEREADER_PATH		= @"/reader/view";
 
 @interface GoogleReaderDelivererContext ()
-+ (DOMNode *)getEntryMain:(DOMHTMLDocument *)document target:(NSDictionary *)element;
-- (NSString *)stringForXPath:(NSString *)xpath target:(DOMNode*)targetNode debug:(NSString *)message;
-- (NSString *)getAuthor:(DOMNode *)targetNode;
-- (NSString *)getTitle:(DOMNode *)targetNode;
-- (NSString *)getFeedName:(DOMNode *)targetNode;
-- (NSString *)getURI:(DOMNode *)targetNode;
-+ (void)dumpXPathResult:(DOMXPathResult *)result withPrefix:(NSString *)prefix;
++ (BOOL)siteMatchWithURL:(NSString *)URL;
+- (NSString *)titleWithNode:(DOMNode *)targetNode;
+- (NSString *)sourceWithNode:(DOMNode *)targetNode;
+- (NSString *)URLWithNode:(DOMNode *)targetNode;
 @end
 
 @implementation GoogleReaderDelivererContext
 
-+ (BOOL)match:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement
++ (BOOL)siteMatchWithURL:(NSString *)URL
 {
-	NSURL * u = [NSURL URLWithString:[document URL]];
-	if (u != nil) {
-		NSString * host = [u host];
-		if ([host isEqualToString:GOOGLEREADER_HOSTNAME]) {
-			NSString * path = [u path];
-			if ([path hasPrefix:GOOGLEREADER_PATH]) {
-				return [self getEntryMain:document target:targetElement] != nil;
+	NSURL * url = [NSURL URLWithString:URL];
+	if (url != nil) {
+		if ([[url host] isEqualToString:GOOGLEREADER_HOSTNAME]) {
+			if ([[url path] hasPrefix:GOOGLEREADER_PATH]) {
+				return YES;
 			}
 		}
 	}
 	return NO;
 }
 
++ (BOOL)match:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement
+{
+	if ([self siteMatchWithURL:[document URL]]) {
+		if ([self entryNodeWithDocument:document target:targetElement] != nil) {
+			D0(@"matched");
+			return YES;
+		}
+	}
+	D0(@"mismatched");
+	return NO;
+}
+
 + (DOMHTMLElement *)matchForAutoDetection:(DOMHTMLDocument *)document windowScriptObject:(WebScriptObject *)wso;
 {
 #pragma unused (wso)
-	DOMHTMLElement* element = nil;
+	DOMHTMLElement * element = nil;
 
-	NSURL* url = [NSURL URLWithString:[document URL]];
-	if (url != nil) {
-		NSString* host = [url host];
-		if ([host isEqualToString:GOOGLEREADER_HOSTNAME]) {
-			NSString* path = [url path];
-			if ([path hasPrefix:GOOGLEREADER_PATH]) {
-				NSArray * expressions = [NSArray arrayWithObjects:
-					  @"//div[@id=\"current-entry\"]//div[@class=\"item-body\"]//img"
-					, @"//div[@id=\"current-entry\"]//div[@class=\"item-body\"]"
-					, nil
-					];
-				element = [DelivererContext evaluate:expressions document:document contextNode:document];
-			}
-		}
+	if ([self siteMatchWithURL:[document URL]]) {
+		NSArray * expressions = [NSArray arrayWithObjects:
+			  @"//div[@id=\"current-entry\"]//div[@class=\"item-body\"]//img"
+			, @"//div[@id=\"current-entry\"]//div[@class=\"item-body\"]"
+			, nil
+			];
+		element = [DelivererContext evaluate:expressions document:document contextNode:document];
 	}
 
 	return element;
 }
 
-- (id)initWithDocument:(DOMHTMLDocument*)document target:(NSDictionary*)targetElement
++ (NSString *)name
 {
-	if ((self = [super initWithDocument:document target:targetElement]) != nil) {
-		DOMNode * target = [GoogleReaderDelivererContext getEntryMain:document target:targetElement];
-		if (target != nil) {
-			author_ = [[self getAuthor:target] retain];
-			title_ = [[self getTitle:target] retain];
-			feedName_ = [[self getFeedName:target] retain];
-			uri_ = [[self getURI:target] retain];
-		}
-		else {
-			// 通常はあり得ない - match で同じ事を実行して成功しているはずだから
-			D(@"Failed getEntryMain. element: %@", SafetyDescription(targetElement));
-		}
-	}
-	return self;
+	return @"Google Reader";
 }
 
-- (void)dealloc
+/// フィードエントリとその情報(Authorとか)を含む最も内側の div要素を得る
++ (NSString *)entryNodeExpression
 {
-	[author_ release], author_ = nil;
-	[title_ release], title_ = nil;
-	[feedName_ release], feedName_ = nil;
-	[uri_ release], uri_ = nil;
-
-	[super dealloc];
-}
-
-- (NSString *)titleOfDocument
-{
-	// フィード名とフィードタイトルを連結したものをドキュメントタイトルとする
-	NSMutableString * title = [[[NSMutableString alloc] initWithString:feedName_] autorelease];
-
-	if (title_ != nil && [title_ length] > 0) {
-		[title appendFormat:@" - %@", title_];
-	}
-
-	return title;
-}
-
-- (NSString *)URLOfDocument
-{
-	return uri_;
-}
-
-- (NSString *)titleOfMenuItem
-{
-	return @" - Google Reader";
+	return @"ancestor-or-self::div[@class=\"entry-main\"]";
 }
 
 #pragma mark -
 #pragma mark Private Methods
 
-/**
- * フィードエントリとその情報(Authorとか)を含む最も内側の div要素を得る
- * @param [in] document
- * @param [in] element
- * @return DOMNode
- */
-+ (DOMNode *)getEntryMain:(DOMHTMLDocument*)document target:(NSDictionary*)element
+
+/// フィードエントリのタイトルを得る
+- (NSString *)titleWithNode:(DOMNode *)targetNode
 {
-	static NSString* xpath = @"ancestor-or-self::div[@class=\"entry-main\"]";
+	static NSString * xpath = @"./h2[@class=\"entry-title\"]//a/text()";
 
-	DOMNode* targetNode = [element objectForKey:WebElementDOMNodeKey];
-	if (targetNode == nil) {
-		D(@"DOMNode not found: %@", element);
-		return nil;
-	}
+	NSString * title = [self evaluateWithXPathExpression:xpath target:targetNode];
+	if (title == nil) title = @"(no title)";
+	return title;
+}
 
-	D(@"getEntryMain: target: %@", SafetyDescription(targetNode));
-	DOMXPathResult* result;
-	result = [document evaluate:xpath
-					contextNode:targetNode
-					   resolver:nil /* nil for HTML document */
-						   type:DOM_ANY_TYPE
-						inResult:nil];
+/// フィードソース名(サイト名)を得る
+- (NSString *)sourceWithNode:(DOMNode *)targetNode
+{
+	static NSString * xpath = @"./div[@class=\"entry-author\"]//a/text()";
 
-	[self dumpXPathResult:result withPrefix:@"getEntryMain"];
+	NSString * source = [self evaluateWithXPathExpression:xpath target:targetNode];
+	if (source == nil) source = @"(no source)";
+	return source;
+}
 
-	if (result != nil) {
-		if (![result invalidIteratorState]) {
-			DOMNode* node;
-			for (node = [result iterateNext]; node != nil; node = [result iterateNext]) {
-				D(@"node: %@ id:%@", [node description], [((DOMHTMLDivElement*)node) idName]);
-				return node; /* 先頭のDOMノードでOK(1ノードしか選択していないハズ) */
+/// 元記事へのURLを得る
+- (NSString *)URLWithNode:(DOMNode *)targetNode
+{
+	static NSString * xpath = @"./h2[@class=\"entry-title\"]//a/@href";
+
+	@try {
+		DOMXPathResult * result = [self evaluateToDocument:xpath contextNode:targetNode type:DOM_ANY_TYPE inResult:nil];
+		[[self class] dump:result];
+
+		if (result != nil && [result resultType] == DOM_UNORDERED_NODE_ITERATOR_TYPE && ![result invalidIteratorState]) {
+			for (DOMNode * node = [result iterateNext]; node != nil; node = [result iterateNext]) {
+				D(@"name=%@ type=%d value=%@ textContent=%@", [node nodeName], [node nodeType], [node nodeValue], [node textContent]);
+				return [node textContent];
 			}
 		}
 	}
-	D(@"Failed XPath for targetNode: %@", [targetNode description]);
-	return nil;
-}
-
-- (NSString *)stringForXPath:(NSString *)xpath target:(DOMNode *)targetNode debug:(NSString *)message
-{
-	D(@"%@: targetNode: %@", message, SafetyDescription(targetNode));
-	if ([targetNode respondsToSelector:@selector(idName)]) {
-		D(@"%@: targetNode's id: %@", message, [targetNode performSelector:@selector(idName)]);
+	@catch (NSException * e) {
+		D0([e description]);
 	}
 
-	@try {
-		DOMXPathResult* result;
-		result = [self evaluateToDocument:xpath
-							  contextNode:targetNode
-									 type:DOM_STRING_TYPE
-								 inResult:nil];
-
-		[GoogleReaderDelivererContext dumpXPathResult:result withPrefix:message];
-
-		if (result != nil && [result resultType] == DOM_STRING_TYPE) {
-			return [result stringValue];
-		}
-	}
-	@catch (NSException* e) {
-		D(@"Catch exception: %@", [e description]);
-	}
-
-	return [[[NSString alloc] init] autorelease];
-}
-
-/**
- * getAuthor
- *	フィードエントリの作者を得る
- * @param [in] targetNode
- * @return NSString*
- */
-- (NSString*) getAuthor:(DOMNode*)targetNode
-{
-	static NSString* xpath = @"./div[@class=\"entry-author\"]/*[@class=\"entry-author-name\"]/text()";
-
-	NSString* author = nil;
-	
-	author = [self stringForXPath:xpath target:targetNode debug:@"getAuthor"];
-	if (author != nil && [author length] > 3) {
-		return author;
-	}
-	return [[[NSString alloc] init] autorelease];
-}
-
-/**
- * getTitle
- *	フィードエントリのタイトルを得る
- * @param [in] targetNode
- * @return NSString*
- */
-- (NSString*) getTitle:(DOMNode*)targetNode
-{
-	static NSString* xpath = @"./h2[@class=\"entry-title\"]//a/text()";
-
-	NSString* title = nil;
-	title = [self stringForXPath:xpath target:targetNode debug:@"getTitle"];
-	if (title != nil) {
-		return title;
-	}
-
-	return [[[NSString alloc] initWithString:@"no title"] autorelease];
-}
-
-/**
- * getFeedName
- *	フィード名(サイト名)を得る
- */
-- (NSString*) getFeedName:(DOMNode*)targetNode
-{
-	static NSString* xpath = @"./div[@class=\"entry-author\"]//a/text()";
-
-	NSString* title = nil;
-	title = [self stringForXPath:xpath target:targetNode debug:@"getFeedName"];
-	if (title != nil) {
-		return title;
-	}
-
-	return [[[NSString alloc] initWithString:@"no feedname"] autorelease];
-}
-
-/**
- * getURI
- *	元記事へのURIを得る
- */
-- (NSString*) getURI:(DOMNode*)targetNode
-{
-	static NSString* xpath = @"./h2[@class=\"entry-title\"]//a/@href";
-
-	@try {
-		DOMXPathResult* result;
-		result = [self evaluateToDocument:xpath
-							  contextNode:targetNode
-									 type:DOM_ANY_TYPE
-								 inResult:nil];
-
-		[GoogleReaderDelivererContext dumpXPathResult:result withPrefix:@"getURI"];
-
-		if (result != nil && [result resultType] == DOM_UNORDERED_NODE_ITERATOR_TYPE) {
-			if (![result invalidIteratorState]) {
-				DOMNode* node = nil;
-				for (node = [result iterateNext]; node != nil; node = [result iterateNext]) {
-					D(@"1st node: name: %@ type: %d value: %@ textContent: %@",
-							[node nodeName],
-							[node nodeType],
-							[node nodeValue],
-							[node textContent]);
-					/* s/[?&;](fr?(om)?|track|ref|FM)=(r(ss(all)?|df)|atom)([&;].*)?//g */
-					return [node textContent];
-				}
-			}
-		}
-	}
-	@catch (NSException* e) {
-		D(@"Catch exception: %@", [e description]);
-	}
-
-	return [[[NSString alloc] init] autorelease];
-}
-
-/**
- *
- */
-+ (void) dumpXPathResult:(DOMXPathResult*)result withPrefix:(NSString*)prefix
-{
-#pragma unused (prefix)
-#define ToTypeName(t) \
-					(t == DOM_NUMBER_TYPE ? @"NUMBER" : \
-					 t == DOM_STRING_TYPE ? @"STRING" : \
-					 t == DOM_BOOLEAN_TYPE ? @"BOOLEAN" : \
-					 t == DOM_UNORDERED_NODE_ITERATOR_TYPE ? @"UNORDERED_NODE_ITERATOR" : \
-					 t == DOM_ORDERED_NODE_ITERATOR_TYPE ? @"ORDERED_NODE_ITERATOR" : \
-					 t == DOM_UNORDERED_NODE_SNAPSHOT_TYPE ? @"UNORDERED_NODE_SNAPSHOT" : \
-					 t == DOM_ORDERED_NODE_SNAPSHOT_TYPE ? @"ORDERED_NODE_SNAPSHOT" : \
-					 t == DOM_ANY_UNORDERED_NODE_TYPE ? @"ANY_UNORDERED_NODE" : \
-					 t == DOM_FIRST_ORDERED_NODE_TYPE ? @"FIRST_ORDERED_NODE" : \
-					 t == DOM_ANY_TYPE ? @"ANY" : @"Unknown?")
-
-	@try {
-		if (result != nil) {
-			D(@"XPath: %@ {", prefix);
-			D(@"  description: %@", [result description]);
-			D(@"  resultType: %@", ToTypeName([result resultType]));
-			switch ([result resultType]) {
-			case DOM_NUMBER_TYPE:
-				D(@"  numberValue: %f", [result numberValue]);
-				break;
-			case DOM_STRING_TYPE:
-				D(@"  stringValue: %@", [result stringValue]);
-				break;
-			case DOM_BOOLEAN_TYPE:
-				D(@"  booleanValue: %d", [result booleanValue]);
-				break;
-			case DOM_ORDERED_NODE_SNAPSHOT_TYPE:
-			case DOM_UNORDERED_NODE_SNAPSHOT_TYPE:
-				D(@"  snapshotLength: %d", [result snapshotLength]);
-				D(@"  snapshotItem[0]: %@", [[result snapshotItem:0] description]);
-				break;
-			case DOM_ORDERED_NODE_ITERATOR_TYPE:
-			case DOM_UNORDERED_NODE_ITERATOR_TYPE:
-				D(@"  %@s invalidIteratorState: %d", @"NODE_ITERATOR", [result invalidIteratorState]);
-				break;
-			case DOM_FIRST_ORDERED_NODE_TYPE:
-				D(@"  %@ invalidIteratorState: %d", @"FIRST_ORDERED_NODE", [result invalidIteratorState]);
-				break;
-			default:
-				D(@"  resultType was invalid%@", @"!");
-			}
-			D(@"%@", @"}");
-		}
-	}
-	@catch (NSException* e) {
-		D(@"Catch exception: %@", [e description]);
-	}
+	return @"(no URL)";
 }
 @end

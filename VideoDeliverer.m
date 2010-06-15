@@ -87,7 +87,7 @@ static NSString * TYPE = @"Video";
 			caption = [contents objectForKey:@"caption"];
 		}
 		else {
-			url = context_.URLOfDocument;
+			url = context_.documentURL;
 			caption = nil;
 		}
 		[super postVideo:url caption:caption];

@@ -27,14 +27,9 @@
 
 - (id)initWithCallback:(id<PostCallback>)callback
 {
-	return [self initWithCallback:callback private:NO];
-}
-
-- (id)initWithCallback:(id<PostCallback>)callback private:(BOOL)private
-{
 	if ((self = [super init]) != nil) {
 		callback_ = [callback retain];
-		privated_ = private;
+		privated_ = NO;
 		queuingEnabled_ = NO;
 		extractEnabled_ = YES;
 	}

@@ -21,7 +21,7 @@
 	// GoogleReaderDelivererContext を生成する
 	GoogleReaderDelivererContext * context = [[[GoogleReaderDelivererContext alloc] initWithDocument:document target:clickedElement] autorelease];
 
-	NSURL * url = [NSURL URLWithString:context.URLOfDocument];
+	NSURL * url = [NSURL URLWithString:context.documentURL];
 	if (url == nil) return nil;
 
 	D(@"URL:%@", [url absoluteString]);
@@ -44,7 +44,7 @@
 		}
 	}
 
-	NSString * postID = [context.URLOfDocument lastPathComponent];
+	NSString * postID = [context.documentURL lastPathComponent];
 	if (postID == nil) {
 		D(@"Could not get PostID. element:%@", [clickedElement description]);
 		return nil;
