@@ -33,7 +33,7 @@
 	return nil;
 }
 
-- (id)initWithDocument:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement
+- (id)initWithDocument:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement	//TODO これだれが使うんだっけ？
 {
 	// targetにマッチするコンテキストを探す
 	DelivererContext * context = nil;
@@ -152,10 +152,12 @@
 	}
 }
 
-- (void)postQuote:(NSString *)quote
+- (void)postQuote:(NSString *)quote source:(NSString *)source
 {
 	@try {
-		NSString * source = [Anchor htmlWithURL:[context_ documentURL] title:[context_ documentTitle]];
+		if (source == nil)
+			source = [Anchor htmlWithURL:[context_ documentURL] title:[context_ documentTitle]];
+
 		NSUInteger i = 0;
 		NSEnumerator * enumerator = [PostAdaptorCollection enumerator];
 		Class adaptorClass;
@@ -248,8 +250,6 @@
 	@catch (NSException * e) {
 		D0([e description]);
 	}
-
-	[response release];	//TODO need?
 }
 
 /**

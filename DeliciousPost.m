@@ -54,7 +54,8 @@ static NSString * API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
 
 - (void)dealloc
 {
-	[callback_ release];
+	[callback_ release], callback_ = nil;
+	[responseData_ release], responseData_ = nil;
 
 	[super dealloc];
 }
@@ -133,47 +134,38 @@ static NSString * API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
 	[responseData_ setLength:0]; // initialize receive buffer
 }
 
-/**
- * didReceiveData
- *	delegate method
- */
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
 {
 #pragma unused (connection)
 	[responseData_ appendData:data]; // append data to receive buffer
 }
 
-/**
- * connectionDidFinishLoading
- *	delegate method
- */
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
+#pragma unused (connection)
 	D(@"succeeded to load %d bytes", [responseData_ length]);
 
 	if (callback_ != nil) {
-		NSString * resultCode = nil;
-		NSXMLNode * node = nil;
 		NSError * error = nil;
-		NSXMLDocument * document = [[[NSXMLDocument alloc] initWithData:responseData_ options:NSXMLDocumentTidyHTML error:&error] autorelease];
-		node = [[document rootElement] attributeForName:@"code"];
+		NSXMLDocument * xmlDoc = [[[NSXMLDocument alloc] initWithData:responseData_ options:NSXMLDocumentTidyHTML error:&error] autorelease];
+		NSXMLNode * node = [[xmlDoc rootElement] attributeForName:@"code"];
+
+		NSString * resultCode = nil;
 		if (node != nil) {
 			resultCode = [node stringValue];
 		}
 		D(@"resultCode:%@", resultCode);
-		[self callback:@selector(successed:) withObject:[resultCode retain]];
+
+		[self callback:@selector(successed:) withObject:resultCode];
 	}
 	else {
 		[self callback:@selector(failedWithError:) withObject:nil];
 	}
-
-	[connection release];
-	[responseData_ release];
-	responseData_ = nil;
 }
 
 - (NSURLRequest *)createRequest:(NSDictionary *)params
 {
+#pragma unused (connection)
 	@try {
 		NSMutableString * ms = [[[NSMutableString alloc] initWithString:API_ADD_ENDPOINT] autorelease];
 		NSEnumerator * enumerator = [params keyEnumerator];
@@ -187,15 +179,8 @@ static NSString * API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
 
 		// create the POST request
 		NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:s] cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:TIMEOUT];
-#if 0
-		s = [NSString stringWithFormat:@"%@:%@", [DeliciousPost username], [DeliciousPost password]];
-		s = [NSString stringWithFormat:@"Basic %@", [[s dataUsingEncoding:NSASCIIStringEncoding] encodeBase64]];
-		[request setValue:s forHTTPHeaderField: @"Authorization"];
-		[request setHTTPShouldHandleCookies:NO];
-#endif
 		[request setValue:@"Tumblrful" forHTTPHeaderField:@"User-Agent"];
 
-		//D(@"request: %@", SafetyDescription(request));
 		return request;
 	}
 	@catch (NSException * e) {
@@ -204,17 +189,10 @@ static NSString * API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
 	return nil;
 }
 
-/**
- * didFailWithError
- *	delegate method
- */
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
+#pragma unused (connection)
 	D0([error description]);
-
-	[connection release];
-	[responseData_ release];	// release receive buffer
-	responseData_ = nil;
 
 	[self callback:@selector(failedWithError:) withObject:error];
 }

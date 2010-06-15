@@ -100,9 +100,6 @@ static NSString * TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 			NSString * endpoint = [context_ documentURL];
 			NSURLRequest * request = [NSURLRequest requestWithURL:[NSURL URLWithString:endpoint]];
 			ReblogKeyDelegate * delegate = [[ReblogKeyDelegate alloc] initWithEndpoint:endpoint deliverer:self];
-#if 0 // TODO alloc/init しているのに retainはいらんだろ
-			[delegate retain];	// 通信後、このオブジェクト自身でreleaseする
-#endif
 			NSURLConnection * connection;
 			connection = [NSURLConnection connectionWithRequest:request delegate:delegate];
 		}

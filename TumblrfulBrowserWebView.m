@@ -1,6 +1,6 @@
 /**
  * @file TumblrfulBrowserWebView.m
- * @brief TumblrfulBrowserWebView implementation
+ * @brief TumblrfulBrowserWebView class implementation
  * @author Masayuki YAMAYA
  * @date 2008-03-03
  */
@@ -8,6 +8,7 @@
 // /System/Library/Frameworks/WebKit.framework/Headers/WebView.h
 #import "TumblrfulBrowserWebView.h"
 #import "QuoteDeliverer.h"
+#import "TwitterQuoteDeliverer.h"
 #import "LinkDeliverer.h"
 #import "ReblogDeliverer.h"
 #import "LDRReblogDeliverer.h"
@@ -69,6 +70,7 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 			, [FlickrPhotoDeliverer class]
 			, [PhotoDeliverer class]
 			, [QuoteDeliverer class]
+			, [TwitterQuoteDeliverer class]
 			, [VimeoVideoDeliverer class]
 			, [SlideShareVideoDeliverer class]
 			, [VideoDeliverer class]

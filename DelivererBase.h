@@ -45,8 +45,9 @@
 /**
  * post "Quote" contents
  *	@param[in] quote	quote text
+ *	@param[in] source	source
  */
-- (void)postQuote:(NSString *)quote;
+- (void)postQuote:(NSString *)quote source:(NSString *)source;
 
 /**
  * post "Photo" contents

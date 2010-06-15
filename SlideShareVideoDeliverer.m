@@ -8,9 +8,12 @@
  */
 #import "SlideShareVideoDeliverer.h"
 #import "DelivererRules.h"
+#import "NSString+Tumblrful.h"
 #import "DebugLog.h"
 #import <WebKit/DOMHTMLObjectElement.h>
 // /System/Library/Frameworks/WebKit.framework/Headers/DOMHTMLObjectElement.h
+
+static NSString * SLIDESHARE_HOSTNAME = @"slideshare.net";
 
 @implementation SlideShareVideoDeliverer
 
@@ -25,9 +28,9 @@
 
 	D(@"DOMNode:%@", [node description]);
 
-	/* check URL's host */
+	// check URL's host
 	NSURL* url = [NSURL URLWithString:[[document URL] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
-	if ([[url host] hasSuffix:@"slideshare.net"] == NO) {
+	if ([[url host] hasSuffix:SLIDESHARE_HOSTNAME] == NO) {
 		return nil;
 	}
 
@@ -35,13 +38,11 @@
 		return nil;
 	}
 
-	/* create object */
-	SlideShareVideoDeliverer* deliverer = nil;
-	deliverer = [[SlideShareVideoDeliverer alloc] initWithDocument:document element:clickedElement];
-	if (deliverer != nil) {
-		return [deliverer retain]; //need?
+	// create object
+	SlideShareVideoDeliverer * deliverer = [[SlideShareVideoDeliverer alloc] initWithDocument:document element:clickedElement];
+	if (deliverer == nil) {
+		D(@"Could not alloc+init %@Deliverer.", [self name]);
 	}
-	D(@"Could not alloc+init %@Deliverer.", [self name]);
 
 	return deliverer;
 }
@@ -83,7 +84,7 @@
 		D(@"Failed XPath for Title. XPathResult: %@", SafetyDescription(result));
 		return nil;
 	}
-	title = [title stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	title = [title stringByTrimmingWhitespace];
 
 	/* username */
 	result = [context_ evaluateToDocument:XPathForUserName contextNode:clickedNode type:DOM_ANY_TYPE inResult:nil];

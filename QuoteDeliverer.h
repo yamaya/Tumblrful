@@ -1,6 +1,6 @@
 /**
  * @file QuoteDeliverer.h
- * @brief QuoteDeliverer declaration
+ * @brief QuoteDeliverer class declaration
  * @author Masayuki YAMAYA
  * @date 2008-03-03
  */

@@ -1,6 +1,6 @@
 /**
  * @file QuoteDeliverer.m
- * @brief QuoteDeliverer implementation
+ * @brief QuoteDeliverer class implementation
  * @author Masayuki YAMAYA
  * @date 2008-03-03
  */
@@ -89,7 +89,7 @@ static NSString * TYPE = @"Quote";
 			return;
 		}
 
-		[super postQuote:quote];
+		[super postQuote:quote source:nil];
 	}
 	@catch (NSException * e) {
 		[self failedWithException:e];

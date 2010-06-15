@@ -47,9 +47,6 @@ static NSString* NOTIFY_NAME = @"NotifyPostToTumblr";
 {
 	if ((self = [super init]) != nil) {
 		[GrowlApplicationBridge setGrowlDelegate:self];
-#if 0	// FIXME これ不要だろ
-		[self registrationDictionaryForGrowl];
-#endif
 	}
 	return self;
 }
