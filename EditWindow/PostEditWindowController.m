@@ -23,6 +23,7 @@
 - (void)setContentsViewWithPostType:(PostType)postType contents:(NSDictionary *)contents display:(BOOL)display;
 - (void)resizeWindowOnSpotWithRect:(NSRect)aRect display:(BOOL)display animate:(BOOL)animate;
 - (void)updateInvocationForReblog;
+- (NSImage *)imageWithURL:(NSString *)imageURL;
 @end
 
 @implementation PostEditWindowController
@@ -55,11 +56,10 @@
 
 - (void)setContentsOptionWithPrivated:(BOOL)privated queued:(BOOL)queued
 {
-#pragma unused (queued)
 	[self loadNibSafety];
 
 	[privateButton_ setState:get_button_state(privated)];
-	[queueingButton_ setState:get_button_state(privated)];
+	[queueingButton_ setState:get_button_state(queued)];
 }
 
 - (void)openSheet:(NSWindow *)window
@@ -241,38 +241,38 @@
 	adaptor.queuingEnabled = ([queueingButton_ state] == NSOnState);
 	adaptor.options = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:([twitterButton_ state] == NSOnState ? YES : NO)], @"twitter", nil];
 
+	Anchor * anchor = nil;
+	NSString * description = nil;
+	NSString * quote = nil;
+	NSString * source = nil;
+	NSString * caption = nil;
+	NSString * throughURL = nil;
+	NSString * embed = nil;
+
 	switch (postType_) {
 	case LinkPostType:
-		{
-			Anchor * anchor = [Anchor anchorWithURL:linkViewController_.URL title:linkViewController_.title];
-			NSString * description = linkViewController_.description;
-			[invocation_ setArgument:&anchor atIndex:2];
-			[invocation_ setArgument:&description atIndex:3];
-		}
+		anchor = [Anchor anchorWithURL:linkViewController_.URL title:linkViewController_.title];
+		description = linkViewController_.description;
+		[invocation_ setArgument:&anchor atIndex:2];
+		[invocation_ setArgument:&description atIndex:3];
 		break;
 	case QuotePostType:
-		{
-			NSString * quote = quoteViewController_.quote;
-			NSString * source = quoteViewController_.source;
-			[invocation_ setArgument:&quote atIndex:2];
-			[invocation_ setArgument:&source atIndex:3];
-		}
+		quote = quoteViewController_.quote;
+		source = quoteViewController_.source;
+		[invocation_ setArgument:&quote atIndex:2];
+		[invocation_ setArgument:&source atIndex:3];
 		break;
 	case PhotoPostType:
-		{
-			NSString * caption = photoViewController_.caption;
-			NSString * throughURL = photoViewController_.throughURL;
-			[invocation_ setArgument:&caption atIndex:3];
-			[invocation_ setArgument:&throughURL atIndex:4];
-		}
+		caption = photoViewController_.caption;
+		throughURL = photoViewController_.throughURL;
+		[invocation_ setArgument:&caption atIndex:3];
+		[invocation_ setArgument:&throughURL atIndex:4];
 		break;
 	case VideoPostType:	
-		{
-			NSString * embed = videoViewController_.embed;
-			NSString * caption = videoViewController_.caption;
-			[invocation_ getArgument:&embed atIndex:2];
-			[invocation_ getArgument:&caption atIndex:3];
-		}
+		embed = videoViewController_.embed;
+		caption = videoViewController_.caption;
+		[invocation_ getArgument:&embed atIndex:2];
+		[invocation_ getArgument:&caption atIndex:3];
 		break;
 	case ReblogPostType:
 		[self updateInvocationForReblog];
@@ -431,9 +431,9 @@
 		[newContents setObject:[contents objectForKey:@"post[two]"] forKey:@"source"];
 		break;
 	case PhotoPostType:
-		//TODO どうやって NSImage を持ってこようか...
 		[newContents setObject:[contents objectForKey:@"post[two]"] forKey:@"caption"];
 		[newContents setObject:[contents objectForKey:@"post[three]"] forKey:@"throughURL"];
+		self.image = [self imageWithURL:[contents objectForKey:@"img-src"]];
 		break;
 	case VideoPostType:	
 		[newContents setObject:[contents objectForKey:@"post[one]"] forKey:@"embed"];
@@ -470,4 +470,19 @@
     [postEditPanel_ setFrame:r display:display animate:animate];
 }
 
+- (NSImage *)imageWithURL:(NSString *)imageURL
+{
+	if (imageURL == nil) return nil;
+
+	NSURLRequest * request = [NSURLRequest requestWithURL:[NSURL URLWithString:imageURL]];
+	NSURLResponse * response = nil;
+	NSError * error = nil;
+	NSData * data = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&error];
+	D0([response description]);
+	D0([error description]);
+
+	if (error != nil || data == nil) return nil;
+
+	return [[[NSImage alloc] initWithData:data] autorelease];
+}
 @end

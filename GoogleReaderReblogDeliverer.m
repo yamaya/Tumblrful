@@ -29,7 +29,7 @@
 	NSRange range;
 	DOMNode * node = [clickedElement objectForKey:WebElementImageURLKey];
 	if (node != nil && [[node className] isEqualToString:@"DOMHTMLImageElement"]) {
-		DOMHTMLImageElement* img = (DOMHTMLImageElement*)node;
+		DOMHTMLImageElement * img = (DOMHTMLImageElement *)node;
 		range = [[img src] rangeOfString:[self dataSiteURL]];
 		if (!(range.location == 0 && range.length >= [[self dataSiteURL] length])) {
 			D(@"GoogleReaderReblogDeliverer: type is Photo but On %@", [self dataSiteURL]);

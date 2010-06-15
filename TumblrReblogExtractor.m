@@ -99,6 +99,8 @@ static const NSRange EmptyRange = {NSNotFound, 0};
 		NSMutableDictionary * contents = nil;
 		NSArray * elements = [self inputElementsWithReblogFrom:data_];
 		NSString * type = [self postTypeWithElements:elements];
+		D(@"type=%@", type);
+
 		if ([type isEqualToString:@"link"])					contents = [self fieldsForLink:elements];
 		else if ([type isEqualToString:@"photo"])			contents = [self fieldsForPhoto:elements];
 		else if ([type isEqualToString:@"quote"])			contents = [self fieldsForQuote:elements];
@@ -169,43 +171,40 @@ static const NSRange EmptyRange = {NSNotFound, 0};
  */
 - (NSArray *)inputElementsWithReblogFrom:(NSData *)reblogForm
 {
-	// TODO Photo に post[one](source) が無いから <div style="text-align:center;"> をひっかけてたのか...
-	// 誤動作するようであれば、 <div style="text-align:center;"> を追加しよう
-	static NSString * XPath = @"//div[@id=\"container\"]/div[@id=\"content\"]/form[@id=\"edit_post\"]//(input[starts-with(@name, \"post\")] | textarea[starts-with(@name, \"post\")] | input[@id=\"form_key\"])";
+	static NSString * XPath = @"//div[@id=\"container\"]/div[@id=\"content\"]/form[@id=\"edit_post\"]//(input[starts-with(@name, \"post\")] | textarea[starts-with(@name, \"post\")] | input[@id=\"form_key\"] | div[@id=\"current_photo\"]//img)";
 
 	// UTF-8 文字列にしないと後の [attribute stringValue] で日本語がコードポイント表記になってしまう
 	NSString * formString = [[[NSString alloc] initWithData:reblogForm encoding:NSUTF8StringEncoding] autorelease];
 
 	// DOMにする
 	NSError * error = nil;
-	NSXMLDocument * document = [[[NSXMLDocument alloc] initWithXMLString:formString options:NSXMLDocumentTidyHTML error:&error] autorelease];
-	if (document == nil) {
+	NSXMLDocument * xmlDoc = [[[NSXMLDocument alloc] initWithXMLString:formString options:NSXMLDocumentTidyHTML error:&error] autorelease];
+	if (xmlDoc == nil) {
 		NSString * message = [NSString stringWithFormat:@"Couldn't make DOMDocument. %@", [error description]];
 		D0(message);
 		[NSException raise:TUMBLRFUL_EXCEPTION_NAME format:@"%@", message];
 	}
 
 	error = nil;
-	NSArray * elements = [[document rootElement] nodesForXPath:XPath error:&error];
+	NSArray * elements = [[xmlDoc rootElement] nodesForXPath:XPath error:&error];
 	if (elements == nil) {
 		NSString * message = [NSString stringWithFormat:@"Failed nodesForXPath. %@", [error description]];
 		D0(message);
 		[NSException raise:TUMBLRFUL_EXCEPTION_NAME format:@"%@", message];
 	}
 
-	D(@"elements retainCount=%d", [elements retainCount]);
+	D(@"elements=%@", [elements description]);
 	return elements;
 }
 
-/**
- * NSXMLElementの配列から post[type] の value を得る
- */
+/// NSXMLElementの配列から post[type] の value を得る
 - (NSString *)postTypeWithElements:(NSArray *)elements
 {
 	NSEnumerator * enumerator = [elements objectEnumerator];
 	NSXMLElement * element;
 	while ((element = [enumerator nextObject]) != nil) {
 		NSString * name = [[element attributeForName:@"name"] stringValue];
+		if (name == nil) continue;
 		if (!NSEqualRanges([name rangeOfString:@"post[type]"], EmptyRange)) {
 			return [[element attributeForName:@"value"] stringValue];
 		}
@@ -220,11 +219,13 @@ static const NSRange EmptyRange = {NSNotFound, 0};
 {
 	NSMutableDictionary * fields = [NSMutableDictionary dictionaryWithObjectsAndKeys:@"link", @"post[type]", nil];
 
+	NSString * name;
 	NSEnumerator * enumerator = [elements objectEnumerator];
 	NSXMLElement * element;
 	while ((element = [enumerator nextObject]) != nil) {
 
-		NSString * name = [[element attributeForName:@"name"] stringValue];
+		name = [[element attributeForName:@"name"] stringValue];
+		if (name == nil) continue;
 
 		if (!NSEqualRanges([name rangeOfString:@"post[one]"], EmptyRange)) {
 			NSXMLNode * attribute = [element attributeForName:@"value"];
@@ -245,32 +246,39 @@ static const NSRange EmptyRange = {NSNotFound, 0};
 	return fields;
 }
 
-/**
- * "Photo" post type の時の input fields の抽出
- */
-- (NSMutableDictionary *)fieldsForPhoto:(NSArray*)elements
+/// "Photo" post type の時の input fields の抽出
+- (NSMutableDictionary *)fieldsForPhoto:(NSArray *)elements
 {
 	NSMutableDictionary * fields = [NSMutableDictionary dictionaryWithObjectsAndKeys:@"photo", @"post[type]", nil];
 
-	NSEnumerator* enumerator = [elements objectEnumerator];
-	NSXMLElement* element;
+	NSXMLNode * attribute;
+	NSString * name;
+	NSEnumerator * enumerator = [elements objectEnumerator];
+	NSXMLElement * element;
 	while ((element = [enumerator nextObject]) != nil) {
+		if ([[element name] isEqualToString:@"img"]) {
+			NSString * source = [[element attributeForName:@"src"] stringValue];
+			D(@"image-src=%@", source);
+			[fields setObject:source forKey:@"img-src"];
+			continue;
+		}
 
-		NSString* name = [[element attributeForName:@"name"] stringValue];
-		NSXMLNode* attribute;
-
-		if (!NSEqualRanges([name rangeOfString:@"post[one]"], EmptyRange)) {
-			// one は出現しない
-			D0(@"post[one] is not implemented in Reblog(Photo).");
-		}
-		else if (!NSEqualRanges([name rangeOfString:@"post[two]"], EmptyRange)) {
-			[fields setObject:[element stringValue] forKey:@"post[two]"];
-		}
-		else if (!NSEqualRanges([name rangeOfString:@"post[three]"], EmptyRange)) {
-			attribute = [element attributeForName:@"value"];
-			[fields setObject:[attribute stringValue] forKey:@"post[three]"];
-		}
-		else {
+		name = [[element attributeForName:@"name"] stringValue];
+		if (name != nil) {
+			if (!NSEqualRanges([name rangeOfString:@"post[one]"], EmptyRange)) {
+				// one は出現しない
+				D0(@"post[one] is not implemented in Reblog(Photo).");
+				continue;
+			}
+			else if (!NSEqualRanges([name rangeOfString:@"post[two]"], EmptyRange)) {
+				[fields setObject:[element stringValue] forKey:@"post[two]"];
+				continue;
+			}
+			else if (!NSEqualRanges([name rangeOfString:@"post[three]"], EmptyRange)) {
+				attribute = [element attributeForName:@"value"];
+				[fields setObject:[attribute stringValue] forKey:@"post[three]"];
+				continue;
+			}
 			[self setFormKeyFieldIfExist:element fields:fields];
 		}
 	}
@@ -285,11 +293,13 @@ static const NSRange EmptyRange = {NSNotFound, 0};
 {
 	NSMutableDictionary * fields = [NSMutableDictionary dictionaryWithObjectsAndKeys:@"quote", @"post[type]", nil];
 
+	NSString * name;
 	NSEnumerator * enumerator = [elements objectEnumerator];
 	NSXMLElement * element;
 	while ((element = [enumerator nextObject]) != nil) {
 
-		NSString * name = [[element attributeForName:@"name"] stringValue];
+		name = [[element attributeForName:@"name"] stringValue];
+		if (name == nil) continue;
 
 		if (!NSEqualRanges([name rangeOfString:@"post[one]"], EmptyRange)) {
 			[fields setObject:[element stringValue] forKey:@"post[one]"];
@@ -312,12 +322,14 @@ static const NSRange EmptyRange = {NSNotFound, 0};
 {
 	NSMutableDictionary * fields = [NSMutableDictionary dictionaryWithObjectsAndKeys:@"regular", @"post[type]", nil];
 
-	NSEnumerator* enumerator = [elements objectEnumerator];
-	NSXMLElement* element;
+	NSString * name;
+	NSXMLNode * attribute;
+	NSEnumerator * enumerator = [elements objectEnumerator];
+	NSXMLElement * element;
 	while ((element = [enumerator nextObject]) != nil) {
 
-		NSString* name = [[element attributeForName:@"name"] stringValue];
-		NSXMLNode* attribute;
+		name = [[element attributeForName:@"name"] stringValue];
+		if (name == nil) continue;
 
 		if (!NSEqualRanges([name rangeOfString:@"post[one]"], EmptyRange)) {
 			attribute = [element attributeForName:@"value"];
@@ -345,11 +357,13 @@ static const NSRange EmptyRange = {NSNotFound, 0};
 {
 	NSMutableDictionary * fields = [NSMutableDictionary dictionaryWithObjectsAndKeys:@"conversation", @"post[type]", nil];
 
+	NSString * name;
 	NSEnumerator* enumerator = [elements objectEnumerator];
 	NSXMLElement* element;
 	while ((element = [enumerator nextObject]) != nil) {
 
-		NSString* name = [[element attributeForName:@"name"] stringValue];
+		name = [[element attributeForName:@"name"] stringValue];
+		if (name == nil) continue;
 
 		if (!NSEqualRanges([name rangeOfString:@"post[one]"], EmptyRange)) {
 			NSXMLNode* attribute = [element attributeForName:@"value"];
@@ -377,11 +391,13 @@ static const NSRange EmptyRange = {NSNotFound, 0};
 {
 	NSMutableDictionary * fields = [NSMutableDictionary dictionaryWithObjectsAndKeys:@"video", @"post[type]", nil];
 
-	NSEnumerator* enumerator = [elements objectEnumerator];
-	NSXMLElement* element;
+	NSString * name;
+	NSEnumerator * enumerator = [elements objectEnumerator];
+	NSXMLElement * element;
 	while ((element = [enumerator nextObject]) != nil) {
 
-		NSString* name = [[element attributeForName:@"name"] stringValue];
+		name = [[element attributeForName:@"name"] stringValue];
+		if (name == nil) continue;
 
 		if (!NSEqualRanges([name rangeOfString:@"post[one]"], EmptyRange)) {
 			[fields setObject:[element stringValue] forKey:@"post[one]"];
@@ -404,11 +420,13 @@ static const NSRange EmptyRange = {NSNotFound, 0};
 {
 	NSMutableDictionary * fields = [NSMutableDictionary dictionaryWithObjectsAndKeys:@"audio", @"post[type]", nil];
 
+	NSString * name;
 	NSEnumerator * enumerator = [elements objectEnumerator];
 	NSXMLElement * element;
 	while ((element = [enumerator nextObject]) != nil) {
 
-		NSString * name = [[element attributeForName:@"name"] stringValue];
+		name = [[element attributeForName:@"name"] stringValue];
+		if (name == nil) continue;
 
 		if (!NSEqualRanges([name rangeOfString:@"post[one]"], EmptyRange)) {
 			[fields setObject:[element stringValue] forKey:@"post[one]"];
