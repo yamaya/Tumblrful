@@ -23,12 +23,7 @@ static NSString * GOOGLEREADER_PATH		= @"/reader/view";
 @end
 
 @implementation GoogleReaderDelivererContext
-/**
- * 自分が処理すべき HTML ドキュメントかどうかを判定する
- * @param [in] document URL を含む DOM ドキュメント
- * @param [in] targetElement 選択している要素
- * @return 処理すべき URL の場合 true
- */
+
 + (BOOL)match:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement
 {
 	NSURL * u = [NSURL URLWithString:[document URL]];
@@ -44,12 +39,6 @@ static NSString * GOOGLEREADER_PATH		= @"/reader/view";
 	return NO;
 }
 
-/**
- * 自分が処理すべき HTML ドキュメントかどうかを判定する
- * @param [in] document URL を含む DOM ドキュメント
- * @param [in] wso Window スクリプトオブジェクト
- * @return 処理すべき HTMLドキュメントの場合、ポスト対象となる要素
- */
 + (DOMHTMLElement *)matchForAutoDetection:(DOMHTMLDocument *)document windowScriptObject:(WebScriptObject *)wso;
 {
 #pragma unused (wso)
@@ -74,12 +63,6 @@ static NSString * GOOGLEREADER_PATH		= @"/reader/view";
 	return element;
 }
 
-/**
- * オブジェクトの初期化
- * @param [in] document URL を含む DOM ドキュメント
- * @param [in] targetElement 選択している要素
- * @return 自身のオブジェクト
- */
 - (id)initWithDocument:(DOMHTMLDocument*)document target:(NSDictionary*)targetElement
 {
 	if ((self = [super initWithDocument:document target:targetElement]) != nil) {
@@ -108,9 +91,9 @@ static NSString * GOOGLEREADER_PATH		= @"/reader/view";
 	[super dealloc];
 }
 
-// フィード名とフィードタイトルを連結したものをドキュメントタイトルとする
-- (NSString *)documentTitle
+- (NSString *)titleOfDocument
 {
+	// フィード名とフィードタイトルを連結したものをドキュメントタイトルとする
 	NSMutableString * title = [[[NSMutableString alloc] initWithString:feedName_] autorelease];
 
 	if (title_ != nil && [title_ length] > 0) {
@@ -120,12 +103,12 @@ static NSString * GOOGLEREADER_PATH		= @"/reader/view";
 	return title;
 }
 
-- (NSString *)documentURL
+- (NSString *)URLOfDocument
 {
 	return uri_;
 }
 
-- (NSString *)menuTitle
+- (NSString *)titleOfMenuItem
 {
 	return @" - Google Reader";
 }
@@ -139,7 +122,7 @@ static NSString * GOOGLEREADER_PATH		= @"/reader/view";
  * @param [in] element
  * @return DOMNode
  */
-+ (DOMNode*) getEntryMain:(DOMHTMLDocument*)document target:(NSDictionary*)element
++ (DOMNode *)getEntryMain:(DOMHTMLDocument*)document target:(NSDictionary*)element
 {
 	static NSString* xpath = @"ancestor-or-self::div[@class=\"entry-main\"]";
 

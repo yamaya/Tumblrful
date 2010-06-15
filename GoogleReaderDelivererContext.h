@@ -15,16 +15,4 @@
 	NSString * feedName_;
 	NSString * uri_;
 }
-
-+ (BOOL)match:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement;
-
-+ (DOMHTMLElement *)matchForAutoDetection:(DOMHTMLDocument *)document windowScriptObject:(WebScriptObject *)wso;
-
-- (id)initWithDocument:(DOMHTMLDocument*)document target:(NSDictionary*)targetElement;
-
-- (NSString *)documentTitle;
-
-- (NSString *)documentURL;
- 
-- (NSString *)menuTitle;
 @end

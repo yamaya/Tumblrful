@@ -30,8 +30,8 @@
 /**
  * Initialize object
  *	creates an object inside DelivererContext.
- *	@param[in] document 現在表示しているビューの DOMHTMLDocumentオブジェクト
- *	@param[in] targetElement 選択していた要素の情報
+ *	@param[in] document Currently displayed object DOMHTMLDocument
+ *	@param[in] targetElement Selected elements
  */
 - (id)initWithDocument:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement;
 

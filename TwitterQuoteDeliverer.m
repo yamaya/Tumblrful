@@ -9,7 +9,7 @@
 static NSString * TWITTER_HOSTNAME = @"twitter.com";
 
 @interface TwitterQuoteDeliverer ()
-- (NSDictionary *)contentsFromTwitterStatus;
+- (NSDictionary *)quoteContents;
 @end
 
 @implementation TwitterQuoteDeliverer
@@ -61,7 +61,7 @@ static NSString * TWITTER_HOSTNAME = @"twitter.com";
 {
 #pragma unused (sender)
 	@try {
-		NSDictionary * contents = [self contentsFromTwitterStatus];
+		NSDictionary * contents = [self quoteContents];
 		if (contents != nil) {
 			[super postQuote:[contents objectForKey:@"quote"] source:[contents objectForKey:@"source"]];
 		}
@@ -72,7 +72,7 @@ static NSString * TWITTER_HOSTNAME = @"twitter.com";
 	}
 }
 
-- (NSDictionary *)contentsFromTwitterStatus
+- (NSDictionary *)quoteContents
 {
 	static NSString * XPathForQuote = @"(//span[@class=\"entry-content\"])[1]";
 
@@ -96,13 +96,13 @@ static NSString * TWITTER_HOSTNAME = @"twitter.com";
 		quote = [quote stringByTrimmingWhitespace];
 	}
 	{	// source
-		NSString * title = [context_ documentTitle];
+		NSString * title = context_.titleOfDocument;
 		title = [title stringByTrimmingWhitespace];
 		NSRange range = [title rangeOfString:@": "];
 		if (range.location != NSNotFound) {
 			title = [title substringToIndex:range.location];
 		}
-		source = [DelivererRules anchorTagWithName:[context_ documentURL] name:title];
+		source = [DelivererRules anchorTagWithName:context_.URLOfDocument name:title];
 	}
 
 	return [NSDictionary dictionaryWithObjectsAndKeys:quote, @"quote", source, @"source", nil];

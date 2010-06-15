@@ -162,7 +162,7 @@ static NSString * TYPE = @"Reblog";
 	D(@"self.retainCount=%x", [self retainCount]);
 
 	@try {
-		NSString * message = [NSString stringWithFormat:@"%@\nPost ID: %@", [context_ documentTitle], postID_];
+		NSString * message = [NSString stringWithFormat:@"%@\nPost ID: %@", context_.titleOfDocument, postID_];
 		[self notify:message];
 	}
 	@catch (NSException * e) {
@@ -173,6 +173,6 @@ static NSString * TYPE = @"Reblog";
 - (void)notify:(NSString *)message
 {
 	NSString * typeDescription = [NSString stringWithFormat:@"%@", [[self postType] capitalizedString]];
-	[GrowlSupport notify:typeDescription description:message];
+	[GrowlSupport notifyWithTitle:typeDescription description:message];
 }
 @end

@@ -1,6 +1,6 @@
 /**
  * @file VideoDeliverer.h
- * @brief VideoDeliverer declaration
+ * @brief VideoDeliverer class declaration
  * @author Masayuki YAMAYA
  * @date 2008-03-03
  */
@@ -14,8 +14,6 @@
 {
 	NSDictionary * clickedElement_;
 }
-
-- (id)initWithDocument:(DOMHTMLDocument *)document element:(NSDictionary *)clickedElement;
 
 /**
  * Make contents of Video

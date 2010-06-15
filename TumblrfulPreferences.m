@@ -67,7 +67,7 @@
 	[passwordTextField setStringValue:s];
 
 	if (isNotEntered) {
-		[GrowlSupport notify:@"Tumblrful" description:@"Email or Password not entered."];
+		[GrowlSupport notifyWithTitle:@"Tumblrful" description:@"Email or Password not entered."];
 	}
 
 	private = [settings boolForKey:@"tumblrPrivateEnabled"];
@@ -101,7 +101,7 @@
 	[deliciousPasswordTextField setStringValue:s];
 
 	if (isNotEntered) {
-		[GrowlSupport notify:@"Tumblrful" description:@"Username or Password not entered for del.icio.us."];
+		[GrowlSupport notifyWithTitle:@"Tumblrful" description:@"Username or Password not entered for del.icio.us."];
 	}
 
 	private = [settings boolForKey:@"deliciousPrivateEnabled"];

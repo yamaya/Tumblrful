@@ -1,26 +1,23 @@
 /**
  * @file LDRDelivererContext.m
- * @brief LDRDelivererContext implementation
+ * @brief LDRDelivererContext class implementation
  * @author Masayuki YAMAYA
  * @date 2008-03-03
  */
 #import "LDRDelivererContext.h"
-#import "Log.h"
+#import "DebugLog.h"
 #import <WebKit/DOM.h>
 #import <WebKit/WebView.h>
 
-//#define V(format, ...)	Log(format, __VA_ARGS__)
-#define V(format, ...)
-
 @interface LDRDelivererContext (Private)
-+ (DOMNode*) getItemCountElement:(DOMHTMLDocument*)document target:(NSDictionary*)element;
-- (NSString*) stringForXPath:(NSString*)xpath target:(DOMNode*)targetNode debug:(NSString*)message;
-- (NSString*) getAuthor:(DOMNode*)targetNode;
-- (NSString*) getTitle:(DOMNode*)targetNode;
-- (NSString*) getFeedName;
-- (NSString*) getURI:(DOMNode*)targetNode;
-+ (void) dumpXPathResult:(DOMXPathResult*)result withPrefix:(NSString*)prefix;
-+ (BOOL) match:(NSURL*)url;
++ (DOMNode *)getItemCountElement:(DOMHTMLDocument*)document target:(NSDictionary*)element;
+- (NSString *)stringForXPath:(NSString*)xpath target:(DOMNode*)targetNode debug:(NSString*)message;
+- (NSString *)getAuthor:(DOMNode*)targetNode;
+- (NSString *)getTitle:(DOMNode*)targetNode;
+- (NSString *)getFeedName;
+- (NSString *)getURI:(DOMNode*)targetNode;
++ (void)dumpXPathResult:(DOMXPathResult*)result withPrefix:(NSString*)prefix;
++ (BOOL)match:(NSURL*)url;
 @end
 @implementation LDRDelivererContext (Private)
 /**
@@ -36,11 +33,11 @@
 
 	DOMNode* targetNode = [element objectForKey:WebElementDOMNodeKey];
 	if (targetNode == nil) {
-		V(@"DOMNode not found: %@", element);
+		D(@"DOMNode not found: %@", element);
 		return nil;
 	}
 
-	V(@"getItemCountElement: target: %@", SafetyDescription(targetNode));
+	D(@"getItemCountElement: target: %@", SafetyDescription(targetNode));
 	DOMXPathResult* result;
 	result = [document evaluate:xpath
 					contextNode:targetNode
@@ -54,12 +51,12 @@
 		if (![result invalidIteratorState]) {
 			DOMNode* node;
 			for (node = [result iterateNext]; node != nil; node = [result iterateNext]) {
-				V(@"node: %@ id:%@", [node description], [((DOMHTMLDivElement*)node) idName]);
+				D(@"node: %@ id:%@", [node description], [((DOMHTMLDivElement*)node) idName]);
 				return node; /* 先頭のDOMノードでOK(1ノードしか選択していないハズ) */
 			}
 		}
 	}
-	V(@"Failed XPath for targetNode: %@", [targetNode description]);
+	D(@"Failed XPath for targetNode: %@", [targetNode description]);
 	return nil;
 }
 
@@ -69,28 +66,18 @@
 - (NSString*) stringForXPath:(NSString*)xpath target:(DOMNode*)targetNode debug:(NSString*)message
 {
 #pragma unused (message)
-#if 0	//DEBUG
-	V(@"%@: targetNode: %@", message, SafetyDescription(targetNode));
-	if ([targetNode respondsToSelector:@selector(idName)]) {
-		V(@"%@: targetNode's id: %@", message, [targetNode performSelector:@selector(idName)]);
-	}
-#endif
-
 	@try {
 		DOMXPathResult* result;
 		result = [self evaluateToDocument:xpath
 							  contextNode:targetNode
 									 type:DOM_STRING_TYPE
 								 inResult:nil];
-#if 0	//DEBUG
-		[LDRDelivererContext dumpXPathResult:result withPrefix:message];
-#endif
 		if (result != nil && [result resultType] == DOM_STRING_TYPE) {
 			return [result stringValue];
 		}
 	}
 	@catch (NSException* e) {
-		V(@"Catch exception: %@", [e description]);
+		D(@"Catch exception: %@", [e description]);
 	}
 
 	return [[[NSString alloc] init] autorelease];
@@ -150,7 +137,7 @@
 		}
 	}
 	@catch (NSException* e) {
-		V(@"Catch exception: %@", [e description]);
+		D(@"Catch exception: %@", [e description]);
 	}
 
 	return [[[NSString alloc] init] autorelease];
@@ -176,7 +163,7 @@
 			if (![result invalidIteratorState]) {
 				DOMNode* node = nil;
 				for (node = [result iterateNext]; node != nil; node = [result iterateNext]) {
-					V(@"1st node: name: %@ type: %d value: %@ textContent: %@",
+					D(@"1st node: name: %@ type: %d value: %@ textContent: %@",
 							[node nodeName],
 							[node nodeType],
 							[node nodeValue],
@@ -188,7 +175,7 @@
 		}
 	}
 	@catch (NSException* e) {
-		V(@"Catch exception: %@", [e description]);
+		D(@"Catch exception: %@", [e description]);
 	}
 
 	return [[[NSString alloc] init] autorelease];
@@ -214,43 +201,43 @@
 
 	@try {
 		if (result != nil) {
-			V(@"XPath: %@ {", prefix);
-			V(@"  description: %@", [result description]);
-			V(@"  resultType: %@", ToTypeName([result resultType]));
+			D(@"XPath: %@ {", prefix);
+			D(@"  description: %@", [result description]);
+			D(@"  resultType: %@", ToTypeName([result resultType]));
 			switch ([result resultType]) {
 			case DOM_NUMBER_TYPE:
-				V(@"  numberValue: %f", [result numberValue]);
+				D(@"  numberValue: %f", [result numberValue]);
 				break;
 			case DOM_STRING_TYPE:
-				V(@"  stringValue: %@", [result stringValue]);
+				D(@"  stringValue: %@", [result stringValue]);
 				break;
 			case DOM_BOOLEAN_TYPE:
-				V(@"  booleanValue: %d", [result booleanValue]);
+				D(@"  booleanValue: %d", [result booleanValue]);
 				break;
 			case DOM_ORDERED_NODE_SNAPSHOT_TYPE:
 			case DOM_UNORDERED_NODE_SNAPSHOT_TYPE:
-				V(@"  snapshotLength: %d", [result snapshotLength]);
-				V(@"  snapshotItem[0]: %@", [[result snapshotItem:0] description]);
+				D(@"  snapshotLength: %d", [result snapshotLength]);
+				D(@"  snapshotItem[0]: %@", [[result snapshotItem:0] description]);
 				break;
 			case DOM_ORDERED_NODE_ITERATOR_TYPE:
 			case DOM_UNORDERED_NODE_ITERATOR_TYPE:
-				V(@"  %@s invalidIteratorState: %d", @"NODE_ITERATOR", [result invalidIteratorState]);
+				D(@"  %@s invalidIteratorState: %d", @"NODE_ITERATOR", [result invalidIteratorState]);
 				break;
 			case DOM_FIRST_ORDERED_NODE_TYPE:
-				V(@"  %@ invalidIteratorState: %d", @"FIRST_ORDERED_NODE", [result invalidIteratorState]);
+				D(@"  %@ invalidIteratorState: %d", @"FIRST_ORDERED_NODE", [result invalidIteratorState]);
 				break;
 			default:
-				V(@"  resultType was invalid%@", @"!");
+				D(@"  resultType was invalid%@", @"!");
 			}
-			V(@"%@", @"}");
+			D(@"%@", @"}");
 		}
 	}
 	@catch (NSException* e) {
-		V(@"Catch exception: %@", [e description]);
+		D(@"Catch exception: %@", [e description]);
 	}
 }
 
-+ (BOOL) match:(NSURL*)url
++ (BOOL)match:(NSURL *)url
 {
 	/* host をチェック */
 	NSString* host = [url host];
@@ -258,14 +245,9 @@
 }
 @end
 
-@implementation LDRDelivererContext : DelivererContext
-/**
- * 自分が処理すべき HTML ドキュメントかどうかを判定する
- * @param [in] document URL を含む DOM ドキュメント
- * @param [in] targetElement 選択している要素
- * @return 処理すべき URL の場合 true
- */
-+ (BOOL) match:(DOMHTMLDocument*)document target:(NSDictionary*)targetElement
+@implementation LDRDelivererContext
+
++ (BOOL)match:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement
 {
 	NSURL* url = [NSURL URLWithString:[document URL]];
 	if ([LDRDelivererContext match:url]) {
@@ -274,12 +256,6 @@
 	return NO;
 }
 
-/**
- * 自分が処理すべき HTML ドキュメントかどうかを判定する - 要素自動判定
- * @param [in] document 評価対象となる DOMドキュメント
- * @param [in] wso Window スクリプトオブジェクト
- * @return 処理すべき HTMLドキュメントの場合、ポスト対象となる要素
- */
 + (DOMHTMLElement*) matchForAutoDetection:(DOMHTMLDocument*)document windowScriptObject:(WebScriptObject*)wso;
 {
 	if ([LDRDelivererContext match:[NSURL URLWithString:[document URL]]] == NO) {
@@ -294,11 +270,11 @@
 		// このメソッドは LDR から供給されている
 		NSArray* args = [NSArray arrayWithObjects:[NSNumber numberWithBool:YES], nil];
 		id item = [wso callWebScriptMethod:@"get_active_item" withArguments:args];
-		V(@"get_active_item result=%@", SafetyDescription(item));
+		D(@"get_active_item result=%@", SafetyDescription(item));
 		if (item != nil) {
 			// id を得る
 			NSString* idno = [item valueForKey:@"id"];
-			V(@"  id=%@", idno);
+			D(@"  id=%@", idno);
 			if (idno != nil) {
 				// item_body_XXX な要素を DOMNode オブジェクトとして得るため
 				// に '$' メソッドを通す
@@ -306,9 +282,9 @@
 					    [NSString stringWithFormat:@"item_body_%@", idno]
 					  , nil];
 				itemBody = [wso callWebScriptMethod:@"$" withArguments:args];
-				V(@"itemBody result=%@", SafetyDescription(itemBody));
-				V(@"  className=%@", [itemBody className]);
-				V(@"  idName=%@", [itemBody idName]);
+				D(@"itemBody result=%@", SafetyDescription(itemBody));
+				D(@"  className=%@", [itemBody className]);
+				D(@"  idName=%@", [itemBody idName]);
 			}
 		}
 
@@ -319,23 +295,17 @@
 				, @"./div[@class=\"body\"]"
 				, nil];
 			element = [DelivererContext evaluate:expressions document:document contextNode:itemBody];
-			V(@"element=%@", SafetyDescription(element));
-			V(@"  idName=%@", [element idName]);
+			D(@"element=%@", SafetyDescription(element));
+			D(@"  idName=%@", [element idName]);
 		}
 	}
 	@catch (NSException* e) {
-		V(@"Catch exception: %@", [e description]);
+		D(@"Catch exception: %@", [e description]);
 	}
 
 	return element;
 }
 
-/**
- * オブジェクトの初期化
- * @param [in] document URL を含む DOM ドキュメント
- * @param [in] targetElement 選択している要素
- * @return 自身のオブジェクト
- */
 - (id) initWithDocument:(DOMHTMLDocument*)document target:(NSDictionary*)targetElement
 {
 	if ((self = [super initWithDocument:document target:targetElement]) != nil) {
@@ -348,30 +318,25 @@
 		}
 		else {
 			/* 通常はあり得ない - match で同じ事を実行して成功しているはずだから*/
-			V(@"Failed getItemCountElement. element: %@", SafetyDescription(targetElement));
+			D(@"Failed getItemCountElement. element: %@", SafetyDescription(targetElement));
 		}
 	}
 	return self;
 }
 
-/**
- * オブジェクトの解放
- */
-- (void) dealloc
+- (void)dealloc
 {
-	if (author_ != nil) [author_ release];
-	if (title_ != nil) [title_ release];
-	if (feedName_ != nil) [feedName_ release];
-	if (uri_ != nil) [uri_ release];
+	[author_ release], author_ = nil;
+	[title_ release], title_ = nil;
+	[feedName_ release], feedName_ = nil;
+	[uri_ release], uri_ = nil;
 
 	[super dealloc];
 }
 
-/**
- * フィード名とフィードタイトルを連結したものをドキュメントタイトルとする
- */
-- (NSString*) documentTitle
+- (NSString *)titleOfDocument
 {
+	// フィード名とフィードタイトルを連結したものをドキュメントタイトルとする
 	NSMutableString* title = [[[NSMutableString alloc] initWithString:feedName_] autorelease];
 
 	if (title_ != nil && [title_ length] > 0) {
@@ -381,18 +346,12 @@
 	return title;
 }
 
-/**
- *
- */
-- (NSString*) documentURL
+- (NSString *)URLOfDocument
 {
 	return uri_;
 }
 
-/**
- * メニュータイトル(の部分)を返す
- */
-- (NSString*) menuTitle
+- (NSString *)titleOfMenuItem
 {
 	return @" - LDR";
 }

@@ -57,7 +57,7 @@ static NSString * TYPE = @"Quote";
 
 - (void)dealloc
 {
-	[selectionText_ release];
+	[selectionText_ release], selectionText_ = nil;
 
 	[super dealloc];
 }
@@ -98,6 +98,6 @@ static NSString * TYPE = @"Quote";
 
 - (void)notifyByEmptyText
 {
-	[GrowlSupport notify:TYPE description:[DelivererRules errorMessageWith:selectionText_]];
+	[GrowlSupport notifyWithTitle:TYPE description:[DelivererRules errorMessageWith:selectionText_]];
 }
 @end

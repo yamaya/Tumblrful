@@ -1,6 +1,6 @@
 /**
  * @file VimeoVideoDeliverer.h
- * @brief VimeoVideoDeliverer declaration
+ * @brief VimeoVideoDeliverer class declaration
  * @author Masayuki YAMAYA
  * @date 2008-03-03
  */

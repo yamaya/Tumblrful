@@ -1,6 +1,6 @@
 /**
  * @file VimeoVideoDeliverer.m
- * @brief VimeoVideoDeliverer implementation class
+ * @brief VimeoVideoDeliverer class implementation
  * @author Masayuki YAMAYA
  * @date 2008-05-10
  */
@@ -15,6 +15,8 @@
 // for Vimeo API
 #define API_KEY		(@"b83e12234274c5e3c307a83aa84a8176")
 #define API_SECRET	(@"c9afd3ef0")
+
+static NSString * VIMEO_HOSTNAME = @"vimeo.com";
 
 @interface VimeoVideoDeliverer ()
 - (NSString *)vimeoVideoIDWithURL:(NSString *)URL;
@@ -40,11 +42,11 @@
 
 		// check URL's host
 		NSURL* url = [NSURL URLWithString:[[document URL] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
-		if ([[url host] hasSuffix:@"vimeo.com"]) {
+		if ([[url host] hasSuffix:VIMEO_HOSTNAME]) {
 			NSInteger no = [[[url path] substringFromIndex:1] integerValue];
 			D(@"no = %d", no);
 			if (no != 0) {
-				deliverer = [[VimeoVideoDeliverer alloc] initWithDocument:document element:clickedElement];
+				deliverer = [[VimeoVideoDeliverer alloc] initWithDocument:document target:clickedElement];
 				if (deliverer == nil) {
 					D(@"could not alloc+init %@Deliverer.", [self name]);
 				}
@@ -72,7 +74,7 @@
 	NSString * embed = nil;
 
 	// videoID をURLから得る http://www.vimeo.com/1237052?pg=embed&sec=1237052
-	NSString * videoID = [self vimeoVideoIDWithURL:[context_ documentURL]];
+	NSString * videoID = [self vimeoVideoIDWithURL:context_.URLOfDocument];
 	D(@"videoID=%@", videoID);
 
 	// Vimeo API 経由で Video 情報を XML 形式で得る

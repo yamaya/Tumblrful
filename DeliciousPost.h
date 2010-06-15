@@ -1,6 +1,6 @@
 /**
  * @file DeliciousPost.h
- * @brief DeliciousPost declaration
+ * @brief DeliciousPost class declaration
  * @author Masayuki YAMAYA
  * @date 2008-03-07
  */
@@ -8,7 +8,7 @@
 
 @interface DeliciousPost : NSObject<Post>
 {
-	NSMutableData * responseData_;	/* for NSURLConnection */
+	NSMutableData * responseData_;
 	NSObject<PostCallback> * callback_;
 	BOOL private_;
 }

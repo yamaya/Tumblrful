@@ -37,7 +37,7 @@ static UserSettings * instance = nil;
 
 - (void)dealloc
 {
-	[dictionary_ release];
+	[dictionary_ release], dictionary_ = nil;
 
 	[super dealloc];
 }

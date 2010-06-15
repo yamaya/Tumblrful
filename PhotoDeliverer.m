@@ -42,7 +42,7 @@ static NSString * TYPE = @"Photo";
 
 - (void)dealloc
 {
-	[clickedElement_ release];
+	[clickedElement_ release], clickedElement_ = nil;
 
 	[super dealloc];
 }
@@ -57,9 +57,6 @@ static NSString * TYPE = @"Photo";
 	return TYPE;
 }
 
-/**
- * メニューのアクション
- */
 - (void)action:(id)sender
 {
 #pragma unused (sender)
@@ -88,13 +85,13 @@ static NSString * TYPE = @"Photo";
 	NSString * source = [[clickedElement_ objectForKey:WebElementImageURLKey] absoluteString];
 
 	// キャプション - セレクションがあればそれを blockquoteで囲って追加する
-	NSString * caption = [context_ anchorTagToDocument];
+	NSString * caption = context_.anchorOfDocument;
 	NSString * selection = [self selectedStringWithBlockquote];
 	if (selection != nil && [selection length] > 0) {
 		caption = [caption stringByAppendingFormat:@"\r%@", selection];
 	}
 
-	return [NSDictionary dictionaryWithObjectsAndKeys:source, @"source", caption, @"caption", [context_ documentURL], @"throughURL", nil];
+	return [NSDictionary dictionaryWithObjectsAndKeys:source, @"source", caption, @"caption", context_.URLOfDocument, @"throughURL", nil];
 }
 
 - (NSString *)selectedStringWithBlockquote

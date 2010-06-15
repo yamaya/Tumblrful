@@ -52,7 +52,7 @@ static NSString * TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 	LDRDelivererContext * context = [[[LDRDelivererContext alloc] initWithDocument:document target:clickedElement] autorelease];
 	if (context == nil) return nil;
 
-	NSURL * url = [NSURL URLWithString:[context documentURL]];
+	NSURL * url = [NSURL URLWithString:context.URLOfDocument];
 	if (url == nil) 
 		return nil;
 
@@ -72,7 +72,7 @@ static NSString * TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 		}
 	}
 
-	NSString * postID = [[context documentURL] lastPathComponent];
+	NSString * postID = [context.URLOfDocument lastPathComponent];
 	if (postID == nil) {
 		D(@"Could not get PostID. element:%@", [clickedElement description]);
 		return nil;
@@ -97,7 +97,7 @@ static NSString * TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 		}
 		else {
 			// メニューから呼び出された場合
-			NSString * endpoint = [context_ documentURL];
+			NSString * endpoint = context_.URLOfDocument;
 			NSURLRequest * request = [NSURLRequest requestWithURL:[NSURL URLWithString:endpoint]];
 			ReblogKeyDelegate * delegate = [[ReblogKeyDelegate alloc] initWithEndpoint:endpoint deliverer:self];
 			NSURLConnection * connection;

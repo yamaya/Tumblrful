@@ -1,6 +1,6 @@
 /**
- * @file PostEditWindow.h
- * @brief PostEditWindow class declaration
+ * @file PostEditWindowController.h
+ * @brief PostEditWindowController class declaration
  * @author Masayuki YAMAYA
  * @date 2010-06-01
  */
@@ -14,11 +14,10 @@
 @class VideoViewController;
 @class TumblrReblogExtractor;
 
-// TODO 改名すべき PostEditWindowController
 /**
  * Post editting window controller class
  */
-@interface PostEditWindow : NSObject<TumblrReblogExtractorDelegate>
+@interface PostEditWindowController : NSObject<TumblrReblogExtractorDelegate>
 {
 	IBOutlet NSPanel * postEditPanel_;
 	IBOutlet NSView * genericView_;

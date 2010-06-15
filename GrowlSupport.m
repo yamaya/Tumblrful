@@ -5,32 +5,12 @@ static NSString* NOTIFY_NAME = @"NotifyPostToTumblr";
 
 @implementation GrowlSupport
 
-/// notify TODO: deprecated
-+ (void) notify:(NSString*)title description:(NSString*)description
-{
-	[GrowlSupport sharedInstance];
-
-	[GrowlApplicationBridge notifyWithTitle:title
-								description:description
-						   notificationName:NOTIFY_NAME
-								   iconData:nil
-								   priority:0
-								   isSticky:NO
-							   clickContext:nil];
-}
-
 /// notify
 + (void)notifyWithTitle:(NSString *)title description:(NSString *)description
 {
 	[GrowlSupport sharedInstance];
 
-	[GrowlApplicationBridge notifyWithTitle:title
-								description:description
-						   notificationName:NOTIFY_NAME
-								   iconData:nil
-								   priority:0
-								   isSticky:NO
-							   clickContext:nil];
+	[GrowlApplicationBridge notifyWithTitle:title description:description notificationName:NOTIFY_NAME iconData:nil priority:0 isSticky:NO clickContext:nil];
 }
 
 + (GrowlSupport *)sharedInstance

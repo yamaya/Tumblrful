@@ -75,7 +75,7 @@
 		 * エラーメッセージは photoInfoXMLWithPhotoID メソッド内部で出力しているのでここでは
 		 * 不要。
 		 */
-		 caption = [context_ anchorTagToDocument];
+		 caption = context_.anchorOfDocument;
 	}
 	NSString * selection = [self selectedStringWithBlockquote];
 	if (selection != nil && [selection length] > 0) {
@@ -83,7 +83,7 @@
 	}
 	D(@"caption: %@", caption);
 
-	return [NSDictionary dictionaryWithObjectsAndKeys:source, @"source", caption, @"caption", [context_ documentURL], @"throughURL", nil];
+	return [NSDictionary dictionaryWithObjectsAndKeys:source, @"source", caption, @"caption", context_.URLOfDocument, @"throughURL", nil];
 }
 
 - (NSString *)photoIDWithURL:(NSURL *)URL
@@ -98,7 +98,7 @@
 
 		if ([photoID isEqualToString:@"spaceball.gif"]) {
 			// オリジナルの画像にかぶせてるねぇ
-			photoID = [[context_ documentURL] lastPathComponent];
+			photoID = [context_.URLOfDocument lastPathComponent];
 			D(@"photoID(1st retry):%@", photoID);
 			[self notify:[DelivererRules errorMessageWith:@"This photo is spaceball!"]];
 			return nil;

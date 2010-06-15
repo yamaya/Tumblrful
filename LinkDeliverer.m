@@ -30,7 +30,7 @@ static NSString* TYPE = @"Link";
 
 - (void)dealloc
 {
-	[clickedElement_ release];
+	[clickedElement_ release], clickedElement_ = nil;
 
 	[super dealloc];
 }
@@ -53,8 +53,8 @@ static NSString* TYPE = @"Link";
 		NSString * url = (NSString *)[clickedElement_ objectForKey:WebElementLinkURLKey];
 		NSString * name = (NSString *)[clickedElement_ objectForKey:WebElementLinkLabelKey];
 
-		if (url == nil) url = [context_ documentURL];
-		if (name == nil) name = [context_ documentTitle];
+		if (url == nil) url = context_.URLOfDocument;
+		if (name == nil) name = context_.titleOfDocument;
 
 		[super postLink:url title:name];
 	}

@@ -107,13 +107,14 @@ static const NSRange EmptyRange = {NSNotFound, 0};
 		else if ([type isEqualToString:@"video"])			contents = [self fieldsForVideo:elements];
 		else if ([type isEqualToString:@"audio"])			contents = [self fieldsForAudio:elements];
 
+		NSString * message = nil;
 		if (contents == nil) {
-			NSString * message = [NSString stringWithFormat:@"Unrecognized Reblog form. type:%@", SafetyDescription(type)];
+			message = [NSString stringWithFormat:@"Unrecognized Reblog form. type:%@", SafetyDescription(type)];
 			D0(message);
 			// nilもデリゲートに渡す
 		}
 		else if ([contents count] < 2) { // type[post] + 1このフィールドは絶対あるはず
-			NSString * message = [NSString stringWithFormat:@"Unrecognized Reblog form. too few contents. type:%@", SafetyDescription(type)];
+			message = [NSString stringWithFormat:@"Unrecognized Reblog form. too few contents. type:%@", SafetyDescription(type)];
 			D0(message);
 		}
 		else {

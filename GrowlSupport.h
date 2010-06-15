@@ -8,9 +8,6 @@
 
 + (GrowlSupport *)sharedInstance;
 
-//TODO deprecated
-+ (void)notify:(NSString *)title description:(NSString *)description;
-
 + (void)notifyWithTitle:(NSString *)title description:(NSString *)description;
 
 @end

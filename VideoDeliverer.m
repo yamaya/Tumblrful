@@ -32,7 +32,7 @@ static NSString * TYPE = @"Video";
 
 	D(@"DOMNode:%@", [node description]);
 
-	/* check URL's host */
+	// check URL's host
 	NSURL * url = [NSURL URLWithString:[[document URL] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
 	if ([[url host] hasSuffix:@"youtube.com"] == NO) {
 		return nil;
@@ -43,16 +43,14 @@ static NSString * TYPE = @"Video";
 	}
 
 	// create object
-	VideoDeliverer * deliverer = [[VideoDeliverer alloc] initWithDocument:document element:clickedElement];
-	if (deliverer != nil) {
-		return [deliverer retain]; //need?
-	}
-	D(@"Could not alloc+init %@Deliverer.", [self name]);
+	VideoDeliverer * deliverer = [[VideoDeliverer alloc] initWithDocument:document target:clickedElement];
+	if (deliverer == nil)
+		D(@"Could not alloc+init %@Deliverer.", [self name]);
 
 	return deliverer;
 }
 
-- (id)initWithDocument:(DOMHTMLDocument *)document element:(NSDictionary *)clickedElement
+- (id)initWithDocument:(DOMHTMLDocument *)document target:(NSDictionary *)clickedElement
 {
 	if ((self = [super initWithDocument:document target:clickedElement]) != nil) {
 		clickedElement_ = [clickedElement retain];
@@ -62,7 +60,8 @@ static NSString * TYPE = @"Video";
 
 - (void)dealloc
 {
-	[clickedElement_ release]; 
+	[clickedElement_ release], clickedElement_ = nil;
+
 	[super dealloc];
 }
 
@@ -88,7 +87,7 @@ static NSString * TYPE = @"Video";
 			caption = [contents objectForKey:@"caption"];
 		}
 		else {
-			url = [context_ documentURL];
+			url = context_.URLOfDocument;
 			caption = nil;
 		}
 		[super postVideo:url caption:caption];

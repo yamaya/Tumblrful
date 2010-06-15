@@ -1,6 +1,6 @@
 /**
  * @file DeliciousPost.m
- * @brief DeliciousPost implementation
+ * @brief DeliciousPost class implementation
  * @author Masayuki YAMAYA
  * @date 2008-03-28
  */
@@ -75,34 +75,23 @@ static NSString * API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
 	return private_;
 }
 
-/**
- * post to del.icio.us
- *	@param params - request parameteres
- *	@param delegate - delegate for NSURLConnection
- */
 - (void)postWith:(NSDictionary *)params
 {
-	responseData_ = [[[NSMutableData alloc] init] retain];
+	responseData_ = [[NSMutableData data] retain];
 
 	NSURLRequest * request = [self createRequest:params]; // request は connection に指定した時点で reatin upする
 	D(@"request:%@", [request description]);
 
 	NSURLConnection * connection = [NSURLConnection connectionWithRequest:request delegate:self];
-	[connection retain];
 
 	D(@"connection:%@", SafetyDescription(connection));
 	if (connection == nil) {
 		[self callback:@selector(failedWithError:) withObject:nil];
-		[responseData_ release];
-		responseData_ = nil;
+		[responseData_ release], responseData_ = nil;
 	}
 }
 
-/**
- * didReceiveAuthenticationChallenge
- *	delegate method
- */
-- (void)connection:(NSURLConnection*)connection didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge*)challenge
+- (void)connection:(NSURLConnection *)connection didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
 {
 #pragma unused (connection)
 	D_METHOD;
@@ -114,18 +103,12 @@ static NSString * API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
 	[[challenge sender] useCredential:crendential forAuthenticationChallenge:challenge];
 }
 
-/**
- * didReceiveResponse
- * delegate method
- *	正常なら statusCode は 201
- *	Account 不正なら 403
- */
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
 #pragma unused (connection)
 	D(@"DeliciousPost.didReceiveResponse retain:%x", [self retainCount]);
 
-	NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response; /* この cast は正しい */
+	NSHTTPURLResponse * httpResponse = (NSHTTPURLResponse *)response; /* この cast は正しい */
 	if ([httpResponse statusCode] != 201) {
 		D(@"\tAbnormal! statusCode: %d", [httpResponse statusCode]);
 		D(@"\tallHeaderFields: %@", [[httpResponse allHeaderFields] description]);

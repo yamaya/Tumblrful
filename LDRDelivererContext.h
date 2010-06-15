@@ -13,11 +13,4 @@
 	NSString* feedName_;
 	NSString* uri_;
 }
-+ (BOOL) match:(DOMHTMLDocument*)document target:(NSDictionary*)targetElement;
-- (id) initWithDocument:(DOMHTMLDocument*)document target:(NSDictionary*)targetElement;
-- (NSString*) documentTitle;
-- (NSString*) documentURL;
-- (NSString*) menuTitle;
-
-- (void) dealloc;
 @end

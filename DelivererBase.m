@@ -13,7 +13,7 @@
 #import "PostAdaptorCollection.h"
 #import "PostAdaptor.h"
 #import "GrowlSupport.h"
-#import "PostEditWindow.h"
+#import "PostEditWindowController.h"
 #import "NSString+Tumblrful.h"
 #import "DebugLog.h"
 
@@ -33,7 +33,7 @@
 	return nil;
 }
 
-- (id)initWithDocument:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement	//TODO これだれが使うんだっけ？
+- (id)initWithDocument:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement
 {
 	// targetにマッチするコンテキストを探す
 	DelivererContext * context = nil;
@@ -93,8 +93,8 @@
 - (void)invoke:(NSInvocation *)invocation withType:(PostType)type
 {
 	if (needEdit_) {
-		PostEditWindow * window = [[PostEditWindow alloc] initWithPostType:type withInvocation:invocation];
-		[window openSheet:[[NSApplication sharedApplication] keyWindow]];
+		PostEditWindowController * controller = [[PostEditWindowController alloc] initWithPostType:type withInvocation:invocation];
+		[controller openSheet:[[NSApplication sharedApplication] keyWindow]];
 	}
 	else {
 		[invocation invoke];
@@ -106,9 +106,9 @@
 	D_METHOD;
 
 	if (needEdit_) {
-		PostEditWindow * window = [[PostEditWindow alloc] initWithPostType:type withInvocation:invocation];
-		window.image = image;
-		[window openSheet:[[NSApplication sharedApplication] keyWindow]];
+		PostEditWindowController * controller = [[PostEditWindowController alloc] initWithPostType:type withInvocation:invocation];
+		controller.image = image;
+		[controller openSheet:[[NSApplication sharedApplication] keyWindow]];
 	}
 	else {
 		[invocation invoke];
@@ -156,7 +156,7 @@
 {
 	@try {
 		if (source == nil)
-			source = [Anchor htmlWithURL:[context_ documentURL] title:[context_ documentTitle]];
+			source = [Anchor htmlWithURL:context_.URLOfDocument title:context_.titleOfDocument];
 
 		NSUInteger i = 0;
 		NSEnumerator * enumerator = [PostAdaptorCollection enumerator];
@@ -244,7 +244,7 @@
 	D(@"self.retainCount=%x", [self retainCount]);
 
 	@try {
-		NSString * message = [NSString stringWithFormat:@"%@\n--- %@", [context_ documentTitle], response];
+		NSString * message = [NSString stringWithFormat:@"%@\n--- %@", context_.titleOfDocument, response];
 		[self notify:message];
 	}
 	@catch (NSException * e) {
@@ -274,7 +274,7 @@
  */
 - (void)notify:(NSString*)message
 {
-	[GrowlSupport notify:[[self postType] capitalizedString] description:message];
+	[GrowlSupport notifyWithTitle:[[self postType] capitalizedString] description:message];
 }
 
 #pragma mark -
@@ -347,7 +347,7 @@
 // メニュータイトルを作る
 - (NSString *)makeMenuTitle
 {
-	NSString * title = [NSString stringWithFormat:@"%@%@", [self titleForMenuItem], [context_ menuTitle]];
+	NSString * title = [NSString stringWithFormat:@"%@%@", [self titleForMenuItem], context_.titleOfMenuItem];
 	return [DelivererRules menuItemTitleWith:title];
 }
 

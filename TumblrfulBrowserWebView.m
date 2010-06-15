@@ -93,7 +93,7 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 {
 	// アカウントが未設定ならメニューを追加しない
 	if (![self validateAccount]) {
-		[GrowlSupport notify:@"Tumblrful" description:@"Email or Password not entered."];
+		[GrowlSupport notifyWithTitle:@"Tumblrful" description:@"Email or Password not entered."];
 		return menu;
 	}
 
@@ -136,7 +136,7 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 	}
 
 	// error handling
-	[GrowlSupport notify:@"Tumblrful" description:@"Error - Could not detect type of post"];
+	[GrowlSupport notifyWithTitle:@"Tumblrful" description:@"Error - Could not detect type of post"];
 	return menu;
 }
 

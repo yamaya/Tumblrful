@@ -1,10 +1,10 @@
 /**
- * @file PostEditWindow.h
- * @brief PostEditWindow class implementation
+ * @file PostEditWindowController.h
+ * @brief PostEditWindowController class implementation
  * @author Masayuki YAMAYA
  * @date 2010-06-01
  */
-#import "PostEditWindow.h"
+#import "PostEditWindowController.h"
 #import "QuoteViewController.h"
 #import "LinkViewController.h"
 #import "PhotoViewController.h"
@@ -17,7 +17,7 @@
 
 #define get_button_state(b)	((b) ? NSOnState : NSOffState)
 
-@interface PostEditWindow ()
+@interface PostEditWindowController ()
 - (void)loadNibSafety;
 - (void)setContentsViewWithPostType:(PostType)postType display:(BOOL)display;
 - (void)setContentsViewWithPostType:(PostType)postType contents:(NSDictionary *)contents display:(BOOL)display;
@@ -25,7 +25,7 @@
 - (void)updateInvocationForReblog;
 @end
 
-@implementation PostEditWindow
+@implementation PostEditWindowController
 
 @synthesize image = image_;
 
@@ -290,7 +290,7 @@
 			NSString * postTypeString = [NSString stringWithPostType:postType_];
 			NSString * message = [NSString stringWithFormat:@"%@ unimplemented yet.%@", postTypeString, additionalMessage];
 			D0(message);
-			[GrowlSupport notify:[NSString stringWithPostType:postType_] description:message];
+			[GrowlSupport notifyWithTitle:[NSString stringWithPostType:postType_] description:message];
 		}
 		return;
 	}
@@ -442,7 +442,7 @@
 	default:
 		message = @"unimplemented yet";
 		D0(message);
-		[GrowlSupport notify:[NSString stringWithPostType:postType] description:message];
+		[GrowlSupport notifyWithTitle:[NSString stringWithPostType:postType] description:message];
 		break;
 	}
 
