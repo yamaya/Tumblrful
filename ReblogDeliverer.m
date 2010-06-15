@@ -172,7 +172,7 @@ static NSString * TYPE = @"Reblog";
 
 - (void)notify:(NSString *)message
 {
-	NSString * typeDescription = [NSString stringWithFormat:@"%@ %@", TYPE, [[self postType] capitalizedString]];
+	NSString * typeDescription = [NSString stringWithFormat:@"%@", [[self postType] capitalizedString]];
 	[GrowlSupport notify:typeDescription description:message];
 }
 @end

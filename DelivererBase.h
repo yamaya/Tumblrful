@@ -1,6 +1,6 @@
 /**
  * @file DelivererBase.h
- * @brief DelivererBase declaration
+ * @brief DelivererBase class declaration
  * @author Masayuki YAMAYA
  * @date 2008-03-03
  */
@@ -70,6 +70,10 @@
  */
 - (void)postEntry:(NSDictionary *)params;
 
+/**
+ * Notify message to UI
+ *	@param[in] message	message text
+ */
 - (void)notify:(NSString *)message;
 
 /**
@@ -84,5 +88,11 @@
  */
 - (NSArray *)createMenuItems;
 
+/**
+ * Action with parameters
+ *	@param[in] param array object following contents
+ *	- index 0 ... Sender object
+ *	- index 1 ... Mask
+ */
 - (void)actionWithMask:(NSArray *)param;
 @end

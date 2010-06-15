@@ -13,8 +13,12 @@ typedef enum {
 	ConversationPostType,
 	VideoPostType,
 	AudioPostType,
+	ReblogPostType,
 } PostType;
 
 @interface NSString (TumblrfulPostTypeAddition)
+
 + (NSString *)stringWithPostType:(PostType)postType;
+
+- (PostType)postType;
 @end

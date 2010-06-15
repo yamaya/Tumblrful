@@ -225,17 +225,17 @@
 	NSEnumerator * enumerator = [PostAdaptorCollection enumerator];
 	Class adaptorClass;
 	while ((adaptorClass = [enumerator nextObject]) != nil) {
-		if ((1 << i) & filterMask_) { // do filter
+		if ((1 << i) & filterMask_) {	// do filter
 			PostAdaptor * adaptor = [[adaptorClass alloc] initWithCallback:self];
-			[adaptor postEntry:params];
+			NSInvocation * invocation = [adaptor invocationWithPostType:ReblogPostType];
+			[invocation setArgument:&params atIndex:2];
+			[invocation retainArguments];
+			[self invoke:invocation withType:ReblogPostType];
 		}
 		i++;
 	}
 }
 
-/**
- * ポスト成功時のコールバック
- */
 - (void)successed:(NSString *)response
 {
 	D0(response);
@@ -249,7 +249,7 @@
 		D0([e description]);
 	}
 
-	[response release];
+	[response release];	//TODO need?
 }
 
 /**
@@ -311,12 +311,6 @@
 	return items;
 }
 
-/**
- * フィルタマスクを設定する.
- *
- * @param [in] param 要素0にaction:に渡すオブジェクト、要素1にマスクビットが
- *                   格納された配列
- */
 - (void)actionWithMask:(NSArray *)param
 {
 	NSNumber * number = (NSNumber *)[param objectAtIndex:1];

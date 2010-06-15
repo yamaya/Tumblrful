@@ -7,6 +7,7 @@
 // /System/Library/Frameworks/WebKit.framework/Headers/DOMHTMLDocument.h
 #import "LDRReblogDeliverer.h"
 #import "LDRDelivererContext.h"
+#import "TumblrfulConstants.h"
 #import "DebugLog.h"
 #import <WebKit/WebKit.h>
 #import <Foundation/NSXMLDocument.h>
@@ -19,14 +20,14 @@ static NSString * TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 /**
  * Reblog Key を得るための NSURLConnection で使う Delegateクラス.
  */
-@interface DelegateForReblogKey : NSObject
+@interface ReblogKeyDelegate : NSObject
 {
-	NSString* endpoint_;
-	NSMutableData* responseData_;	/**< for NSURLConnection */
-	LDRReblogDeliverer* continuation_;
+	NSString * endpoint_;
+	NSMutableData * data_;
+	LDRReblogDeliverer * deliverer_;
 }
-- (id) initWithEndpoint:(NSString*)endpoint continuation:(LDRReblogDeliverer*)continuation;
-- (void) dealloc;
+- (id)initWithEndpoint:(NSString *)endpoint deliverer:(LDRReblogDeliverer *)deliverer;
+- (void)dealloc;
 @end
 
 #pragma mark -
@@ -89,22 +90,19 @@ static NSString * TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 - (void)action:(id)sender
 {
 #pragma unused (sender)
-	D_METHOD;
-
 	@try {
-		// DelegateForReblogKeyから(その通信後に)呼び出された場合
-		if (object_getClass(sender) == [DelegateForReblogKey class]) {
+		// ReblogKeyDelegateから(その通信後に)呼び出された場合
+		if (object_getClass(sender) == [ReblogKeyDelegate class]) {
 			[super action:sender];
 		}
 		else {
 			// メニューから呼び出された場合
-			NSString* endpoint = [context_ documentURL];
-
-			NSURLRequest* request = [NSURLRequest requestWithURL:[NSURL URLWithString:endpoint]];
-
-			DelegateForReblogKey * delegate = [[DelegateForReblogKey alloc] initWithEndpoint:endpoint continuation:self];
+			NSString * endpoint = [context_ documentURL];
+			NSURLRequest * request = [NSURLRequest requestWithURL:[NSURL URLWithString:endpoint]];
+			ReblogKeyDelegate * delegate = [[ReblogKeyDelegate alloc] initWithEndpoint:endpoint deliverer:self];
+#if 0 // TODO alloc/init しているのに retainはいらんだろ
 			[delegate retain];	// 通信後、このオブジェクト自身でreleaseする
-
+#endif
 			NSURLConnection * connection;
 			connection = [NSURLConnection connectionWithRequest:request delegate:delegate];
 		}
@@ -115,69 +113,41 @@ static NSString * TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 }
 @end
 
-@implementation DelegateForReblogKey
-/**
- * オブジェクトを初期化する.
- *	@param endpoint
- *	@return 初期化済みオブジェクト
- */
-- (id)initWithEndpoint:(NSString*)endpoint continuation:(LDRReblogDeliverer*)continuation
+@implementation ReblogKeyDelegate
+
+- (id)initWithEndpoint:(NSString *)endpoint deliverer:(LDRReblogDeliverer *)deliverer
 {
 	if ((self = [super init]) != nil) {
 		endpoint_ = [endpoint retain];
-		continuation_ = [continuation retain];
-		responseData_ = nil;
+		deliverer_ = [deliverer retain];
+		data_ = nil;
 	}
 	return self;
 }
 
-/**
- * オブジェクトの解放
- */
-- (void) dealloc
+- (void)dealloc
 {
-	if (endpoint_ != nil) {
-		[endpoint_ release];
-		endpoint_ = nil;
-	}
-	if (continuation_ != nil) {
-		[continuation_ release];
-		continuation_ = nil;
-	}
-	if (responseData_ != nil) {
-		[responseData_ release];
-		responseData_ = nil;
-	}
+	[endpoint_ release], endpoint_ = nil;
+	[deliverer_ release], deliverer_ = nil;
+	[data_ release], data_ = nil;
+
 	[super dealloc];
 }
 
-/**
- * didReceiveResponse デリゲートメソッド.
- *	@param connection NSURLConnection オブジェクト
- *	@param response NSURLResponse オブジェクト
- */
-- (void) connection:(NSURLConnection*)connection didReceiveResponse:(NSURLResponse*)response
+- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
 #pragma unused (connection)
-	/* この cast は正しい */
-	NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
+	NSHTTPURLResponse * httpResponse = (NSHTTPURLResponse *)response;
 
 	if ([httpResponse statusCode] == 200) {
-		responseData_ = [[NSMutableData data] retain];
+		data_ = [[NSMutableData data] retain];
 	}
 }
 
-/**
- * didReceiveData デリゲートメソッド.
- *	@param connection NSURLConnection オブジェクト
- *	@param response data NSData オブジェクト
- */
-- (void) connection:(NSURLConnection*)connection didReceiveData:(NSData*)data
+- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
 {
 #pragma unused (connection)
-	if (responseData_ != nil) {
-		[responseData_ appendData:data];
-	}
+	if (data_ != nil) [data_ appendData:data];
 }
 
 /**
@@ -196,48 +166,69 @@ static NSString * TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 #pragma unused (connection)
 	D_METHOD;
 
-	if (responseData_ != nil) {
+	@try {
+		if (data_ == nil) return;
+
 		// DOMにする
 		NSError * error = nil;
-		NSXMLDocument * document = [[NSXMLDocument alloc] initWithData:responseData_ options:NSXMLDocumentTidyHTML error:&error];
-		if (document != nil) {
-			NSArray* elements = [[document rootElement] nodesForXPath:@"//iframe[@id=\"tumblr_controls\"]" error:&error];
+		NSXMLDocument * xmlDoc = [[[NSXMLDocument alloc] initWithData:data_ options:NSXMLDocumentTidyHTML error:&error] autorelease];
+		D0([error description]);
+
+		if (xmlDoc != nil) {
+			error = nil;
+			NSArray * elements = [[xmlDoc rootElement] nodesForXPath:@"//iframe[@id=\"tumblr_controls\"]" error:&error];
+			D0([error description]);
 			if (elements != nil && [elements count] > 0) {
 				NSXMLElement * element = [elements objectAtIndex:0];
-				NSString* src = [[[element attributeForName:@"src"] stringValue] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+				NSString * src = [[[element attributeForName:@"src"] stringValue] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 				NSRange range = [src rangeOfString:@"&pid="];
-				NSString* s = [src substringFromIndex:range.location + 1];
-				NSArray* segments = [s componentsSeparatedByString:@"&"];
+				NSString * s = [src substringFromIndex:range.location + 1];
+				D0([s description]);
 
+				NSArray * segments = [s componentsSeparatedByString:@"&"];
 				NSEnumerator* enumerator = [segments objectEnumerator];
 				while ((s = [enumerator nextObject]) != nil) {
+					D0([s description]);
 					range = [s rangeOfString:@"pid="];
 					if (range.location != NSNotFound) {
-						[continuation_ setPostID:[s substringFromIndex:range.location + range.length]];
+						[deliverer_ setPostID:[s substringFromIndex:range.location + range.length]];
 						continue;
 					}
 					range = [s rangeOfString:@"rk="];
 					if (range.location != NSNotFound) {
-						[continuation_ setReblogKey:[s substringFromIndex:range.location + range.length]];
+						[deliverer_ setReblogKey:[s substringFromIndex:range.location + range.length]];
 						continue;
 					}
 				}
 			}
+			else {
+				NSString * message = @"Not found tumblr_controls iframe.";
+				D0(message);
+				NSException * e = [NSException exceptionWithName:TUMBLRFUL_EXCEPTION_NAME reason:message userInfo:nil];
+				[deliverer_ performSelector:@selector(failedWithException:) withObject:e];
+				return;
+			}
 		}
-		[responseData_ release];
 
 		// メニューから呼び出されたのと同じ事をする
-		[continuation_ performSelector:@selector(action:) withObject:self];
+		[deliverer_ performSelector:@selector(action:) withObject:self];
 	}
-
-	[self release];
+	@catch (NSException * e) {
+		D0([e description]);
+		[deliverer_ performSelector:@selector(failedWithException:) withObject:e];
+	}
+	@finally {
+		[self release];
+	}
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
-#pragma unused (connection, error)
+#pragma unused (connection)
 	D0([error description]);
+
+	[deliverer_ performSelector:@selector(failedWithError:) withObject:error];
 
 	[self release];
 }
-@end // DelegateForReblogKey
+@end // ReblogKeyDelegate

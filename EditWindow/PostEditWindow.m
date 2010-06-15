@@ -12,12 +12,17 @@
 #import "Anchor.h"
 #import "PostAdaptor.h"
 #import "NSString+Tumblrful.h"
+#import "GrowlSupport.h"
 #import "DebugLog.h"
 
 #define get_button_state(b)	((b) ? NSOnState : NSOffState)
 
 @interface PostEditWindow ()
 - (void)loadNibSafety;
+- (void)setContentsViewWithPostType:(PostType)postType display:(BOOL)display;
+- (void)setContentsViewWithPostType:(PostType)postType contents:(NSDictionary *)contents display:(BOOL)display;
+- (void)resizeWindowOnSpotWithRect:(NSRect)aRect display:(BOOL)display animate:(BOOL)animate;
+- (void)updateInvocationForReblog;
 @end
 
 @implementation PostEditWindow
@@ -33,6 +38,7 @@
 		postType_ = postType;
 		invocation_ = [invocation retain];
 		image_ = nil;
+		extractedContents_ = nil;
 	}
 	return self;
 }
@@ -43,6 +49,7 @@
 
 	[image_ release];
 	[invocation_ release];
+	[extractedContents_ release];
 	[super dealloc];
 }
 
@@ -55,79 +62,11 @@
 	[queueingButton_ setState:get_button_state(privated)];
 }
 
-- (void)openSheet:(NSWindow * )window
+- (void)openSheet:(NSWindow *)window
 {
 	[self loadNibSafety];
 
-	NSView * contentsView = nil;
-
-	// ディスクリプションとコンテンツビューはタイプ別に処理する
-	switch (postType_) {
-	case LinkPostType:
-		{
-			Anchor * anchor = nil;
-			NSString * description = nil;
-			[invocation_ getArgument:&anchor atIndex:2];
-			[invocation_ getArgument:&description atIndex:3];
-			D(@"URL:%@", anchor.URL);
-			D(@"title:%@", anchor.title);
-			D(@"description:%@", description);
-			[linkViewController_ setContentsWithTitle:anchor.title URL:anchor.URL description:description];
-			D0(@"YYY");
-			contentsView = [linkViewController_ view];
-		}
-		break;
-	case QuotePostType:
-		{
-			NSString * quote = nil;
-			NSString * source = nil;
-			[invocation_ getArgument:&quote atIndex:2];
-			[invocation_ getArgument:&source atIndex:3];
-			D(@"quote:%@", quote);
-			[quoteViewController_ setContentsWithText:quote source:source];
-			contentsView = [quoteViewController_ view];
-		}
-		break;
-	case PhotoPostType:
-		{
-			NSString * source = nil;
-			NSString * caption = nil;
-			NSString * throughURL = nil;
-			[invocation_ getArgument:&source atIndex:2];
-			[invocation_ getArgument:&caption atIndex:3];
-			[invocation_ getArgument:&throughURL atIndex:4];
-			[photoViewController_ setContentsWithImageURL:source image:image_ caption:caption throughURL:throughURL];
-			contentsView = [photoViewController_ view];
-		}
-		break;
-	case VideoPostType:	
-		{
-			NSString * embed = nil;
-			NSString * caption = nil;
-			[invocation_ getArgument:&embed atIndex:2];
-			[invocation_ getArgument:&caption atIndex:3];
-			[videoViewController_ setContentsWithEmbed:embed caption:caption];
-			contentsView = [videoViewController_ view];
-		}
-		break;
-	default:
-		NSAssert(0, @"unimplemented yet");
-		break;
-	}
-
-	NSRect const contentsBounds = [contentsView bounds];
-	NSRect const baseBounds = [genericView_ bounds];
-	D(@"base=%f view=%f", baseBounds.size.height, contentsBounds.size.height);
-
-	CGFloat const delta = baseBounds.size.height - contentsBounds.size.height;
-	D(@"delta=%f", delta);
-
-	NSRect newFrame = [postEditPanel_ frame];
-	newFrame.size.height -= delta;
-	[postEditPanel_ setFrame:newFrame display:NO];
-
-	[genericView_ addSubview:contentsView];
-	[genericView_ setBounds:contentsBounds];
+	[self setContentsViewWithPostType:postType_ display:NO];
 
 	[tagsField_ setStringValue:@""];
 
@@ -148,6 +87,141 @@
 	}
 }
 
+- (void)setContentsViewWithPostType:(PostType)postType display:(BOOL)display
+{
+	NSMutableDictionary * contents = [NSMutableDictionary dictionary];
+
+	Anchor * anchor = nil;
+	NSString * description = nil;
+	NSString * quote = nil;
+	NSString * source = nil;
+	NSString * caption = nil;
+	NSString * throughURL = nil;
+	NSString * embed = nil;
+	NSDictionary * reblogContents = nil;
+
+	switch (postType) {
+	case LinkPostType:
+		[invocation_ getArgument:&anchor atIndex:2];
+		[invocation_ getArgument:&description atIndex:3];
+		[contents setObject:anchor.URL forKey:@"URL"];
+		[contents setObject:anchor.title forKey:@"title"];
+		[contents setObject:description forKey:@"description"];
+		break;
+	case QuotePostType:
+		[invocation_ getArgument:&quote atIndex:2];
+		[invocation_ getArgument:&source atIndex:3];
+		[contents setObject:quote forKey:@"quote"];
+		[contents setObject:source forKey:@"source"];
+		break;
+	case PhotoPostType:
+		[invocation_ getArgument:&source atIndex:2];
+		[invocation_ getArgument:&caption atIndex:3];
+		[invocation_ getArgument:&throughURL atIndex:4];
+		[contents setObject:source forKey:@"source"];
+		[contents setObject:caption forKey:@"caption"];
+		[contents setObject:throughURL forKey:@"throughURL"];
+		break;
+	case VideoPostType:	
+		[invocation_ getArgument:&embed atIndex:2];
+		[invocation_ getArgument:&caption atIndex:3];
+		[contents setObject:embed forKey:@"embed"];
+		[contents setObject:caption forKey:@"caption"];
+		break;
+	case ReblogPostType:	
+		[invocation_ getArgument:&reblogContents atIndex:2];
+		[contents setObject:reblogContents forKey:@"contents"];
+		break;
+	default:
+		NSAssert(0, @"unimplemented yet");
+		break;
+	}
+	[self setContentsViewWithPostType:postType contents:contents display:display];
+}
+
+- (void)setContentsViewWithPostType:(PostType)postType contents:(NSDictionary *)contents display:(BOOL)display
+{
+	NSView * contentsView = [[genericView_ subviews] lastObject];
+	if (contentsView != nil) {
+		[contentsView removeFromSuperview];
+		contentsView = nil;
+	}
+
+	NSString * URL = nil;
+	NSString * title = nil;
+	NSString * description = nil;
+	NSString * quote = nil;
+	NSString * source = nil;
+	NSString * caption = nil;
+	NSString * throughURL = nil;
+	NSString * embed = nil;
+	NSDictionary * reblogContents = nil;
+	NSProgressIndicator * indicator = nil;
+	TumblrReblogExtractor * extractor = nil;
+
+	// ディスクリプションとコンテンツビューはタイプ別に処理する
+	switch (postType) {
+	case LinkPostType:
+		URL = [contents objectForKey:@"URL"];
+		title = [contents objectForKey:@"title"];
+		description = [contents objectForKey:@"description"];
+		D(@"URL:%@", URL);
+		D(@"title:%@", title);
+		D(@"description:%@", description);
+		[linkViewController_ setContentsWithTitle:title URL:URL description:description];
+		contentsView = [linkViewController_ view];
+		break;
+	case QuotePostType:
+		quote = [contents objectForKey:@"quote"];
+		source = [contents objectForKey:@"source"];
+		D(@"quote:%@", quote);
+		[quoteViewController_ setContentsWithText:quote source:source];
+		contentsView = [quoteViewController_ view];
+		break;
+	case PhotoPostType:
+		source = [contents objectForKey:@"source"];
+		caption = [contents objectForKey:@"caption"];
+		throughURL = [contents objectForKey:@"throughURL"];
+		[photoViewController_ setContentsWithImageURL:source image:image_ caption:caption throughURL:throughURL];
+		contentsView = [photoViewController_ view];
+		break;
+	case VideoPostType:	
+		embed = [contents objectForKey:@"embed"];
+		caption = [contents objectForKey:@"caption"];
+		[videoViewController_ setContentsWithEmbed:embed caption:caption];
+		contentsView = [videoViewController_ view];
+		break;
+	case ReblogPostType:	
+		reblogContents = [contents objectForKey:@"contents"];
+
+		indicator = [[NSProgressIndicator alloc] initWithFrame:[genericView_ bounds]];
+		[indicator setStyle:NSProgressIndicatorSpinningStyle];
+		[indicator startAnimation:self];
+		contentsView = [indicator autorelease];
+
+		extractor = [[TumblrReblogExtractor alloc] initWithDelegate:self];
+		[extractor startWithPostID:[reblogContents objectForKey:@"pid"] withReblogKey:[reblogContents objectForKey:@"rk"]];
+		break;
+	default:
+		NSAssert(0, @"unimplemented yet");
+		break;
+	}
+
+	NSRect const contentsBounds = [contentsView bounds];
+	NSRect const baseBounds = [genericView_ bounds];
+	//D(@"base=%f view=%f", baseBounds.size.height, contentsBounds.size.height);
+
+	CGFloat const delta = baseBounds.size.height - contentsBounds.size.height;
+	//D(@"delta=%f", delta);
+
+	NSRect newFrame = [postEditPanel_ frame];
+	newFrame.size.height -= delta;
+	[self resizeWindowOnSpotWithRect:newFrame display:display animate:YES];
+
+	[genericView_ addSubview:contentsView];
+	[genericView_ setBounds:contentsBounds];
+}
+
 // あるオブジェクトAが、Nibファイルのオープンにより実体化された際にawakeFromNibメッセージを一度受け取ります。
 // 続いて、そのオブジェクトAが別のnibファイル（例えばダイアログとか）をオープンする際に、loadNibNamedメソッドのownerに自分自身を指定すると・・・
 // 先ほど書いたようにnib内のすべてのオブジェクトに対して準備ができたよというメッセージawakeFromNibが送られるので、filesOwnerにもメッセージが送信される事になります。
@@ -165,6 +239,7 @@
 	PostAdaptor * adaptor = [invocation_ target];
 	adaptor.privated = ([privateButton_ state] == NSOnState);
 	adaptor.queuingEnabled = ([queueingButton_ state] == NSOnState);
+	adaptor.options = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:([twitterButton_ state] == NSOnState ? YES : NO)], @"twitter", nil];
 
 	switch (postType_) {
 	case LinkPostType:
@@ -199,13 +274,63 @@
 			[invocation_ getArgument:&caption atIndex:3];
 		}
 		break;
+	case ReblogPostType:
+		[self updateInvocationForReblog];
+		break;
 	default:
 		{
-			NSString * desc = [NSString stringWithFormat:@"%@ unimplemented yet", [NSString stringWithPostType:postType_]];
-			NSAssert(0, desc);
+			NSString * additionalMessage = @"";
+			if (extractedContents_ != nil) {
+				additionalMessage = [NSString stringWithFormat:@" %@/%@ %@"
+					, [[extractedContents_ objectForKey:@"pid"] description]
+					, [[extractedContents_ objectForKey:@"rk"] description]
+					, [[extractedContents_ objectForKey:@"type"] description]
+					];
+			}
+			NSString * postTypeString = [NSString stringWithPostType:postType_];
+			NSString * message = [NSString stringWithFormat:@"%@ unimplemented yet.%@", postTypeString, additionalMessage];
+			D0(message);
+			[GrowlSupport notify:[NSString stringWithPostType:postType_] description:message];
 		}
-		break;
+		return;
 	}
+}
+
+- (void)updateInvocationForReblog
+{
+	NSMutableDictionary * contents = [NSMutableDictionary dictionaryWithDictionary:extractedContents_]; 
+
+	// サイトから取得したりブログコンテンツを編集された内容で上書きする
+	switch ([[extractedContents_ objectForKey:@"type"] postType]) {
+	case LinkPostType:
+		[contents setObject:linkViewController_.URL forKey:@"post[one]"];
+		[contents setObject:linkViewController_.title forKey:@"post[two]"];
+		[contents setObject:linkViewController_.description forKey:@"post[three]"];
+		break;
+	case QuotePostType:
+		[contents setObject:quoteViewController_.quote forKey:@"post[one]"];
+		[contents setObject:quoteViewController_.source forKey:@"post[two]"];
+		break;
+	case PhotoPostType:
+		[contents setObject:photoViewController_.caption forKey:@"post[two]"];
+		[contents setObject:photoViewController_.throughURL forKey:@"post[three]"];
+		break;
+	case VideoPostType:	
+		[contents setObject:videoViewController_.embed forKey:@"post[one]"];
+		[contents setObject:videoViewController_.caption forKey:@"post[two]"];
+		break;
+	default:
+		D(@"why?: %@", [contents description]);
+		return;
+	}
+	[contents removeObjectForKey:@"type"];
+
+	D0([contents description]);
+	PostAdaptor * adaptor = [invocation_ target];
+	D(@"extractEnabled: %d to %d", adaptor.extractEnabled, NO);
+	adaptor.extractEnabled = NO;
+	[invocation_ setArgument:&contents atIndex:2];
+	[invocation_ retainArguments];
 }
 
 - (void)didEndSheet:(NSWindow *)sheet returnCode:(NSInteger)returnCode contextInfo:(void *)contextInfo
@@ -219,11 +344,11 @@
 		@try {
 			[self updateInvocation];
 			[invocation_ invoke];
+			D0(@"invoked");
 		}
 		@catch (NSException * e) {
 			D0([e description]);
 		}
-		D0(@"invoked");
 	} else {
 		D0(@"Cancel");
 	}
@@ -234,7 +359,7 @@
 	for (NSView * view in [originView subviews]) {
 		[self traverseSubviews:view withInvocation:invocation];
 	}
-	[invocation setArgument:&originView atIndex:1];
+	[invocation setArgument:&originView atIndex:2];
 	[invocation invoke];
 }
 
@@ -279,4 +404,70 @@
 
 	postEditPanel_ = nil;
 }
+
+#pragma mark -
+#pragma mark Delegate Methods
+
+- (void)extractor:(TumblrReblogExtractor *)extractor didFinishExtract:(NSDictionary *)contents
+{
+	extractedContents_ = [NSMutableDictionary dictionaryWithDictionary:contents];
+	[extractedContents_ setObject:extractor.postID forKey:@"pid"];
+	[extractedContents_ setObject:extractor.reblogKey forKey:@"rk"];
+	[extractedContents_ retain];
+
+	PostType const postType = [[contents objectForKey:@"type"] postType];
+
+	NSMutableDictionary * newContents = [NSMutableDictionary dictionary];
+	NSString * message = nil;
+
+	switch (postType) {
+	case LinkPostType:
+		[newContents setObject:[contents objectForKey:@"post[one]"] forKey:@"URL"];
+		[newContents setObject:[contents objectForKey:@"post[two]"] forKey:@"title"];
+		[newContents setObject:[contents objectForKey:@"post[three]"] forKey:@"description"];
+		break;
+	case QuotePostType:
+		[newContents setObject:[contents objectForKey:@"post[one]"] forKey:@"quote"];
+		[newContents setObject:[contents objectForKey:@"post[two]"] forKey:@"source"];
+		break;
+	case PhotoPostType:
+		//TODO どうやって NSImage を持ってこようか...
+		[newContents setObject:[contents objectForKey:@"post[two]"] forKey:@"caption"];
+		[newContents setObject:[contents objectForKey:@"post[three]"] forKey:@"throughURL"];
+		break;
+	case VideoPostType:	
+		[newContents setObject:[contents objectForKey:@"post[one]"] forKey:@"embed"];
+		[newContents setObject:[contents objectForKey:@"post[two]"] forKey:@"caption"];
+		break;
+	default:
+		message = @"unimplemented yet";
+		D0(message);
+		[GrowlSupport notify:[NSString stringWithPostType:postType] description:message];
+		break;
+	}
+
+	[self setContentsViewWithPostType:postType contents:newContents display:YES];
+}
+
+- (void)extractor:(TumblrReblogExtractor *)extractor didFailExtractWithError:(NSError *)error
+{
+#pragma unused (extractor, error)
+
+	D0([error description]);
+}
+
+- (void)extractor:(TumblrReblogExtractor *)extractor didFailExtractWithException:(NSException *)exception
+{
+#pragma unused (extractor, exception)
+
+	D0([exception description]);
+}
+
+- (void)resizeWindowOnSpotWithRect:(NSRect)aRect display:(BOOL)display animate:(BOOL)animate
+{
+	NSRect const frame = [postEditPanel_ frame];
+    NSRect r = NSMakeRect(frame.origin.x - (aRect.size.width - frame.size.width), frame.origin.y - (aRect.size.height - frame.size.height), aRect.size.width, aRect.size.height);
+    [postEditPanel_ setFrame:r display:display animate:animate];
+}
+
 @end

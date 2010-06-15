@@ -1,18 +1,15 @@
 /**
  * @file PostAdaptorCollection.m
- * @brief PostAdaptorCollection implementation
+ * @brief PostAdaptorCollection class implementation
  * @author Masayuki YAMAYA
  * @date 2008-03-07
  */
 #import "PostAdaptorCollection.h"
-#import "Log.h"
-
-//#define V(format, ...)	Log(format, __VA_ARGS__)
-#define V(format, ...)
+#import "DebugLog.h"
 
 #pragma mark -
-@interface PostAdaptorCollection (Private)
-+ (NSMutableArray*) sharedInstance;
+@interface PostAdaptorCollection ()
++ (NSMutableArray *)sharedInstance;
 @end
 
 #pragma mark -
@@ -20,29 +17,23 @@
 /**
  *
  */
-+ (void) add:(Class)postClass
++ (void)add:(Class)postClass
 {
 	NSMutableArray* array = [PostAdaptorCollection sharedInstance];
 	[array addObject:postClass];
 }
 
-/**
- *
- */
-+ (NSEnumerator*) enumerator
++ (NSEnumerator *)enumerator
 {
 	return [[PostAdaptorCollection sharedInstance] objectEnumerator];
 }
 
-+ (NSUInteger) count
++ (NSUInteger)count
 {
 	return [[PostAdaptorCollection sharedInstance] count];
 }
-@end
 
-#pragma mark -
-@implementation PostAdaptorCollection (Private)
-+ (NSMutableArray*) sharedInstance
++ (NSMutableArray *)sharedInstance
 {
 	static NSMutableArray* array = nil;
 	if (array == nil) {

@@ -17,7 +17,8 @@ static float TIMEOUT = 60.0f;
 #pragma mark -
 
 @interface TumblrPost ()
-- (void)postWithEndpoint:(NSString *)url withParams:(NSDictionary *)params;
+- (void)postWithEndpoint:(NSString *)endpointURL withParams:(NSDictionary *)params;
+- (void)postWithEndpoint:(NSString *)endpointURL withReblogContents:(NSDictionary *)contents;
 - (void)callbackOnMainThread:(SEL)selector withObject:(NSObject *)param;
 @end
 
@@ -27,6 +28,7 @@ static float TIMEOUT = 60.0f;
 
 @synthesize privated = private_;
 @synthesize queuingEnabled = queuing_;
+@synthesize extractEnabled = extractEnabled_;
 
 - (id)initWithCallback:(NSObject<PostCallback> *)callback
 {
@@ -45,6 +47,7 @@ static float TIMEOUT = 60.0f;
 {
 	[callback_ release], callback_ = nil;
 	[responseData_ release], responseData_ = nil;
+	[reblogParams_ release], reblogParams_ = nil;
 
 	[super dealloc];
 }
@@ -63,10 +66,6 @@ static float TIMEOUT = 60.0f;
 {
 	NSMutableArray * keys = [NSMutableArray arrayWithObjects:@"email", @"password", @"generator", nil];
 	NSMutableArray * objs = [NSMutableArray arrayWithObjects:[TumblrPost username], [TumblrPost password], @"Tumblrful", nil];
-	if (self.privated) {
-		[keys addObject:@"private"];
-		[objs addObject:@"1"];
-	}
 	return [NSMutableDictionary dictionaryWithObjects:objs forKeys:keys];
 }
 
@@ -88,8 +87,8 @@ static float TIMEOUT = 60.0f;
         }
 		value = [value stringByURLEncoding:NSUTF8StringEncoding];
 		[escaped appendFormat:@"&%@=%@", key, value];
-		D0(escaped);
 	}
+	D0(escaped);
 
 	// create the POST request
 	NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:url] cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:TIMEOUT];
@@ -103,9 +102,21 @@ static float TIMEOUT = 60.0f;
 {
 	D(@"type=%@", [params objectForKey:@"type"]);
 
-	if ([[params objectForKey:@"type"] isEqualToString:@"reblog"]) {
-		TumblrReblogExtractor * extractor = [[TumblrReblogExtractor alloc] initWithDelegate:self];
-		[extractor startWithPostID:[params objectForKey:@"pid"] withReblogKey:[params objectForKey:@"rk"]];
+	if ([[params objectForKey:@"type"] caseInsensitiveCompare:@"reblog"] == NSOrderedSame) {
+		NSString * postID = [params objectForKey:@"pid"];
+		NSString * reblogKey = [params objectForKey:@"rk"];
+		if (self.extractEnabled) {
+			reblogParams_ = [params retain];
+			TumblrReblogExtractor * extractor = [[TumblrReblogExtractor alloc] initWithDelegate:self];
+			[extractor startWithPostID:postID withReblogKey:reblogKey];
+		}
+		else {
+			NSString * endpoint = [TumblrReblogExtractor endpointWithPostID:postID withReblogKey:reblogKey];
+			NSMutableDictionary * contents = [NSMutableDictionary dictionaryWithDictionary:params];
+			[contents removeObjectForKey:@"pid"];
+			[contents removeObjectForKey:@"rk"];
+			[self postWithEndpoint:endpoint withReblogContents:contents];
+		}
 	}
 	else {
 		[self postWithEndpoint:TUMBLRFUL_TUMBLR_WRITE_URL withParams:params];
@@ -144,7 +155,6 @@ static float TIMEOUT = 60.0f;
 		[self callbackOnMainThread:@selector(failedWithError:) withObject:error];
 	}
 
-	[responseData_ release]; /* release receive buffer */
 	[self release];
 }
 
@@ -153,22 +163,17 @@ static float TIMEOUT = 60.0f;
 #pragma unused (connection)
 	D0([error description]);
 
-	[responseData_ release], responseData_ = nil;
-
 	[self callbackOnMainThread:@selector(failedWithError:) withObject:error];
 	[self release];
 }
 
 #ifdef SUPPORT_MULTIPART_PORT
-/**
- * create multipart POST request
- */
 -(NSURLRequest *)createRequestForMultipart:(NSDictionary *)params withData:(NSData *)data
 {
-	static NSString* HEADER_BOUNDARY = @"0xKhTmLbOuNdArY";
+	static NSString * HEADER_BOUNDARY = @"0xKhTmLbOuNdArY";
 
 	// create the URL POST Request to tumblr
-	NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:TUMBLRFUL_TUMBLR_WRITE_URL]];
+	NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:TUMBLRFUL_TUMBLR_WRITE_URL]];
 
 	[request setHTTPMethod:@"POST"];
 
@@ -176,12 +181,12 @@ static float TIMEOUT = 60.0f;
 	[request addValue:[NSString stringWithFormat:@"multipart/form-data; boundary=%@", HEADER_BOUNDARY] forHTTPHeaderField: @"Content-Type"];
 
 	// create the body
-	NSMutableData* body = [NSMutableData data];
+	NSMutableData * body = [NSMutableData data];
 	[body appendData:[[NSString stringWithFormat:@"--%@\r\n", HEADER_BOUNDARY] dataUsingEncoding:NSUTF8StringEncoding]];
 
 	// add key-values from the NSDictionary object
-	NSEnumerator* enumerator = [params keyEnumerator];
-	NSString* key;
+	NSEnumerator * enumerator = [params keyEnumerator];
+	NSString * key;
 	while ((key = [enumerator nextObject]) != nil) {
 		[body appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"\r\n\r\n", key] dataUsingEncoding:NSUTF8StringEncoding]];
 		[body appendData:[[NSString stringWithFormat:@"%@", [params objectForKey:key]] dataUsingEncoding:NSUTF8StringEncoding]];
@@ -199,21 +204,30 @@ static float TIMEOUT = 60.0f;
 
 	return request;
 }
-#endif /* SUPPORT_MULTIPART_PORT */
+#endif // SUPPORT_MULTIPART_PORT
 
 #pragma mark -
 #pragma mark Private Methods
 
-- (void)postWithEndpoint:(NSString *)url withParams:(NSDictionary *)params
+- (void)postWithEndpoint:(NSString *)endpointURL withParams:(NSDictionary *)params
 {
-	D_METHOD;
+	D0(endpointURL);
+	D0([params description]);
 
-	NSURLRequest * request = [self createRequest:url params:params];	// request は connection に指定した時点で reatin upする
+	NSURLRequest * request = [self createRequest:endpointURL params:params];	// request は connection に指定した時点で reatin upする
 	NSURLConnection * connection = [NSURLConnection connectionWithRequest:request delegate:self];	// autoreleased
-
 	if (connection == nil) {
 		[self callbackOnMainThread:@selector(failedWithError:) withObject:nil];
 	}
+}
+
+- (void)postWithEndpoint:(NSString *)endpointURL withReblogContents:(NSDictionary *)contents
+{
+	NSMutableDictionary * params = [NSMutableDictionary dictionaryWithDictionary:contents];
+	if (self.queuingEnabled)
+		[params setObject:@"2" forKey:@"post[state]"];	// queuing post
+
+	[self postWithEndpoint:endpointURL withParams:params];
 }
 
 - (void)callbackOnMainThread:(SEL)selector withObject:(NSObject *)object
@@ -232,28 +246,30 @@ static float TIMEOUT = 60.0f;
 
 	if (contents == nil) {
 		NSString * message = [NSString stringWithFormat:@"Unrecognized Reblog form."];
-		D0(message);
 		NSException * e = [NSException exceptionWithName:TUMBLRFUL_EXCEPTION_NAME reason:message userInfo:nil];
 		[self callbackOnMainThread:@selector(failedWithException:) withObject:e];
+		return;
 	}
-	else if ([contents count] < 2) { // type[post] + 1このフィールドは絶対あるはず
+	else if ([contents count] < 2) {
 		NSString * message = [NSString stringWithFormat:@"Unrecognized Reblog form. too few fields. type:%@", SafetyDescription([contents objectForKey:@"type"])];
 		NSException * e = [NSException exceptionWithName:TUMBLRFUL_EXCEPTION_NAME reason:message userInfo:nil];
 		[self callbackOnMainThread:@selector(failedWithException:) withObject:e];
 		return;
 	}
 
-	NSMutableDictionary * params = [NSMutableDictionary dictionaryWithDictionary:contents];
-	if (queuing_) [params setObject:@"2" forKey:@"post[state]"];	// queuing post
-	[params addEntriesFromDictionary:contents];
-
 	// Tumblrへポストする
-	[self postWithEndpoint:extractor.endpoint withParams:params];
+	[self postWithEndpoint:extractor.endpoint withReblogContents:contents];
 }
 
 - (void)extractor:(TumblrReblogExtractor *)extractor didFailExtractWithError:(NSError *)error
 {
 #pragma unused (extractor)
-	[self callbackOnMainThread:@selector(failedWithException:) withObject:error];
+	[self callbackOnMainThread:@selector(failedWithError:) withObject:error];
+}
+
+- (void)extractor:(TumblrReblogExtractor *)extractor didFailExtractWithException:(NSException *)exception
+{
+#pragma unused (extractor)
+	[self callbackOnMainThread:@selector(failedWithException:) withObject:exception];
 }
 @end // TumblrPost

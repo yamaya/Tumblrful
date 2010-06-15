@@ -15,15 +15,20 @@
 {
 	BOOL private_;
 	BOOL queuing_;
+	BOOL extractEnabled_;
 	NSMutableData* responseData_;
 	NSObject<PostCallback>* callback_; // for Deliverer
+	NSDictionary * reblogParams_;	// for Reblog
 }
 
-/// private post
+/// private post or not
 @property (nonatomic, assign) BOOL privated;
 
-/// queuing post enabled
+/// queuing post enabled or not
 @property (nonatomic, assign) BOOL queuingEnabled;
+
+/// Extract reblog post or not
+@property (nonatomic, assign) BOOL extractEnabled;
 
 + (NSString *)username;
 

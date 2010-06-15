@@ -1,6 +1,6 @@
 /**
  * @file Deliverer.h
- * @brief Deliverer declaration
+ * @brief Deliverer class declaration
  * @author Masayuki YAMAYA
  * @date 2008-03-03
  */

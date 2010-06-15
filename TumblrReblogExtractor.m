@@ -26,11 +26,10 @@ static const NSRange EmptyRange = {NSNotFound, 0};
 @implementation TumblrReblogExtractor
 
 @synthesize endpoint = endpoint_;
+@synthesize postID = postID_;
+@synthesize reblogKey = reblogKey_;
 
-/**
- * endpointから reblog form を取得して field に展開する.
- */
-- (void)startWithPostID:(NSString*)postID withReblogKey:(NSString*)reblogKey
+- (void)startWithPostID:(NSString *)postID withReblogKey:(NSString *)reblogKey
 {
 	D(@"postid=%@ reblogkey=%@", postID, reblogKey);
 
@@ -39,8 +38,14 @@ static const NSRange EmptyRange = {NSNotFound, 0};
 		return;
 	}
 
-	endpoint_ = [NSString stringWithFormat:@"%@/reblog/%@/%@", TUMBLRFUL_TUMBLR_URL, postID, reblogKey];
-	[endpoint_ retain];
+	NSAssert(postID, @"postID must be not nil");
+	NSAssert(reblogKey, @"reblogKey must be not nil");
+	[postID_ release];
+	postID_ = [postID retain];
+	[reblogKey_ release];
+	reblogKey_ = [reblogKey retain];
+
+	endpoint_ = [[TumblrReblogExtractor endpointWithPostID:postID withReblogKey:reblogKey] retain];
 
 	NSURLRequest* request = [NSURLRequest requestWithURL:[NSURL URLWithString:endpoint_]];
 	NSURLConnection* connection = [NSURLConnection connectionWithRequest:request delegate:self];
@@ -67,6 +72,9 @@ static const NSRange EmptyRange = {NSNotFound, 0};
 	[super dealloc];
 }
 
+#pragma mark -
+#pragma mark Delegate Methods
+
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
 #pragma unused (connection)
@@ -87,38 +95,39 @@ static const NSRange EmptyRange = {NSNotFound, 0};
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
 #pragma unused (connection)
-	D(@"data.length=%d", [data_ length]);
-
 	@try {
-		NSMutableDictionary * fields = nil;
+		NSMutableDictionary * contents = nil;
 		NSArray * elements = [self inputElementsWithReblogFrom:data_];
 		NSString * type = [self postTypeWithElements:elements];
-		if ([type isEqualToString:@"link"])					fields = [self fieldsForLink:elements];
-		else if ([type isEqualToString:@"photo"])			fields = [self fieldsForPhoto:elements];
-		else if ([type isEqualToString:@"quote"])			fields = [self fieldsForQuote:elements];
-		else if ([type isEqualToString:@"regular"])			fields = [self fieldsForRegular:elements];
-		else if ([type isEqualToString:@"conversation"])	fields = [self fieldsForConversation:elements];
-		else if ([type isEqualToString:@"video"])			fields = [self fieldsForVideo:elements];
-		else if ([type isEqualToString:@"audio"])			fields = [self fieldsForAudio:elements];
+		if ([type isEqualToString:@"link"])					contents = [self fieldsForLink:elements];
+		else if ([type isEqualToString:@"photo"])			contents = [self fieldsForPhoto:elements];
+		else if ([type isEqualToString:@"quote"])			contents = [self fieldsForQuote:elements];
+		else if ([type isEqualToString:@"regular"])			contents = [self fieldsForRegular:elements];
+		else if ([type isEqualToString:@"conversation"])	contents = [self fieldsForConversation:elements];
+		else if ([type isEqualToString:@"video"])			contents = [self fieldsForVideo:elements];
+		else if ([type isEqualToString:@"audio"])			contents = [self fieldsForAudio:elements];
 
-		if (fields == nil) {
+		if (contents == nil) {
 			NSString * message = [NSString stringWithFormat:@"Unrecognized Reblog form. type:%@", SafetyDescription(type)];
 			D0(message);
 			// nilもデリゲートに渡す
 		}
-		else if ([fields count] < 2) { // type[post] + 1このフィールドは絶対あるはず
-			NSString * message = [NSString stringWithFormat:@"Unrecognized Reblog form. too few fields. type:%@", SafetyDescription(type)];
+		else if ([contents count] < 2) { // type[post] + 1このフィールドは絶対あるはず
+			NSString * message = [NSString stringWithFormat:@"Unrecognized Reblog form. too few contents. type:%@", SafetyDescription(type)];
 			D0(message);
 		}
 		else {
-			[fields setObject:type forKey:@"type"];
+			[contents setObject:type forKey:@"type"];
 		}
 
 		// デリゲートメソッドをメインスレッド上で呼び出す
-		[self performSelectorOnMainThread:@selector(delegateDidFinishExtractMethod:) withObject:fields waitUntilDone:YES];
+		[self performSelectorOnMainThread:@selector(delegateDidFinishExtractMethod:) withObject:contents waitUntilDone:YES];
 	}
 	@catch (NSException * e) {
 		D0([e description]);
+
+		// デリゲートメソッドをメインスレッド上で呼び出す
+		[self performSelectorOnMainThread:@selector(delegateDidFailExtractMethod:) withObject:e waitUntilDone:YES];
 	}
 	@finally {
 		[self release];
@@ -159,6 +168,8 @@ static const NSRange EmptyRange = {NSNotFound, 0};
  */
 - (NSArray *)inputElementsWithReblogFrom:(NSData *)reblogForm
 {
+	// TODO Photo に post[one](source) が無いから <div style="text-align:center;"> をひっかけてたのか...
+	// 誤動作するようであれば、 <div style="text-align:center;"> を追加しよう
 	static NSString * XPath = @"//div[@id=\"container\"]/div[@id=\"content\"]/form[@id=\"edit_post\"]//(input[starts-with(@name, \"post\")] | textarea[starts-with(@name, \"post\")] | input[@id=\"form_key\"])";
 
 	// UTF-8 文字列にしないと後の [attribute stringValue] で日本語がコードポイント表記になってしまう
@@ -248,7 +259,7 @@ static const NSRange EmptyRange = {NSNotFound, 0};
 		NSXMLNode* attribute;
 
 		if (!NSEqualRanges([name rangeOfString:@"post[one]"], EmptyRange)) {
-			/* one は出現しない？ */
+			// one は出現しない
 			D0(@"post[one] is not implemented in Reblog(Photo).");
 		}
 		else if (!NSEqualRanges([name rangeOfString:@"post[two]"], EmptyRange)) {
@@ -273,21 +284,17 @@ static const NSRange EmptyRange = {NSNotFound, 0};
 {
 	NSMutableDictionary * fields = [NSMutableDictionary dictionaryWithObjectsAndKeys:@"quote", @"post[type]", nil];
 
-	NSEnumerator* enumerator = [elements objectEnumerator];
-	NSXMLElement* element;
+	NSEnumerator * enumerator = [elements objectEnumerator];
+	NSXMLElement * element;
 	while ((element = [enumerator nextObject]) != nil) {
 
-		NSString* name = [[element attributeForName:@"name"] stringValue];
+		NSString * name = [[element attributeForName:@"name"] stringValue];
 
 		if (!NSEqualRanges([name rangeOfString:@"post[one]"], EmptyRange)) {
 			[fields setObject:[element stringValue] forKey:@"post[one]"];
 		}
 		else if (!NSEqualRanges([name rangeOfString:@"post[two]"], EmptyRange)) {
 			[fields setObject:[element stringValue] forKey:@"post[two]"];
-		}
-		else if (!NSEqualRanges([name rangeOfString:@"post[three]"], EmptyRange)) {
-			/* three は出現しない？ */
-			D0(@"post[three] is not implemented in Reblog(Quote).");
 		}
 		else {
 			[self setFormKeyFieldIfExist:element fields:fields];
@@ -381,10 +388,6 @@ static const NSRange EmptyRange = {NSNotFound, 0};
 		else if (!NSEqualRanges([name rangeOfString:@"post[two]"], EmptyRange)) {
 			[fields setObject:[element stringValue] forKey:@"post[two]"];
 		}
-		else if (!NSEqualRanges([name rangeOfString:@"post[three]"], EmptyRange)) {
-			/* three は出現しない？ */
-			D0(@"post[three] is not implemented in Reblog(Video).");
-		}
 		else {
 			[self setFormKeyFieldIfExist:element fields:fields];
 		}
@@ -420,9 +423,7 @@ static const NSRange EmptyRange = {NSNotFound, 0};
 	return fields;
 }
 
-/**
- * elementの要素名がformKeyであれば fields に追加する.
- */
+/// elementの要素名がformKeyであれば fields に追加する.
 - (void)setFormKeyFieldIfExist:(NSXMLElement *)element fields:(NSMutableDictionary *)fields
 {
 	NSString * name = [[element attributeForName:@"name"] stringValue];
@@ -433,4 +434,8 @@ static const NSRange EmptyRange = {NSNotFound, 0};
 	}
 }
 
++ (NSString *)endpointWithPostID:(NSString *)postID withReblogKey:(NSString *)reblogKey
+{
+	return [NSString stringWithFormat:@"%@/reblog/%@/%@", TUMBLRFUL_TUMBLR_URL, postID, reblogKey];
+}
 @end

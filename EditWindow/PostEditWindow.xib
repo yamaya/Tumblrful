@@ -12,6 +12,7 @@
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
+			<integer value="2"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -48,7 +49,7 @@
 				<string key="NSWindowContentMaxSize">{1.79769e+308, 1.79769e+308}</string>
 				<string key="NSWindowContentMinSize">{400, 300}</string>
 				<object class="NSView" key="NSWindowView" id="1006">
-					<nil key="NSNextResponder"/>
+					<reference key="NSNextResponder"/>
 					<int key="NSvFlags">256</int>
 					<object class="NSMutableArray" key="NSSubviews">
 						<bool key="EncodedWithXMLCoder">YES</bool>
@@ -128,7 +129,7 @@
 						<object class="NSButton" id="410977778">
 							<reference key="NSNextResponder" ref="1006"/>
 							<int key="NSvFlags">292</int>
-							<string key="NSFrame">{{100, 24}, {63, 18}}</string>
+							<string key="NSFrame">{{87, 24}, {63, 18}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="593422820">
@@ -217,8 +218,31 @@
 								</object>
 							</object>
 						</object>
+						<object class="NSButton" id="53673507">
+							<reference key="NSNextResponder" ref="1006"/>
+							<int key="NSvFlags">292</int>
+							<string key="NSFrame">{{154, 24}, {67, 18}}</string>
+							<reference key="NSSuperview" ref="1006"/>
+							<bool key="NSEnabled">YES</bool>
+							<object class="NSButtonCell" key="NSCell" id="1045951716">
+								<int key="NSCellFlags">67239424</int>
+								<int key="NSCellFlags2">0</int>
+								<string key="NSContents">Twitter</string>
+								<reference key="NSSupport" ref="713941996"/>
+								<reference key="NSControlView" ref="53673507"/>
+								<int key="NSButtonFlags">1211912703</int>
+								<int key="NSButtonFlags2">2</int>
+								<reference key="NSNormalImage" ref="1065015622"/>
+								<reference key="NSAlternateImage" ref="144106309"/>
+								<string key="NSAlternateContents"/>
+								<string key="NSKeyEquivalent"/>
+								<int key="NSPeriodicDelay">200</int>
+								<int key="NSPeriodicInterval">25</int>
+							</object>
+						</object>
 					</object>
 					<string key="NSFrameSize">{478, 545}</string>
+					<reference key="NSSuperview"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1680, 1028}}</string>
 				<string key="NSMinSize">{400, 316}</string>
@@ -1129,6 +1153,7 @@
 								</object>
 								<string key="NSFrame">{{1, 1}, {434, 110}}</string>
 								<reference key="NSSuperview" ref="506405312"/>
+								<reference key="NSNextKeyView" ref="122981083"/>
 								<reference key="NSDocView" ref="122981083"/>
 								<reference key="NSBGColor" ref="839928400"/>
 								<reference key="NSCursor" ref="720979460"/>
@@ -1158,6 +1183,7 @@
 						</object>
 						<string key="NSFrame">{{1, 145}, {436, 112}}</string>
 						<reference key="NSSuperview" ref="320818159"/>
+						<reference key="NSNextKeyView" ref="149578409"/>
 						<int key="NSsFlags">530</int>
 						<reference key="NSVScroller" ref="79086705"/>
 						<reference key="NSHScroller" ref="179023726"/>
@@ -1241,6 +1267,7 @@
 								</object>
 								<string key="NSFrame">{{1, 1}, {434, 118}}</string>
 								<reference key="NSSuperview" ref="122436721"/>
+								<reference key="NSNextKeyView" ref="22746092"/>
 								<reference key="NSDocView" ref="22746092"/>
 								<reference key="NSBGColor" ref="839928400"/>
 								<reference key="NSCursor" ref="720979460"/>
@@ -1269,6 +1296,7 @@
 						</object>
 						<string key="NSFrame">{{1, 0}, {436, 120}}</string>
 						<reference key="NSSuperview" ref="320818159"/>
+						<reference key="NSNextKeyView" ref="56937412"/>
 						<int key="NSsFlags">530</int>
 						<reference key="NSVScroller" ref="507549839"/>
 						<reference key="NSHScroller" ref="239135193"/>
@@ -1515,6 +1543,14 @@
 					</object>
 					<int key="connectionID">142</int>
 				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">twitterButton_</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="53673507"/>
+					</object>
+					<int key="connectionID">145</int>
+				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
 				<object class="NSArray" key="orderedObjects">
@@ -1558,12 +1594,13 @@
 						<object class="NSMutableArray" key="children">
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<reference ref="490521289"/>
-							<reference ref="410977778"/>
 							<reference ref="31684320"/>
 							<reference ref="754243489"/>
 							<reference ref="269020817"/>
 							<reference ref="588520342"/>
 							<reference ref="602196511"/>
+							<reference ref="410977778"/>
+							<reference ref="53673507"/>
 						</object>
 						<reference key="parent" ref="1005"/>
 					</object>
@@ -2101,6 +2138,20 @@
 						<reference key="object" ref="122981083"/>
 						<reference key="parent" ref="506405312"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">143</int>
+						<reference key="object" ref="53673507"/>
+						<object class="NSMutableArray" key="children">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<reference ref="1045951716"/>
+						</object>
+						<reference key="parent" ref="1006"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">144</int>
+						<reference key="object" ref="1045951716"/>
+						<reference key="parent" ref="53673507"/>
+					</object>
 				</object>
 			</object>
 			<object class="NSMutableDictionary" key="flattenedProperties">
@@ -2148,6 +2199,8 @@
 					<string>135.IBPluginDependency</string>
 					<string>136.IBPluginDependency</string>
 					<string>137.IBPluginDependency</string>
+					<string>143.IBPluginDependency</string>
+					<string>144.IBPluginDependency</string>
 					<string>19.IBPluginDependency</string>
 					<string>19.IBViewIntegration.shadowBlurRadius</string>
 					<string>19.IBViewIntegration.shadowColor</string>
@@ -2214,10 +2267,10 @@
 				</object>
 				<object class="NSMutableArray" key="dict.values">
 					<bool key="EncodedWithXMLCoder">YES</bool>
-					<string>{{42, 197}, {478, 545}}</string>
+					<string>{{373, 298}, {478, 545}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<boolean value="YES"/>
-					<string>{{42, 197}, {478, 545}}</string>
+					<string>{{373, 298}, {478, 545}}</string>
 					<boolean value="NO"/>
 					<string>{196, 240}</string>
 					<string>{{202, 428}, {480, 270}}</string>
@@ -2250,6 +2303,8 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>VideoViewController</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -2336,7 +2391,7 @@
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">142</int>
+			<int key="maxID">145</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptionsV3.1+">
@@ -2482,6 +2537,7 @@
 							<string>queueingButton_</string>
 							<string>quoteViewController_</string>
 							<string>tagsField_</string>
+							<string>twitterButton_</string>
 							<string>videoViewController_</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
@@ -2494,6 +2550,7 @@
 							<string>NSButton</string>
 							<string>QuoteViewController</string>
 							<string>NSTextField</string>
+							<string>NSButton</string>
 							<string>VideoViewController</string>
 						</object>
 					</object>
@@ -2509,6 +2566,7 @@
 							<string>queueingButton_</string>
 							<string>quoteViewController_</string>
 							<string>tagsField_</string>
+							<string>twitterButton_</string>
 							<string>videoViewController_</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
@@ -2544,6 +2602,10 @@
 							<object class="IBToOneOutletInfo">
 								<string key="name">tagsField_</string>
 								<string key="candidateClassName">NSTextField</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">twitterButton_</string>
+								<string key="candidateClassName">NSButton</string>
 							</object>
 							<object class="IBToOneOutletInfo">
 								<string key="name">videoViewController_</string>
@@ -2605,13 +2667,11 @@
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>captionTextView_</string>
 							<string>embedTextView_</string>
-							<string>titleFiled_</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>NSTextView</string>
 							<string>NSTextView</string>
-							<string>NSTextField</string>
 						</object>
 					</object>
 					<object class="NSMutableDictionary" key="toOneOutletInfosByName">
@@ -2620,7 +2680,6 @@
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>captionTextView_</string>
 							<string>embedTextView_</string>
-							<string>titleFiled_</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
@@ -2631,10 +2690,6 @@
 							<object class="IBToOneOutletInfo">
 								<string key="name">embedTextView_</string>
 								<string key="candidateClassName">NSTextView</string>
-							</object>
-							<object class="IBToOneOutletInfo">
-								<string key="name">titleFiled_</string>
-								<string key="candidateClassName">NSTextField</string>
 							</object>
 						</object>
 					</object>

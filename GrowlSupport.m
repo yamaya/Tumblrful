@@ -1,13 +1,11 @@
 #import "GrowlSupport.h"
-#import "Log.h"
-
-@implementation GrowlSupport
+#import "DebugLog.h"
 
 static NSString* NOTIFY_NAME = @"NotifyPostToTumblr";
 
-#define Safety(s) (s != nil ? s : @"(nil)")
+@implementation GrowlSupport
 
-/// notify
+/// notify TODO: deprecated
 + (void) notify:(NSString*)title description:(NSString*)description
 {
 	[GrowlSupport sharedInstance];
@@ -19,15 +17,25 @@ static NSString* NOTIFY_NAME = @"NotifyPostToTumblr";
 								   priority:0
 								   isSticky:NO
 							   clickContext:nil];
-#if 0
-	Log(@"Growl.notify title: %@ description: %@", Safety(title), Safety(description));
-#endif
 }
 
-/// sharedInstance
-+ (GrowlSupport*) sharedInstance
+/// notify
++ (void)notifyWithTitle:(NSString *)title description:(NSString *)description
 {
-	static GrowlSupport* instance = nil;
+	[GrowlSupport sharedInstance];
+
+	[GrowlApplicationBridge notifyWithTitle:title
+								description:description
+						   notificationName:NOTIFY_NAME
+								   iconData:nil
+								   priority:0
+								   isSticky:NO
+							   clickContext:nil];
+}
+
++ (GrowlSupport *)sharedInstance
+{
+	static GrowlSupport * instance = nil;
 
 	if (instance == nil) {
 		instance = [[GrowlSupport alloc] init];
@@ -35,29 +43,24 @@ static NSString* NOTIFY_NAME = @"NotifyPostToTumblr";
 	return instance;
 }
 
-/// init
-- (id) init
+- (id)init
 {
 	if ((self = [super init]) != nil) {
 		[GrowlApplicationBridge setGrowlDelegate:self];
+#if 0	// FIXME これ不要だろ
 		[self registrationDictionaryForGrowl];
+#endif
 	}
 	return self;
 }
 
-/// registrationDictionaryForGrowl
-- (NSDictionary*) registrationDictionaryForGrowl
+- (NSDictionary *)registrationDictionaryForGrowl
 {
-	NSArray* registration = [NSArray arrayWithObject:NOTIFY_NAME];
-	return [NSDictionary dictionaryWithObjectsAndKeys:
-		[self applicationNameForGrowl], GROWL_APP_NAME,
-		registration, GROWL_NOTIFICATIONS_ALL,
-		registration, GROWL_NOTIFICATIONS_DEFAULT,
-		nil];
+	NSArray * desc = [NSArray arrayWithObject:NOTIFY_NAME];
+	return [NSDictionary dictionaryWithObjectsAndKeys:[self applicationNameForGrowl], GROWL_APP_NAME, desc, GROWL_NOTIFICATIONS_ALL, desc, GROWL_NOTIFICATIONS_DEFAULT, nil];
 }
 
-/// applicationNameForGrowl
-- (NSString*) applicationNameForGrowl
+- (NSString *)applicationNameForGrowl
 {
 	return @"Tumblrful";
 }

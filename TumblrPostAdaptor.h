@@ -1,6 +1,6 @@
 /**
  * @file TumblrPostAdaptor.h
- * @brief TumblrPostAdaptor declaration
+ * @brief TumblrPostAdaptor class declaration
  * @author Masayuki YAMAYA
  * @date 2008-03-07
  *

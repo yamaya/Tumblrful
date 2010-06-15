@@ -57,6 +57,8 @@
 
 - (void)postEntry:(NSDictionary *)params
 {
+	if (![UmesuePost isEnabled]) return;
+
 	TumblrReblogExtractor * extractor = [[TumblrReblogExtractor alloc] initWithDelegate:self];
 	[extractor startWithPostID:[params objectForKey:@"pid"] withReblogKey:[params objectForKey:@"rk"]];
 }
@@ -97,6 +99,12 @@
 {
 #pragma unused (extractor)
 	[self callbackWithError:error];
+}
+
+- (void)extractor:(TumblrReblogExtractor *)extractor didFailExtractWithException:(NSException *)exception
+{
+#pragma unused (extractor, exception)
+	[self callbackWithException:exception];
 }
 
 - (void)postWithType:(NSString *)type withParams:(NSDictionary *)params
