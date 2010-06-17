@@ -73,8 +73,11 @@ static NSString * API_ADD_ENDPOINT = @"https://www.instapaper.com/api/add";
 	NSURLRequest * request = [self createRequest:params]; // request は connection に指定した時点で reatin upする
 	D(@"request:%@", [request description]);
 
-	NSURLConnection * connection;
-	connection = [NSURLConnection connectionWithRequest:request delegate:self];
+	NSURLConnection * connection = [NSURLConnection connectionWithRequest:request delegate:self];
+	if (connection == nil) {
+		[self callback:@selector(failedWithError:) withObject:nil];
+		[data_ release], data_ = nil;
+	}
 }
 
 #pragma mark -

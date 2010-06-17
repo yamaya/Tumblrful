@@ -52,9 +52,6 @@
 - (void)postPhoto:(NSString *)source caption:(NSString *)caption throughURL:(NSString *)throughURL
 {
 #pragma unused (source, caption, throughURL)
-	D0(caption);
-	D(@"striped=%@", [caption stripHTMLTags:nil]);
-
 	[self postLink:[Anchor anchorWithHTML:caption] description:[caption stripHTMLTags:nil]];
 }
 

@@ -8,11 +8,10 @@
 
 @interface DeliciousPost : NSObject<Post>
 {
-	NSMutableData * responseData_;
+	NSMutableData * data_;
 	NSObject<PostCallback> * callback_;
-	BOOL private_;
 }
 
-+ (BOOL) isEnabled;
++ (BOOL)enabled;
 
 @end

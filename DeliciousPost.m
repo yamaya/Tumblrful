@@ -16,14 +16,24 @@ static NSString * API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
 
 #define TIMEOUT (30.0)
 
-#pragma mark -
 @interface DeliciousPost ()
 - (NSURLRequest *)createRequest:(NSDictionary *)params;
 - (void)callback:(SEL)selector withObject:(id)obj;
 @end
 
-#pragma mark -
 @implementation DeliciousPost
+
+#pragma mark -
+#pragma mark Custom Public Methods
+
++ (BOOL)enabled
+{
+	return [[UserSettings sharedInstance] boolForKey:@"deliciousEnabled"];
+}
+
+#pragma mark -
+#pragma mark Override Methods
+
 + (NSString *)username
 {
 	return [[UserSettings sharedInstance] stringForKey:@"deliciousUsername"];
@@ -34,20 +44,10 @@ static NSString * API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
 	return [[UserSettings sharedInstance] stringForKey:@"deliciousPassword"];
 }
 
-/**
- * enable on del.icio.us post
- */
-+ (BOOL)isEnabled
-{
-	return [[UserSettings sharedInstance] boolForKey:@"deliciousEnabled"];
-}
-
 - (id)initWithCallback:(NSObject<PostCallback> *)callback
 {
 	if ((self = [super init]) != nil) {
 		callback_ = [callback retain];
-		responseData_ = nil;
-		private_ = [[UserSettings sharedInstance] boolForKey:@"deliciousPrivateEnabled"];
 	}
 	return self;
 }
@@ -55,39 +55,33 @@ static NSString * API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
 - (void)dealloc
 {
 	[callback_ release], callback_ = nil;
-	[responseData_ release], responseData_ = nil;
+	[data_ release], data_ = nil;
 
 	[super dealloc];
+}
+
+- (BOOL)privated
+{
+	return [[UserSettings sharedInstance] boolForKey:@"deliciousPrivateEnabled"];
 }
 
 - (NSMutableDictionary *)createMinimumRequestParams
 {
 	NSString * shared = [NSString stringWithFormat:@"%@", ([self privated] ? @"no" : @"yes")];
-
-	NSMutableArray * keys = [NSMutableArray arrayWithObjects:@"shared", nil];
-	NSMutableArray * objs = [NSMutableArray arrayWithObjects:shared, nil];
-
-	return [[NSMutableDictionary alloc] initWithObjects:objs forKeys:keys];	// TODO autoreleaseしないと...
-}
-
-- (BOOL)privated
-{
-	return private_;
+	return [NSMutableDictionary dictionaryWithObjectsAndKeys:shared, @"shared", nil];
 }
 
 - (void)postWith:(NSDictionary *)params
 {
-	responseData_ = [[NSMutableData data] retain];
+	data_ = [[NSMutableData data] retain];
 
 	NSURLRequest * request = [self createRequest:params]; // request は connection に指定した時点で reatin upする
 	D(@"request:%@", [request description]);
 
 	NSURLConnection * connection = [NSURLConnection connectionWithRequest:request delegate:self];
-
-	D(@"connection:%@", SafetyDescription(connection));
 	if (connection == nil) {
 		[self callback:@selector(failedWithError:) withObject:nil];
-		[responseData_ release], responseData_ = nil;
+		[data_ release], data_ = nil;
 	}
 }
 
@@ -106,43 +100,53 @@ static NSString * API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
 #pragma unused (connection)
-	D(@"DeliciousPost.didReceiveResponse retain:%x", [self retainCount]);
-
-	NSHTTPURLResponse * httpResponse = (NSHTTPURLResponse *)response; /* この cast は正しい */
+	NSHTTPURLResponse * httpResponse = (NSHTTPURLResponse *)response;
 	if ([httpResponse statusCode] != 201) {
-		D(@"\tAbnormal! statusCode: %d", [httpResponse statusCode]);
-		D(@"\tallHeaderFields: %@", [[httpResponse allHeaderFields] description]);
+		D(@"Abnormal! statusCode: %d", [httpResponse statusCode]);
+		D(@"allHeaderFields: %@", [[httpResponse allHeaderFields] description]);
 	}
 
-	[responseData_ setLength:0]; // initialize receive buffer
+	[data_ setLength:0]; // initialize receive buffer
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
 {
 #pragma unused (connection)
-	[responseData_ appendData:data]; // append data to receive buffer
+	[data_ appendData:data]; // append data to receive buffer
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
 #pragma unused (connection)
-	D(@"succeeded to load %d bytes", [responseData_ length]);
+	D(@"response data is %d bytes", [data_ length]);
 
-	if (callback_ != nil) {
-		NSError * error = nil;
-		NSXMLDocument * xmlDoc = [[[NSXMLDocument alloc] initWithData:responseData_ options:NSXMLDocumentTidyHTML error:&error] autorelease];
-		NSXMLNode * node = [[xmlDoc rootElement] attributeForName:@"code"];
+	@try {
+		if (callback_ != nil) {
+			NSError * error = nil;
+			NSXMLDocument * xmlDoc = [[[NSXMLDocument alloc] initWithData:data_ options:NSXMLDocumentTidyHTML error:&error] autorelease];
+			if (error != nil) {
+				[self callback:@selector(failedWithError:) withObject:error];
+				return;
+			}
 
-		NSString * resultCode = nil;
-		if (node != nil) {
-			resultCode = [node stringValue];
+			NSString * resultCode = nil;
+			NSXMLNode * node = [[xmlDoc rootElement] attributeForName:@"code"];
+			if (node != nil) {
+				resultCode = [node stringValue];
+			}
+			D(@"resultCode:%@", resultCode);
+
+			[self callback:@selector(successed:) withObject:resultCode];
 		}
-		D(@"resultCode:%@", resultCode);
-
-		[self callback:@selector(successed:) withObject:resultCode];
+		else {
+			D(@"Callback object should be set");
+		}
 	}
-	else {
-		[self callback:@selector(failedWithError:) withObject:nil];
+	@catch (NSException * e) {
+		[self callback:@selector(failedWithException:) withObject:e];
+	}
+	@finally {
+		[self autorelease];
 	}
 }
 
@@ -177,6 +181,7 @@ static NSString * API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
 	D0([error description]);
 
 	[self callback:@selector(failedWithError:) withObject:error];
+	[self autorelease];
 }
 
 - (void)callback:(SEL)selector withObject:(id)obj
