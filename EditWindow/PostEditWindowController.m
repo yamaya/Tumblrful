@@ -271,8 +271,8 @@
 	case VideoPostType:	
 		embed = videoViewController_.embed;
 		caption = videoViewController_.caption;
-		[invocation_ getArgument:&embed atIndex:2];
-		[invocation_ getArgument:&caption atIndex:3];
+		[invocation_ setArgument:&embed atIndex:2];
+		[invocation_ setArgument:&caption atIndex:3];
 		break;
 	case ReblogPostType:
 		[self updateInvocationForReblog];
@@ -378,7 +378,9 @@
 {
 #pragma unused (sender)
 	[tagsField_ validateEditing];
+
 	@try {
+		// コンテンツビューに含まれる全てのコントロールに対して validateEditingを実行する
 		SEL selector = @selector(validateEditingIfControl:);
 		NSMethodSignature * signature = [self.class instanceMethodSignatureForSelector:selector];
 		NSInvocation * invocation = [NSInvocation invocationWithMethodSignature:signature];
