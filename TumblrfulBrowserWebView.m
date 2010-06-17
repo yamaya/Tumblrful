@@ -23,7 +23,8 @@
 #import "PostAdaptorCollection.h"
 #import "TumblrPostAdaptor.h"
 #import "DeliciousPostAdaptor.h"
-#import "UmesuePostAdaptor.h"
+//#import "UmesuePostAdaptor.h"
+#import "InstapaperPostAdaptor.h"
 #import "DebugLog.h"
 #import "GoogleReaderDelivererContext.h"
 #import "LDRDelivererContext.h"
@@ -58,10 +59,11 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 	static NSMutableArray* classes = nil;
 
 	if (classes == nil) {
-		/* setup PostAdaptorCollection */
+		// setup PostAdaptorCollection
 		[PostAdaptorCollection add:[TumblrPostAdaptor class]];
-		[PostAdaptorCollection add:[UmesuePostAdaptor class]];
+		//[PostAdaptorCollection add:[UmesuePostAdaptor class]];
 		[PostAdaptorCollection add:[DeliciousPostAdaptor class]];
+		[PostAdaptorCollection add:[InstapaperPostAdaptor class]];
 
 		classes = [NSMutableArray arrayWithObjects:
 			  [GoogleReaderReblogDeliverer class]
@@ -146,7 +148,7 @@ static const NSUInteger POST_MASK_ALL = 0x7;
  * @param [in] document 評価対象となる DOMドキュメント
  * @param [in] endpoint ポスト先を示すビット値
  */
-- (BOOL) invokeAction:(DOMHTMLElement*)target document:(DOMHTMLDocument*)document endpoint:(NSUInteger)endpoint
+- (BOOL)invokeAction:(DOMHTMLElement*)target document:(DOMHTMLDocument*)document endpoint:(NSUInteger)endpoint
 {
 	if (target == nil) {
 		return NO;

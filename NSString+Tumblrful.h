@@ -20,4 +20,13 @@ extern NSString * EmptyString;
  *	@return NSString object
  */
 - (NSString *)stringByURLEncoding:(NSStringEncoding)encoding;
+
+/**
+ * strip HTML tags
+ *	@param [in] excludes	exclude tags
+ *	@example
+ *	NSArray * excludes = [NSArray arrayWithObjects: @"table", @"tr", @"td", nil];
+ *	NSString * striped = [html stripHTMLTags:excludes];
+ */
+- (NSString *)stripHTMLTags:(NSArray *)excludes;
 @end

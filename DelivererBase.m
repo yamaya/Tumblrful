@@ -244,8 +244,11 @@
 	D(@"self.retainCount=%x", [self retainCount]);
 
 	@try {
-		NSString * message = [NSString stringWithFormat:@"%@\n--- %@", context_.documentTitle, response];
-		[self notify:message];
+		NSString * addition = @"";
+		if (response != nil && [response length] > 0) {
+			addition = [NSString stringWithFormat:@"\n--- %@", response];
+		}
+		[self notify:[NSString stringWithFormat:@"%@%@", context_.documentTitle, addition]];
 	}
 	@catch (NSException * e) {
 		D0([e description]);

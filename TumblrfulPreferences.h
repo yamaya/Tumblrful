@@ -21,6 +21,11 @@
 	IBOutlet NSTextField* deliciousPasswordTextField;
 	IBOutlet NSButton* deliciousPrivateCheckBox;
 
+	IBOutlet NSButton * instapaperCheckBox;
+	IBOutlet NSBox * instapaperBox;
+	IBOutlet NSTextField * instapaperUsernameTextField;
+	IBOutlet NSTextField * instapaperPasswordTextField;
+
 	IBOutlet NSButton* otherCheckBox;
 	IBOutlet NSBox* otherBox;
 	IBOutlet NSTextField* otherURLTextField;
@@ -29,6 +34,13 @@
 	
 	IBOutlet NSButton * openInBackgroundTab;
 }
+
+/// action that select checkbox for 'Use delicious'
 - (IBAction)checkWithDelicious:(id)sender;
+
+/// action that select checkbox for 'Use Instapaper'
+- (IBAction)checkWithInstapaper:(id)sender;
+
+/// action that select checkbox for 'Use other tumblog'
 - (IBAction)checkUseOtherTumblog:(id)sender;
 @end

@@ -5,6 +5,7 @@
  * @date 2008-03-07
  */
 #import "Anchor.h"
+#import "DebugLog.h"
 
 @interface Anchor ()
 + (NSDictionary *)componentsAnchorTag:(NSString *)html;
@@ -29,8 +30,9 @@
 {
 	if ((self =	[super init]) != nil) {
 		NSDictionary * components = [Anchor componentsAnchorTag:html];
-		url_ = [components objectForKey:@"URL"];
-		title_ = [components objectForKey:@"title"];
+		D0([components description]);
+		url_ = [[components objectForKey:@"URL"] retain];
+		title_ = [[components objectForKey:@"title"] retain];
 	}
 	return self;
 }
@@ -69,7 +71,7 @@
 {
 	NSString * text = nil;
 	NSString * tag = nil;
-	NSString * result = [self copy];
+	NSString * result = [html copy];
 
 	NSScanner * scanner = [NSScanner scannerWithString:html];
 
@@ -90,11 +92,20 @@
 		if ([tag isEqualToString:@"a"]) {
 			NSString * title = [result stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"%@>", text] withString:@""];
 
-			scanner = [NSScanner scannerWithString:text];
-			NSString * url = nil;
-			[scanner scanUpToString:@"href" intoString:nil];
-			[scanner scanUpToString:@"\"" intoString:nil];
-			[scanner scanUpToString:@"\"" intoString:&url];
+			NSRange range = [text rangeOfString:@"href"];
+			range.location += range.length;
+			range.length = [text length] - range.location - 1;
+
+			range = [text rangeOfString:@"\"" options:NSLiteralSearch range:range];
+			range.location += range.length;
+			range.length = [text length] - range.location - 1;
+
+			NSString * url = [text substringWithRange:range];
+			range = [url rangeOfString:@"\""];
+			range.length = [url length] - range.length;
+			if (range.location != NSNotFound)
+				url = [url substringWithRange:range];
+
 			return [NSDictionary dictionaryWithObjectsAndKeys:url, @"URL", title, @"title", nil];
 		}
 	}

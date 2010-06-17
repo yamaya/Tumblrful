@@ -11,18 +11,16 @@
 #import "DebugLog.h"
 
 @implementation TumblrfulPreferences
-/**
- * preloadImage
- */
-+ (NSImage*)preloadImage:(NSString*)name
+
++ (NSImage *)preloadImage:(NSString *)name
 {
-	NSString* imagePath = [[NSBundle bundleWithIdentifier:TUMBLRFUL_BUNDLE_ID] pathForImageResource:name];
+	NSString * imagePath = [[NSBundle bundleWithIdentifier:TUMBLRFUL_BUNDLE_ID] pathForImageResource:name];
 	if (imagePath == nil) {
 		D(@"imagePath for %@ is nil", name);
 		return nil;
 	}
 
-	NSImage* image = [[NSImage alloc] initByReferencingFile:imagePath];
+	NSImage * image = [[NSImage alloc] initByReferencingFile:imagePath];
 	if (image == nil) {
 		D(@"image for %@ is nil", name);
 		return nil;
@@ -32,12 +30,9 @@
 	return image;
 }
 
-/**
- * awakeFromNib
- */
 - (void)awakeFromNib
 {
-	NSDictionary* info = [[NSBundle bundleWithIdentifier:TUMBLRFUL_BUNDLE_ID] infoDictionary];
+	NSDictionary * info = [[NSBundle bundleWithIdentifier:TUMBLRFUL_BUNDLE_ID] infoDictionary];
 	D0([info description]);
 
 	[authorTextField setStringValue:
@@ -45,7 +40,7 @@
 			[info objectForKey:@"CFBundleShortVersionString"],
 			[info objectForKey:@"CFBundleVersion"]]];
 
-	UserSettings* settings = [UserSettings sharedInstance];
+	UserSettings * settings = [UserSettings sharedInstance];
 
 	BOOL isNotEntered = NO;
 	NSString* s;
@@ -77,7 +72,7 @@
 	[queuingCheckBox setState:(queuing ? NSOnState : NSOffState)];
 
 	/*
-	 * del.icio.us
+	 * delicious
 	 */
 	BOOL withDelicious = [settings boolForKey:@"deliciousEnabled"];
 	[deliciousCheckBox setState:(withDelicious ? NSOnState : NSOffState)];
@@ -108,6 +103,36 @@
 	[deliciousPrivateCheckBox setState:(private ? NSOnState : NSOffState)];
 
 	[self checkWithDelicious:deliciousCheckBox];
+
+	/*
+	 * Instapaper
+	 */
+	BOOL const instapaperEnabled = [settings boolForKey:@"instapaperEnabled"];
+	[instapaperCheckBox setState:(instapaperEnabled ? NSOnState : NSOffState)];
+
+	isNotEntered = NO;
+
+	s = [settings stringForKey:@"instapaperUsername"];
+	if (s == nil) {
+		D0(@"instapaperUsername is nul");
+		s = @"";
+		if (instapaperEnabled) isNotEntered = YES;
+	}
+	[instapaperUsernameTextField setStringValue:s];
+
+	s = [settings stringForKey:@"instapaperPassword"];
+	if (s == nil) {
+		D0(@"instapaperPassword is nul");
+		s = @"";
+		if (instapaperEnabled) isNotEntered = YES;
+	}
+	[instapaperPasswordTextField setStringValue:s];
+
+	if (isNotEntered) {
+		[GrowlSupport notifyWithTitle:@"Tumblrful" description:@"Username or Password not entered for Instapaper"];
+	}
+
+	[self checkWithInstapaper:instapaperCheckBox];
 
 	/*
 	 * other
@@ -147,13 +172,11 @@
 	[openInBackgroundTab setState:(boolValue ? NSOnState : NSOffState)];
 }
 
-/**
- * Image to display in the preferences toolbar
- */
-- (NSImage*) imageForPreferenceNamed:(NSString *)name
+/// Image to display in the preferences toolbar
+- (NSImage *)imageForPreferenceNamed:(NSString *)name
 {
 #pragma unused (name)
-	NSImage* image = [NSImage imageNamed:@"Tumblrful.png"];
+	NSImage * image = [NSImage imageNamed:@"Tumblrful.png"];
 	if (image == nil)
 		image = [TumblrfulPreferences preloadImage:@"Tumblrful.png"];
 
@@ -161,51 +184,39 @@
 	return image;
 }
 
-/**
- * Override to return the name of the relevant nib
- */
-- (NSString*) preferencesNibName
+/// Override to return the name of the relevant nib
+- (NSString *) preferencesNibName
 {
 	return @"TumblrfulPreferences";
 }
 
-#if 0
-- (void) didChange
-{
-	[super didChange];
-}
-#endif
-
-- (NSView*) viewForPreferenceNamed:(NSString*)aName
+- (NSView *)viewForPreferenceNamed:(NSString *)aName
 {
 	return [super viewForPreferenceNamed:aName];
 }
 
-#if 0
-/**
- * Called when switching preference panels.
- */
-- (void) willBeDisplayed
-{
-}
-#endif
-
-/**
- * Called when window closes or "save" button is clicked.
- */
-- (void) saveChanges
+/// Called when window closes or "save" button is clicked.
+- (void)saveChanges
 {
 	UserSettings * settings = [UserSettings sharedInstance];
 
+	// Tumblr
 	[settings setObject:[emailTextField stringValue] forKey:@"tumblrEmail"];
 	[settings setObject:[passwordTextField stringValue] forKey:@"tumblrPassword"];
 	[settings setBool:([privateCheckBox state] == NSOnState) forKey:@"tumblrPrivateEnabled"];
 	[settings setBool:([queuingCheckBox state] == NSOnState) forKey:@"tumblrQueuingEnabled"];
-	// del.icio.us
+
+	// delicious
 	[settings setBool:([deliciousCheckBox state] == NSOnState) forKey:@"deliciousEnabled"];
 	[settings setObject:[deliciousUsernameTextField stringValue] forKey:@"deliciousUsername"];
 	[settings setObject:[deliciousPasswordTextField stringValue] forKey:@"deliciousPassword"];
 	[settings setBool:([deliciousPrivateCheckBox state] == NSOnState) forKey:@"deliciousPrivateEnabled"];
+
+	// Instapaper
+	[settings setBool:([instapaperCheckBox state] == NSOnState) forKey:@"instapaperEnabled"];
+	[settings setObject:[instapaperUsernameTextField stringValue] forKey:@"instapaperUsername"];
+	[settings setObject:[instapaperPasswordTextField stringValue] forKey:@"instapaperPassword"];
+
 	// other
 	[settings setBool:([otherCheckBox state] == NSOnState) forKey:@"otherTumblogEnabled"];
 	[settings setObject:[otherURLTextField stringValue] forKey:@"otherTumblogSiteURL"];
@@ -217,32 +228,24 @@
 	[settings synchronize];
 }
 
-/**
- * Not sure how useful this is, so far always seems to return YES.
- */
-- (BOOL) hasChangesPending
+/// Not sure how useful this is, so far always seems to return YES.
+- (BOOL)hasChangesPending
 {
 	return [super hasChangesPending];
 }
 
-/**
- * Called when we relinquish ownership of the preferences panel.
- */
+/// Called when we relinquish ownership of the preferences panel.
 - (void)moduleWillBeRemoved
 {
 	[super moduleWillBeRemoved];
 }
 
-/**
- * Called after willBeDisplayed, once we "own" the preferences panel.
- */
+/// Called after willBeDisplayed, once we "own" the preferences panel.
 - (void)moduleWasInstalled
 {
 	[super moduleWasInstalled];
 }
 
-/**
- */
 - (IBAction)checkWithDelicious:(id)sender
 {
 	if (sender == deliciousCheckBox) {
@@ -250,12 +253,20 @@
 		BOOL enabled = (state == NSOnState ? YES : NO);
 		[deliciousUsernameTextField setEnabled:enabled];
 		[deliciousPasswordTextField setEnabled:enabled];
+		[deliciousPrivateCheckBox setEnabled:enabled];
 	}
 }
 
-/**
- * action that select checkbox for 'Use other tumblog'
- */
+- (IBAction)checkWithInstapaper:(id)sender
+{
+	if (sender == instapaperCheckBox) {
+		NSInteger state = [instapaperCheckBox state];
+		BOOL enabled = (state == NSOnState ? YES : NO);
+		[instapaperUsernameTextField setEnabled:enabled];
+		[instapaperPasswordTextField setEnabled:enabled];
+	}
+}
+
 - (IBAction)checkUseOtherTumblog:(id)sender
 {
 	if (sender == otherCheckBox) {

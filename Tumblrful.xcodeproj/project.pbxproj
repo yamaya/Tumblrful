@@ -46,6 +46,8 @@
 		540CBAEC11B3B6C300EE6D77 /* QuoteViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 540CBAE711B3B6C300EE6D77 /* QuoteViewController.m */; };
 		5443AAB911A0FB55003F7A53 /* Tumblrful.png in Resources */ = {isa = PBXBuildFile; fileRef = 5443AAB811A0FB55003F7A53 /* Tumblrful.png */; };
 		5459AE7A11C3599D00A6ADE3 /* TumblrReblogExtractor.m in Sources */ = {isa = PBXBuildFile; fileRef = 5459AE7911C3599D00A6ADE3 /* TumblrReblogExtractor.m */; };
+		5468C1F411C9F7E500B4A62A /* InstapaperPost.m in Sources */ = {isa = PBXBuildFile; fileRef = 5468C1F111C9F7E500B4A62A /* InstapaperPost.m */; };
+		5468C1F511C9F7E500B4A62A /* InstapaperPostAdaptor.m in Sources */ = {isa = PBXBuildFile; fileRef = 5468C1F311C9F7E500B4A62A /* InstapaperPostAdaptor.m */; };
 		546A0751105A7E57009DE2D1 /* Growl.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 546A0750105A7E57009DE2D1 /* Growl.framework */; };
 		546A0759105A7E60009DE2D1 /* Growl.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 546A0750105A7E57009DE2D1 /* Growl.framework */; };
 		546A07AC105A8A4B009DE2D1 /* SafariSingleWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 546A07AB105A8A4B009DE2D1 /* SafariSingleWindow.m */; };
@@ -159,6 +161,10 @@
 		5443AABA11A0FB65003F7A53 /* NSPreferenceModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSPreferenceModule.h; sourceTree = "<group>"; };
 		5459AE7811C3599D00A6ADE3 /* TumblrReblogExtractor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TumblrReblogExtractor.h; sourceTree = "<group>"; };
 		5459AE7911C3599D00A6ADE3 /* TumblrReblogExtractor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TumblrReblogExtractor.m; sourceTree = "<group>"; };
+		5468C1F011C9F7E500B4A62A /* InstapaperPost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InstapaperPost.h; sourceTree = "<group>"; };
+		5468C1F111C9F7E500B4A62A /* InstapaperPost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InstapaperPost.m; sourceTree = "<group>"; };
+		5468C1F211C9F7E500B4A62A /* InstapaperPostAdaptor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InstapaperPostAdaptor.h; sourceTree = "<group>"; };
+		5468C1F311C9F7E500B4A62A /* InstapaperPostAdaptor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InstapaperPostAdaptor.m; sourceTree = "<group>"; };
 		546A0750105A7E57009DE2D1 /* Growl.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Growl.framework; path = Frameworks/Growl.framework; sourceTree = "<group>"; };
 		546A07AA105A8A4B009DE2D1 /* SafariSingleWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SafariSingleWindow.h; sourceTree = "<group>"; };
 		546A07AB105A8A4B009DE2D1 /* SafariSingleWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SafariSingleWindow.m; sourceTree = "<group>"; };
@@ -240,6 +246,10 @@
 		08FB77AFFE84173DC02AAC07 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				5468C1F011C9F7E500B4A62A /* InstapaperPost.h */,
+				5468C1F111C9F7E500B4A62A /* InstapaperPost.m */,
+				5468C1F211C9F7E500B4A62A /* InstapaperPostAdaptor.h */,
+				5468C1F311C9F7E500B4A62A /* InstapaperPostAdaptor.m */,
 				548C398911C7AD11000BF1BD /* AggregatorDeliverContext.h */,
 				548C398A11C7AD11000BF1BD /* AggregatorDeliverContext.m */,
 				54AD366D11C76F0500CD1DF8 /* TwitterQuoteDeliverer.h */,
@@ -519,6 +529,8 @@
 				54AD366F11C76F0500CD1DF8 /* TwitterQuoteDeliverer.m in Sources */,
 				54845E8111C79DF1004E9D91 /* PostEditWindowController.m in Sources */,
 				548C398B11C7AD11000BF1BD /* AggregatorDeliverContext.m in Sources */,
+				5468C1F411C9F7E500B4A62A /* InstapaperPost.m in Sources */,
+				5468C1F511C9F7E500B4A62A /* InstapaperPostAdaptor.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

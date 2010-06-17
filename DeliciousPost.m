@@ -67,7 +67,7 @@ static NSString * API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
 	NSMutableArray * keys = [NSMutableArray arrayWithObjects:@"shared", nil];
 	NSMutableArray * objs = [NSMutableArray arrayWithObjects:shared, nil];
 
-	return [[NSMutableDictionary alloc] initWithObjects:objs forKeys:keys];
+	return [[NSMutableDictionary alloc] initWithObjects:objs forKeys:keys];	// TODO autoreleaseしないと...
 }
 
 - (BOOL)privated
@@ -148,7 +148,6 @@ static NSString * API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
 
 - (NSURLRequest *)createRequest:(NSDictionary *)params
 {
-#pragma unused (connection)
 	@try {
 		NSMutableString * ms = [[[NSMutableString alloc] initWithString:API_ADD_ENDPOINT] autorelease];
 		NSEnumerator * enumerator = [params keyEnumerator];
