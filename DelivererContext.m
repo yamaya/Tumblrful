@@ -80,7 +80,7 @@
 	return self;
 }
 
-- (void) dealloc
+- (void)dealloc
 {
 	[document_ release], document_ = nil;
 

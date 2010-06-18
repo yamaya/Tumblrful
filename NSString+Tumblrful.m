@@ -18,20 +18,79 @@ NSString * EmptyString = @"";
 
 - (NSString *)stringByURLEncoding:(NSStringEncoding)encoding
 {
-	NSArray * escapeChars = [NSArray arrayWithObjects:@";", @"/", @"?", @":", @"@", @"&", @"=", @"+", @"$", @",", @"[", @"]", @"#", @"!", @"'", @"(", @")", @"*", nil];
-	NSArray * replaceChars = [NSArray arrayWithObjects:@"%3B", @"%2F", @"%3F",@"%3A", @"%40", @"%26", @"%3D", @"%2B", @"%24", @"%2C", @"%5B", @"%5D", @"%23", @"%21", @"%27",@"%28", @"%29", @"%2A", nil];
+	NSArray * escapes = [NSArray arrayWithObjects:@";", @"/", @"?", @":", @"@", @"&", @"=", @"+", @"$", @",", @"[", @"]", @"#", @"!", @"'", @"(", @")", @"*", nil];
+	NSArray * replaces = [NSArray arrayWithObjects:@"%3B", @"%2F", @"%3F",@"%3A", @"%40", @"%26", @"%3D", @"%2B", @"%24", @"%2C", @"%5B", @"%5D", @"%23", @"%21", @"%27",@"%28", @"%29", @"%2A", nil];
 
 	NSMutableString * encodedString = [[[self stringByAddingPercentEscapesUsingEncoding:encoding] mutableCopy] autorelease];
 
-	const NSUInteger N = [escapeChars count];
+	const NSUInteger N = [escapes count];
 	for (NSUInteger i = 0; i < N; i++) {
-		[encodedString replaceOccurrencesOfString:[escapeChars objectAtIndex:i]
-									   withString:[replaceChars objectAtIndex:i]
+		[encodedString replaceOccurrencesOfString:[escapes objectAtIndex:i]
+									   withString:[replaces objectAtIndex:i]
 										  options:NSLiteralSearch
 											range:NSMakeRange(0, [encodedString length])];
 	}
 
-	return [NSString stringWithString: encodedString];
+	return encodedString;
+}
+
+static NSString * ESCAPE_CHARS[] = {
+	@";",
+	@"/",
+	@"?",
+	@":",
+	@"@",
+	@"&",
+	@"=",
+	@"+",
+	@"$",
+	@",",
+	@"[",
+	@"]",
+	@"#",
+	@"!",
+	@"'",
+	@"(",
+	@")",
+	@"*"
+};
+static NSString * REPLACE_CHARS[] = {
+	@"%3B",
+	@"%2F",
+	@"%3F",
+	@"%3A",
+	@"%40",
+	@"%26",
+	@"%3D",
+	@"%2B",
+	@"%24",
+	@"%2C",
+	@"%5B",
+	@"%5D",
+	@"%23",
+	@"%21",
+	@"%27",
+	@"%28",
+	@"%29",
+	@"%2A"
+};
+
+- (NSString *)stringByURLDecoding:(NSStringEncoding)encoding
+{
+	NSArray * escapes = [NSArray arrayWithObjects:ESCAPE_CHARS count:sizeof(ESCAPE_CHARS) / sizeof(ESCAPE_CHARS[0])];
+	NSArray * replaces = [NSArray arrayWithObjects:REPLACE_CHARS count:sizeof(REPLACE_CHARS) / sizeof(REPLACE_CHARS[0])];
+
+	NSMutableString * decoded = [[[self stringByReplacingPercentEscapesUsingEncoding:encoding] mutableCopy] autorelease];
+
+	NSUInteger const N = [replaces count];
+	for (NSUInteger i = 0; i < N; i++) {
+		[decoded replaceOccurrencesOfString:[replaces objectAtIndex:i]
+								 withString:[escapes objectAtIndex:i]
+									options:NSLiteralSearch
+									  range:NSMakeRange(0, [decoded length])];
+	}
+
+	return decoded;
 }
 
 - (NSString *)stripHTMLTags:(NSArray *)excludes
@@ -60,5 +119,21 @@ NSString * EmptyString = @"";
 			result = [result stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"%@>", text] withString:@""];
 	}
 	return result;
+}
+
+- (NSDictionary *)dictionaryWithKVPConnector:(NSString *)connector withSeparator:(NSString *)separator
+{
+	NSArray * separated = [self componentsSeparatedByString:separator];
+
+	NSInteger const count = [separated count];
+	NSMutableDictionary * dict = [NSMutableDictionary dictionaryWithCapacity:count];
+	for (NSInteger i = 0; i < count; i++) {
+		NSArray * kvp = [(NSString *)[separated objectAtIndex:i] componentsSeparatedByString:connector];
+		if ([kvp count] == 2) {
+			[dict setObject:[kvp objectAtIndex:1] forKey:[kvp objectAtIndex:0]];
+		}
+	}
+
+	return dict;
 }
 @end

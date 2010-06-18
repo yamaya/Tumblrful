@@ -9,6 +9,7 @@
 #import "DeliciousPost.h"
 #import "NSDataBase64.h"
 #import "UserSettings.h"
+#import "NSString+Tumblrful.h"
 #import "DebugLog.h"
 #import <Foundation/NSXMLDocument.h>
 
@@ -153,18 +154,16 @@ static NSString * API_ADD_ENDPOINT = @"https://api.del.icio.us/v1/posts/add?";
 - (NSURLRequest *)createRequest:(NSDictionary *)params
 {
 	@try {
-		NSMutableString * ms = [[[NSMutableString alloc] initWithString:API_ADD_ENDPOINT] autorelease];
+		NSMutableString * ps = [NSMutableString string];
 		NSEnumerator * enumerator = [params keyEnumerator];
-		NSString * key;
-		while ((key = [enumerator nextObject]) != nil) {
-			[ms appendFormat:@"&%@=%@", key, [params objectForKey:key]];
+		for (NSString * key; (key = [enumerator nextObject]) != nil; ) {
+			D(@"%@=%@", key, [params objectForKey:key]);
+			[ps appendFormat:@"&%@=%@", key, [[params objectForKey:key] stringByURLEncoding:NSUTF8StringEncoding]];
 		}
-		NSString * s = [NSString stringWithString:ms];
-		s = [s stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-		s = [s stringByReplacingOccurrencesOfString:@"+" withString:@"%2B"];
+		NSURL * url = [NSURL URLWithString:[NSString stringWithFormat:@"%@?%@", API_ADD_ENDPOINT, ps]];
 
 		// create the POST request
-		NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:s] cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:TIMEOUT];
+		NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:TIMEOUT];
 		[request setValue:@"Tumblrful" forHTTPHeaderField:@"User-Agent"];
 
 		return request;

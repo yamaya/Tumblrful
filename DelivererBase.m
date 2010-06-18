@@ -9,6 +9,7 @@
 #import "DelivererContext.h"
 #import "GoogleReaderDelivererContext.h"
 #import "LDRDelivererContext.h"
+#import "InstapaperDelivererContext.h"
 #import "Anchor.h"
 #import "PostAdaptorCollection.h"
 #import "PostAdaptor.h"
@@ -334,6 +335,7 @@
 			contexts = [NSMutableArray arrayWithObjects:
 				  [GoogleReaderDelivererContext class]
 				, [LDRDelivererContext class]
+				, [InstapaperDelivererContext class]
 				, [DelivererContext class]
 				, nil];
 			[contexts retain]; // must

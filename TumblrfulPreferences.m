@@ -109,9 +109,7 @@
 	 */
 	BOOL const instapaperEnabled = [settings boolForKey:@"instapaperEnabled"];
 	[instapaperCheckBox setState:(instapaperEnabled ? NSOnState : NSOffState)];
-
 	isNotEntered = NO;
-
 	s = [settings stringForKey:@"instapaperUsername"];
 	if (s == nil) {
 		D0(@"instapaperUsername is nul");
@@ -119,7 +117,6 @@
 		if (instapaperEnabled) isNotEntered = YES;
 	}
 	[instapaperUsernameTextField setStringValue:s];
-
 	s = [settings stringForKey:@"instapaperPassword"];
 	if (s == nil) {
 		D0(@"instapaperPassword is nul");
@@ -127,12 +124,35 @@
 		if (instapaperEnabled) isNotEntered = YES;
 	}
 	[instapaperPasswordTextField setStringValue:s];
-
 	if (isNotEntered) {
 		[GrowlSupport notifyWithTitle:@"Tumblrful" description:@"Username or Password not entered for Instapaper"];
 	}
-
 	[self checkWithInstapaper:instapaperCheckBox];
+#if 0
+	/*
+	 * Yammer
+	 */
+	BOOL const yammerEnabled = [settings boolForKey:@"yammerEnabled"];
+	[yammerCheckBox setState:(yammerEnabled ? NSOnState : NSOffState)];
+	isNotEntered = NO;
+	s = [settings stringForKey:@"yammerUsername"];
+	if (s == nil) {
+		D0(@"yammerUsername is nul");
+		s = @"";
+		if (yammerEnabled) isNotEntered = YES;
+	}
+	[yammerUsernameTextField setStringValue:s];
+	s = [settings stringForKey:@"yammerPassword"];
+	if (s == nil) {
+		D0(@"yammerPassword is nul");
+		s = @"";
+		if (yammerEnabled) isNotEntered = YES;
+	}
+	[yammerPasswordTextField setStringValue:s];
+	if (isNotEntered) {
+		[GrowlSupport notifyWithTitle:@"Tumblrful" description:@"Username or Password not entered for Yammer"];
+	}
+	[self checkWithInstapaper:yammerCheckBox];
 
 	/*
 	 * other
@@ -148,7 +168,6 @@
 		if (useOther) isNotEntered = YES;
 	}
 	[otherURLTextField setStringValue:s];
-
 	s = [settings stringForKey:@"otherTumblogLoginName"];
 	if (s == nil) {
 		D0(@"otherTumblogLoginName is nul");
@@ -166,6 +185,7 @@
 	[otherPasswordTextField setStringValue:s];
 
 	[self checkUseOtherTumblog:otherCheckBox];
+#endif
 
 	// openInBackgroundTab
 	BOOL boolValue = [settings boolForKey:@"openInBackgroundTab"];
@@ -216,12 +236,18 @@
 	[settings setBool:([instapaperCheckBox state] == NSOnState) forKey:@"instapaperEnabled"];
 	[settings setObject:[instapaperUsernameTextField stringValue] forKey:@"instapaperUsername"];
 	[settings setObject:[instapaperPasswordTextField stringValue] forKey:@"instapaperPassword"];
+#if 0
+	// Yammer
+	[settings setBool:([yammerCheckBox state] == NSOnState) forKey:@"yammerEnabled"];
+	[settings setObject:[yammerUsernameTextField stringValue] forKey:@"yammerUsername"];
+	[settings setObject:[yammerPasswordTextField stringValue] forKey:@"yammerPassword"];
 
 	// other
 	[settings setBool:([otherCheckBox state] == NSOnState) forKey:@"otherTumblogEnabled"];
 	[settings setObject:[otherURLTextField stringValue] forKey:@"otherTumblogSiteURL"];
 	[settings setObject:[otherLoginTextField stringValue] forKey:@"otherTumblogLoginName"];
 	[settings setObject:[otherPasswordTextField stringValue] forKey:@"otherTumblogPassword"];
+#endif
 
 	[settings setBool:([openInBackgroundTab state] == NSOnState) forKey:@"openInBackgroundTab"];
 
@@ -249,8 +275,8 @@
 - (IBAction)checkWithDelicious:(id)sender
 {
 	if (sender == deliciousCheckBox) {
-		NSInteger state = [deliciousCheckBox state];
-		BOOL enabled = (state == NSOnState ? YES : NO);
+		NSInteger const state = [deliciousCheckBox state];
+		BOOL const enabled = (state == NSOnState ? YES : NO);
 		[deliciousUsernameTextField setEnabled:enabled];
 		[deliciousPasswordTextField setEnabled:enabled];
 		[deliciousPrivateCheckBox setEnabled:enabled];
@@ -260,18 +286,28 @@
 - (IBAction)checkWithInstapaper:(id)sender
 {
 	if (sender == instapaperCheckBox) {
-		NSInteger state = [instapaperCheckBox state];
-		BOOL enabled = (state == NSOnState ? YES : NO);
+		NSInteger const state = [instapaperCheckBox state];
+		BOOL const enabled = (state == NSOnState ? YES : NO);
 		[instapaperUsernameTextField setEnabled:enabled];
 		[instapaperPasswordTextField setEnabled:enabled];
+	}
+}
+
+- (IBAction)checkWithYammer:(id)sender
+{
+	if (sender == yammerCheckBox) {
+		NSInteger const state = [yammerCheckBox state];
+		BOOL const enabled = (state == NSOnState ? YES : NO);
+		[yammerUsernameTextField setEnabled:enabled];
+		[yammerPasswordTextField setEnabled:enabled];
 	}
 }
 
 - (IBAction)checkUseOtherTumblog:(id)sender
 {
 	if (sender == otherCheckBox) {
-		NSInteger state = [otherCheckBox state];
-		BOOL enabled = (state == NSOnState ? YES : NO);
+		NSInteger const state = [otherCheckBox state];
+		BOOL const enabled = (state == NSOnState ? YES : NO);
 		[otherURLTextField setEnabled:enabled];
 		[otherLoginTextField setEnabled:enabled];
 		[otherPasswordTextField setEnabled:enabled];

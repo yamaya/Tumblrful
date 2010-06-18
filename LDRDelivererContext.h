@@ -1,10 +1,10 @@
 /**
  * @file LDRDelivererContext.h
- * @brief LDRDelivererContext declaration
+ * @brief LDRDelivererContext class declaration
  * @author Masayuki YAMAYA
  * @date 2008-03-03
  */
-#import "AggregatorDeliverContext.h"
+#import "AggregatorDelivererContext.h"
 
-@interface LDRDelivererContext : AggregatorDeliverContext
+@interface LDRDelivererContext : AggregatorDelivererContext
 @end

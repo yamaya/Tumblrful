@@ -1,14 +1,14 @@
 /**
- * @file AggregatorDeliverContext.m
+ * @file AggregatorDelivererContext.m
  */
-#import "AggregatorDeliverContext.h"
+#import "AggregatorDelivererContext.h"
 #import "DebugLog.h"
 
-@interface AggregatorDeliverContext ()
+@interface AggregatorDelivererContext ()
 - (NSDictionary *)propertiesWithDocument:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement;
 @end
 
-@implementation AggregatorDeliverContext
+@implementation AggregatorDelivererContext
 
 + (NSString *)name
 {

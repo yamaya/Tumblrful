@@ -75,7 +75,7 @@ static NSString * API_ADD_ENDPOINT = @"https://www.instapaper.com/api/add";
 
 	NSURLConnection * connection = [NSURLConnection connectionWithRequest:request delegate:self];
 	if (connection == nil) {
-		[self callback:@selector(failedWithError:) withObject:nil];
+		[self callbackOnMainThread:@selector(failedWithError:) withObject:nil];
 		[data_ release], data_ = nil;
 	}
 }

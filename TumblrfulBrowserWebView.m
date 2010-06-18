@@ -23,8 +23,9 @@
 #import "PostAdaptorCollection.h"
 #import "TumblrPostAdaptor.h"
 #import "DeliciousPostAdaptor.h"
-//#import "UmesuePostAdaptor.h"
 #import "InstapaperPostAdaptor.h"
+//#import "YammerPostAdaptor.h"
+//#import "UmesuePostAdaptor.h"
 #import "DebugLog.h"
 #import "GoogleReaderDelivererContext.h"
 #import "LDRDelivererContext.h"
@@ -64,6 +65,7 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 		//[PostAdaptorCollection add:[UmesuePostAdaptor class]];
 		[PostAdaptorCollection add:[DeliciousPostAdaptor class]];
 		[PostAdaptorCollection add:[InstapaperPostAdaptor class]];
+		//[PostAdaptorCollection add:[YammerPostAdaptor class]];
 
 		classes = [NSMutableArray arrayWithObjects:
 			  [GoogleReaderReblogDeliverer class]
@@ -117,7 +119,6 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 				menuItem = [menuItem copy];
 				NSString * title = [menuItem title];
 				NSRange range = [title rangeOfString:[DelivererRules menuItemTitleWith:@""]];
-				D(@"range:%d, %d", range.location, range.length);
 				if (range.location != NSNotFound) {
 					[menuItem setTitle:[title substringFromIndex:(range.location + range.length)]];
 					NSInteger const tag = [menuItem tag] | MENUITEM_TAG_NEED_EDIT;

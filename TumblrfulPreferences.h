@@ -26,6 +26,11 @@
 	IBOutlet NSTextField * instapaperUsernameTextField;
 	IBOutlet NSTextField * instapaperPasswordTextField;
 
+	IBOutlet NSButton * yammerCheckBox;
+	IBOutlet NSBox * yammerBox;
+	IBOutlet NSTextField * yammerUsernameTextField;
+	IBOutlet NSTextField * yammerPasswordTextField;
+
 	IBOutlet NSButton* otherCheckBox;
 	IBOutlet NSBox* otherBox;
 	IBOutlet NSTextField* otherURLTextField;
@@ -40,6 +45,9 @@
 
 /// action that select checkbox for 'Use Instapaper'
 - (IBAction)checkWithInstapaper:(id)sender;
+
+/// action that select checkbox for 'Use Yammer'
+- (IBAction)checkWithYammer:(id)sender;
 
 /// action that select checkbox for 'Use other tumblog'
 - (IBAction)checkUseOtherTumblog:(id)sender;

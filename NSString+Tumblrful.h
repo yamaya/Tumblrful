@@ -22,6 +22,13 @@ extern NSString * EmptyString;
 - (NSString *)stringByURLEncoding:(NSStringEncoding)encoding;
 
 /**
+ * Decode URL
+ *	@param[in] encoding encoding
+ *	@return NSString object
+ */
+- (NSString *)stringByURLDecoding:(NSStringEncoding)encoding;
+
+/**
  * strip HTML tags
  *	@param [in] excludes	exclude tags
  *	@example
@@ -29,4 +36,6 @@ extern NSString * EmptyString;
  *	NSString * striped = [html stripHTMLTags:excludes];
  */
 - (NSString *)stripHTMLTags:(NSArray *)excludes;
+
+- (NSDictionary *)dictionaryWithKVPConnector:(NSString *)connector withSeparator:(NSString *)separator;
 @end

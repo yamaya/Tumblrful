@@ -1,12 +1,12 @@
 /**
- * @file AggregatorDeliverContext.h
+ * @file AggregatorDelivererContext.h
  */
 #import "DelivererContext.h"
 
 /**
- * AggregatorDeliverContext class
+ * AggregatorDelivererContext class
  */
-@interface AggregatorDeliverContext : DelivererContext
+@interface AggregatorDelivererContext : DelivererContext
 {
 	NSString * title_;		// entry title
 	NSString * source_;		// entry source e.g. "TechCrunch Japan"

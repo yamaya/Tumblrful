@@ -4,7 +4,7 @@
  * @author Masayuki YAMAYA
  * @date 2008-11-16
  */
-#import "AggregatorDeliverContext.h"
+#import "AggregatorDelivererContext.h"
 
-@interface GoogleReaderDelivererContext : AggregatorDeliverContext
+@interface GoogleReaderDelivererContext : AggregatorDelivererContext
 @end

@@ -44,7 +44,16 @@
 + (DOMHTMLElement *)matchForAutoDetection:(DOMHTMLDocument *)document windowScriptObject:(WebScriptObject *)wso;
 
 /**
+ * Initialize object
+ *	creates an object inside DelivererContext.
+ *	@param[in] document Currently displayed object DOMHTMLDocument
+ *	@param[in] targetElement Selected elements
+ */
+- (id)initWithDocument:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement;
+
+/**
  * Evaluate XPath expression
+ *	Utility method for Subclass.
  *	@param[in] expressions XPath expression (array of NSString object)
  *	@param[in] document DOM document to be evaluated
  *	@param[in] contextNode DOM node to be evaluated
@@ -54,6 +63,7 @@
 
 /**
  * Evaluate XPath expression
+ *	Utility method for Subclass.
  *	@param[in] expressions XPath expression string
  *	@param[in] contextNode DOM node to be evaluated
  *	@param[in] type XPath evaluate type
@@ -61,12 +71,4 @@
  *	@return DOMXPathResult object
  */
 - (DOMXPathResult *)evaluateToDocument:(NSString *)expression contextNode:(DOMNode *)contextNode type:(unsigned short)type inResult:(DOMXPathResult *)inResult;
-
-/**
- * Initialize object
- *	creates an object inside DelivererContext.
- *	@param[in] document Currently displayed object DOMHTMLDocument
- *	@param[in] targetElement Selected elements
- */
-- (id)initWithDocument:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement;
 @end
