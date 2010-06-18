@@ -10,7 +10,7 @@
 /**
  * @macro D_METHOD
  */
-#define D_METHOD		Log(@"%s", __func__)
+#define D_METHOD		Log(@"%s[line %d]", __PRETTY_FUNCTION__, __LINE__)
 
 /**
  * @macro D_ELAPSE_BEGIN

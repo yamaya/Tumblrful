@@ -51,6 +51,8 @@
 		546A0751105A7E57009DE2D1 /* Growl.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 546A0750105A7E57009DE2D1 /* Growl.framework */; };
 		546A0759105A7E60009DE2D1 /* Growl.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 546A0750105A7E57009DE2D1 /* Growl.framework */; };
 		546A07AC105A8A4B009DE2D1 /* SafariSingleWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 546A07AB105A8A4B009DE2D1 /* SafariSingleWindow.m */; };
+		547D041211CB30DB004AD53D /* YammerPost.m in Sources */ = {isa = PBXBuildFile; fileRef = 547D040F11CB30DB004AD53D /* YammerPost.m */; };
+		547D041311CB30DB004AD53D /* YammerPostAdaptor.m in Sources */ = {isa = PBXBuildFile; fileRef = 547D041111CB30DB004AD53D /* YammerPostAdaptor.m */; };
 		547DDDBA11CB09E500C03C17 /* InstapaperDelivererContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 547DDDB911CB09E500C03C17 /* InstapaperDelivererContext.m */; };
 		547DDDCE11CB0F1B00C03C17 /* AggregatorDelivererContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 547DDDCD11CB0F1B00C03C17 /* AggregatorDelivererContext.m */; };
 		54845E8111C79DF1004E9D91 /* PostEditWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 54845E8011C79DF1004E9D91 /* PostEditWindowController.m */; };
@@ -169,6 +171,10 @@
 		546A0750105A7E57009DE2D1 /* Growl.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Growl.framework; path = Frameworks/Growl.framework; sourceTree = "<group>"; };
 		546A07AA105A8A4B009DE2D1 /* SafariSingleWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SafariSingleWindow.h; sourceTree = "<group>"; };
 		546A07AB105A8A4B009DE2D1 /* SafariSingleWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SafariSingleWindow.m; sourceTree = "<group>"; };
+		547D040F11CB30DB004AD53D /* YammerPost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YammerPost.m; sourceTree = "<group>"; };
+		547D041011CB30DB004AD53D /* YammerPostAdaptor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YammerPostAdaptor.h; sourceTree = "<group>"; };
+		547D041111CB30DB004AD53D /* YammerPostAdaptor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YammerPostAdaptor.m; sourceTree = "<group>"; };
+		547D042511CB317E004AD53D /* YammerPost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YammerPost.h; sourceTree = "<group>"; };
 		547DDDB811CB09E500C03C17 /* InstapaperDelivererContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InstapaperDelivererContext.h; sourceTree = "<group>"; };
 		547DDDB911CB09E500C03C17 /* InstapaperDelivererContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InstapaperDelivererContext.m; sourceTree = "<group>"; };
 		547DDDCC11CB0F1B00C03C17 /* AggregatorDelivererContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AggregatorDelivererContext.h; sourceTree = "<group>"; };
@@ -214,7 +220,6 @@
 		089C166AFE841209C02AAC07 /* Tumblerful */ = {
 			isa = PBXGroup;
 			children = (
-				540CBADE11B3B6A300EE6D77 /* EditWindow */,
 				08FB77AFFE84173DC02AAC07 /* Classes */,
 				32C88E010371C26100C91783 /* Other Sources */,
 				089C167CFE841241C02AAC07 /* Resources */,
@@ -249,61 +254,27 @@
 		08FB77AFFE84173DC02AAC07 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
-				547DDDB811CB09E500C03C17 /* InstapaperDelivererContext.h */,
-				547DDDB911CB09E500C03C17 /* InstapaperDelivererContext.m */,
-				5468C1F011C9F7E500B4A62A /* InstapaperPost.h */,
-				5468C1F111C9F7E500B4A62A /* InstapaperPost.m */,
-				5468C1F211C9F7E500B4A62A /* InstapaperPostAdaptor.h */,
-				5468C1F311C9F7E500B4A62A /* InstapaperPostAdaptor.m */,
-				54AD366D11C76F0500CD1DF8 /* TwitterQuoteDeliverer.h */,
-				54AD366E11C76F0500CD1DF8 /* TwitterQuoteDeliverer.m */,
-				5459AE7811C3599D00A6ADE3 /* TumblrReblogExtractor.h */,
-				5459AE7911C3599D00A6ADE3 /* TumblrReblogExtractor.m */,
-				54AFE52811B5329000156646 /* NSString+Tumblrful.h */,
-				54AFE52911B5329100156646 /* NSString+Tumblrful.m */,
-				54EE0E8E11B5272100BA6F0C /* PostType.h */,
-				54EE0E8F11B5272100BA6F0C /* PostType.m */,
-				54A0537811A82A4000D5502E /* TumblrfulConstants.h */,
-				54A0537911A82A4000D5502E /* TumblrfulConstants.m */,
-				54E2540A11A81DB60048C02F /* DebugLog.h */,
-				54E2540B11A81DB60048C02F /* UserSettings.h */,
-				54E2540C11A81DB60048C02F /* UserSettings.m */,
-				546A07AA105A8A4B009DE2D1 /* SafariSingleWindow.h */,
-				546A07AB105A8A4B009DE2D1 /* SafariSingleWindow.m */,
-				54EA05650ED066ED001116D7 /* GoogleReaderDelivererContext.h */,
-				54EA05660ED066ED001116D7 /* GoogleReaderDelivererContext.m */,
-				54EA05670ED066ED001116D7 /* GoogleReaderReblogDeliverer.h */,
-				54EA05680ED066ED001116D7 /* GoogleReaderReblogDeliverer.m */,
-				547DDDCC11CB0F1B00C03C17 /* AggregatorDelivererContext.h */,
-				547DDDCD11CB0F1B00C03C17 /* AggregatorDelivererContext.m */,
+				547D040E11CB30C7004AD53D /* Yammer */,
+				547D040B11CB304F004AD53D /* Safari */,
+				547D040811CB2F1F004AD53D /* Umesue */,
+				547D040911CB2FC2004AD53D /* Common */,
+				547D040411CB2EBC004AD53D /* Instapaper */,
+				547D040711CB2F19004AD53D /* Delicious */,
+				547D040611CB2F12004AD53D /* Tumblr */,
+				547D040511CB2ED0004AD53D /* Aggregator */,
+				540CBADE11B3B6A300EE6D77 /* EditWindow */,
 				3B29209F0DDB3F4E00260CB1 /* SlideShareVideoDeliverer.h */,
 				3B2920A00DDB3F4E00260CB1 /* SlideShareVideoDeliverer.m */,
+				54AD366E11C76F0500CD1DF8 /* TwitterQuoteDeliverer.m */,
+				54AD366D11C76F0500CD1DF8 /* TwitterQuoteDeliverer.h */,
 				3B62B1AC0DD4BA2B009E51C6 /* VimeoVideoDeliverer.h */,
 				3B62B1AD0DD4BA2B009E51C6 /* VimeoVideoDeliverer.m */,
-				3BC522450DBA2EA800D5BACA /* NSDataBase64.h */,
-				3BC522460DBA2EA800D5BACA /* NSDataBase64.m */,
-				3BC522470DBA2EA800D5BACA /* UmesuePostAdaptor.h */,
-				3BC522480DBA2EA800D5BACA /* UmesuePostAdaptor.m */,
-				3B83F0EB0DBA263C004718A8 /* UmesuePost.h */,
-				3B83F0EC0DBA263C004718A8 /* UmesuePost.m */,
 				3BCB6A080DA15BBD001162F8 /* Post.h */,
 				3BCB6A090DA15BBD001162F8 /* PostCallback.h */,
 				3BCB6A0B0DA15BBD001162F8 /* PostAdaptorCollection.h */,
 				3BCB6A0C0DA15BBD001162F8 /* PostAdaptorCollection.m */,
-				3B6318520D9EB833001BA2BF /* DeliciousPost.h */,
-				3B6318530D9EB833001BA2BF /* DeliciousPost.m */,
-				3B6318540D9EB833001BA2BF /* DeliciousPostAdaptor.h */,
-				3B6318550D9EB833001BA2BF /* DeliciousPostAdaptor.m */,
-				3B63184F0D9EAAE0001BA2BF /* Anchor.h */,
-				3B6318500D9EAAE0001BA2BF /* Anchor.m */,
 				3BA41EEE0D9E9EFC00321933 /* PostAdaptor.m */,
 				3BA41EE00D9E93DD00321933 /* PostAdaptor.h */,
-				3BA41EE10D9E93DD00321933 /* TumblrPostAdaptor.h */,
-				3BA41EE20D9E93DD00321933 /* TumblrPostAdaptor.m */,
-				3B4665C50D9C0647001D74D0 /* LDRReblogDeliverer.h */,
-				3B4665C60D9C0647001D74D0 /* LDRReblogDeliverer.m */,
-				3B2A816D0D9AB2730015F103 /* LDRDelivererContext.h */,
-				3B2A816E0D9AB2730015F103 /* LDRDelivererContext.m */,
 				3B2A815F0D9A96CC0015F103 /* DelivererContext.h */,
 				3B2A81600D9A96CC0015F103 /* DelivererContext.m */,
 				3B39029F0D9933EF00245F77 /* DelivererBase.h */,
@@ -323,21 +294,6 @@
 				3BC648730D900F160020EA10 /* Deliverer.h */,
 				3BC648740D900F160020EA10 /* QuoteDeliverer.h */,
 				3BC648750D900F160020EA10 /* QuoteDeliverer.m */,
-				3BB4090E0D8D287500BBDA84 /* TumblrfulPreferences.h */,
-				3BB4090F0D8D287500BBDA84 /* TumblrfulPreferences.m */,
-				3BB4090B0D8D284700BBDA84 /* NSPreferences+Tumblrful.h */,
-				3BB4090C0D8D284700BBDA84 /* NSPreferences+Tumblrful.m */,
-				3BB179D60D8596D500B256E0 /* GrowlSupport.h */,
-				3BB179D70D8596D500B256E0 /* GrowlSupport.m */,
-				3BF41F740D8172BE00575FD9 /* TumblrPost.h */,
-				3BF41F750D8172BE00575FD9 /* TumblrPost.m */,
-				3B37ADC20D7EF54200B713FE /* TumblrfulBrowserWebView.h */,
-				3B37ADC30D7EF54200B713FE /* TumblrfulBrowserWebView.m */,
-				3B4E0C3A0D7AC2E800F92EB1 /* Log.h */,
-				3B4E0C3B0D7AC2E800F92EB1 /* Log.m */,
-				3B04FC6B0D7AC1C000A4E8B8 /* Tumblrful.h */,
-				3B04FC6C0D7AC1C000A4E8B8 /* Tumblrful.m */,
-				5443AABA11A0FB65003F7A53 /* NSPreferenceModule.h */,
 			);
 			name = Classes;
 			sourceTree = "<group>";
@@ -395,6 +351,124 @@
 				540CBAE511B3B6C300EE6D77 /* PostEditWindow.xib */,
 			);
 			name = EditWindow;
+			sourceTree = "<group>";
+		};
+		547D040411CB2EBC004AD53D /* Instapaper */ = {
+			isa = PBXGroup;
+			children = (
+				547DDDB811CB09E500C03C17 /* InstapaperDelivererContext.h */,
+				547DDDB911CB09E500C03C17 /* InstapaperDelivererContext.m */,
+				5468C1F011C9F7E500B4A62A /* InstapaperPost.h */,
+				5468C1F111C9F7E500B4A62A /* InstapaperPost.m */,
+				5468C1F211C9F7E500B4A62A /* InstapaperPostAdaptor.h */,
+				5468C1F311C9F7E500B4A62A /* InstapaperPostAdaptor.m */,
+			);
+			name = Instapaper;
+			sourceTree = "<group>";
+		};
+		547D040511CB2ED0004AD53D /* Aggregator */ = {
+			isa = PBXGroup;
+			children = (
+				547DDDCC11CB0F1B00C03C17 /* AggregatorDelivererContext.h */,
+				547DDDCD11CB0F1B00C03C17 /* AggregatorDelivererContext.m */,
+				54EA05650ED066ED001116D7 /* GoogleReaderDelivererContext.h */,
+				54EA05660ED066ED001116D7 /* GoogleReaderDelivererContext.m */,
+				54EA05670ED066ED001116D7 /* GoogleReaderReblogDeliverer.h */,
+				54EA05680ED066ED001116D7 /* GoogleReaderReblogDeliverer.m */,
+				3B4665C50D9C0647001D74D0 /* LDRReblogDeliverer.h */,
+				3B4665C60D9C0647001D74D0 /* LDRReblogDeliverer.m */,
+				3B2A816D0D9AB2730015F103 /* LDRDelivererContext.h */,
+				3B2A816E0D9AB2730015F103 /* LDRDelivererContext.m */,
+			);
+			name = Aggregator;
+			sourceTree = "<group>";
+		};
+		547D040611CB2F12004AD53D /* Tumblr */ = {
+			isa = PBXGroup;
+			children = (
+				3BA41EE10D9E93DD00321933 /* TumblrPostAdaptor.h */,
+				3BA41EE20D9E93DD00321933 /* TumblrPostAdaptor.m */,
+				5459AE7811C3599D00A6ADE3 /* TumblrReblogExtractor.h */,
+				5459AE7911C3599D00A6ADE3 /* TumblrReblogExtractor.m */,
+				3BF41F740D8172BE00575FD9 /* TumblrPost.h */,
+				3BF41F750D8172BE00575FD9 /* TumblrPost.m */,
+			);
+			name = Tumblr;
+			sourceTree = "<group>";
+		};
+		547D040711CB2F19004AD53D /* Delicious */ = {
+			isa = PBXGroup;
+			children = (
+				3B6318520D9EB833001BA2BF /* DeliciousPost.h */,
+				3B6318530D9EB833001BA2BF /* DeliciousPost.m */,
+				3B6318540D9EB833001BA2BF /* DeliciousPostAdaptor.h */,
+				3B6318550D9EB833001BA2BF /* DeliciousPostAdaptor.m */,
+			);
+			name = Delicious;
+			sourceTree = "<group>";
+		};
+		547D040811CB2F1F004AD53D /* Umesue */ = {
+			isa = PBXGroup;
+			children = (
+				3BC522470DBA2EA800D5BACA /* UmesuePostAdaptor.h */,
+				3BC522480DBA2EA800D5BACA /* UmesuePostAdaptor.m */,
+				3B83F0EB0DBA263C004718A8 /* UmesuePost.h */,
+				3B83F0EC0DBA263C004718A8 /* UmesuePost.m */,
+			);
+			name = Umesue;
+			sourceTree = "<group>";
+		};
+		547D040911CB2FC2004AD53D /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				54E2540B11A81DB60048C02F /* UserSettings.h */,
+				54E2540C11A81DB60048C02F /* UserSettings.m */,
+				3BB179D60D8596D500B256E0 /* GrowlSupport.h */,
+				3BB179D70D8596D500B256E0 /* GrowlSupport.m */,
+				54AFE52811B5329000156646 /* NSString+Tumblrful.h */,
+				54AFE52911B5329100156646 /* NSString+Tumblrful.m */,
+				54EE0E8E11B5272100BA6F0C /* PostType.h */,
+				54EE0E8F11B5272100BA6F0C /* PostType.m */,
+				54A0537811A82A4000D5502E /* TumblrfulConstants.h */,
+				54A0537911A82A4000D5502E /* TumblrfulConstants.m */,
+				3BC522450DBA2EA800D5BACA /* NSDataBase64.h */,
+				3BC522460DBA2EA800D5BACA /* NSDataBase64.m */,
+				3B63184F0D9EAAE0001BA2BF /* Anchor.h */,
+				3B6318500D9EAAE0001BA2BF /* Anchor.m */,
+				54E2540A11A81DB60048C02F /* DebugLog.h */,
+				3B4E0C3A0D7AC2E800F92EB1 /* Log.h */,
+				3B4E0C3B0D7AC2E800F92EB1 /* Log.m */,
+			);
+			name = Common;
+			sourceTree = "<group>";
+		};
+		547D040B11CB304F004AD53D /* Safari */ = {
+			isa = PBXGroup;
+			children = (
+				3BB4090E0D8D287500BBDA84 /* TumblrfulPreferences.h */,
+				3BB4090F0D8D287500BBDA84 /* TumblrfulPreferences.m */,
+				3BB4090B0D8D284700BBDA84 /* NSPreferences+Tumblrful.h */,
+				3BB4090C0D8D284700BBDA84 /* NSPreferences+Tumblrful.m */,
+				5443AABA11A0FB65003F7A53 /* NSPreferenceModule.h */,
+				3B37ADC20D7EF54200B713FE /* TumblrfulBrowserWebView.h */,
+				3B37ADC30D7EF54200B713FE /* TumblrfulBrowserWebView.m */,
+				3B04FC6B0D7AC1C000A4E8B8 /* Tumblrful.h */,
+				3B04FC6C0D7AC1C000A4E8B8 /* Tumblrful.m */,
+				546A07AA105A8A4B009DE2D1 /* SafariSingleWindow.h */,
+				546A07AB105A8A4B009DE2D1 /* SafariSingleWindow.m */,
+			);
+			name = Safari;
+			sourceTree = "<group>";
+		};
+		547D040E11CB30C7004AD53D /* Yammer */ = {
+			isa = PBXGroup;
+			children = (
+				547D042511CB317E004AD53D /* YammerPost.h */,
+				547D040F11CB30DB004AD53D /* YammerPost.m */,
+				547D041011CB30DB004AD53D /* YammerPostAdaptor.h */,
+				547D041111CB30DB004AD53D /* YammerPostAdaptor.m */,
+			);
+			name = Yammer;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -537,6 +611,8 @@
 				5468C1F511C9F7E500B4A62A /* InstapaperPostAdaptor.m in Sources */,
 				547DDDBA11CB09E500C03C17 /* InstapaperDelivererContext.m in Sources */,
 				547DDDCE11CB0F1B00C03C17 /* AggregatorDelivererContext.m in Sources */,
+				547D041211CB30DB004AD53D /* YammerPost.m in Sources */,
+				547D041311CB30DB004AD53D /* YammerPostAdaptor.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -136,4 +136,20 @@ static NSString * REPLACE_CHARS[] = {
 
 	return dict;
 }
+
++ (NSString *)stringWithKVPDictionary:(NSDictionary *)dictionary withConnector:(NSString *)connector withSeparator:(NSString *)separator withEncoding:(NSStringEncoding)encoding
+{
+	NSMutableString * s = [NSMutableString string];
+	NSEnumerator * enumerator = [dictionary keyEnumerator];
+	for (NSString * key; (key = [enumerator nextObject]) != nil; ) {
+
+		NSString * value = [dictionary objectForKey:key];
+		if (encoding) value = [value stringByURLEncoding:NSUTF8StringEncoding];
+
+		if ([s length] > 0) [s appendString:separator];
+
+		[s appendFormat:@"%@%@%@", key, connector, value];
+	}
+	return s;
+}
 @end

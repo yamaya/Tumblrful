@@ -128,32 +128,26 @@
 		[GrowlSupport notifyWithTitle:@"Tumblrful" description:@"Username or Password not entered for Instapaper"];
 	}
 	[self checkWithInstapaper:instapaperCheckBox];
-#if 0
+
 	/*
 	 * Yammer
 	 */
 	BOOL const yammerEnabled = [settings boolForKey:@"yammerEnabled"];
 	[yammerCheckBox setState:(yammerEnabled ? NSOnState : NSOffState)];
 	isNotEntered = NO;
-	s = [settings stringForKey:@"yammerUsername"];
+	s = [settings stringForKey:@"yammerNetwork"];
 	if (s == nil) {
-		D0(@"yammerUsername is nul");
+		D0(@"yammerNetwork is nul");
 		s = @"";
 		if (yammerEnabled) isNotEntered = YES;
 	}
-	[yammerUsernameTextField setStringValue:s];
-	s = [settings stringForKey:@"yammerPassword"];
-	if (s == nil) {
-		D0(@"yammerPassword is nul");
-		s = @"";
-		if (yammerEnabled) isNotEntered = YES;
-	}
-	[yammerPasswordTextField setStringValue:s];
+	[yammerNetworkTextField setStringValue:s];
 	if (isNotEntered) {
-		[GrowlSupport notifyWithTitle:@"Tumblrful" description:@"Username or Password not entered for Yammer"];
+		[GrowlSupport notifyWithTitle:@"Tumblrful" description:@"Network not entered for Yammer"];
 	}
-	[self checkWithInstapaper:yammerCheckBox];
 
+	[self checkWithYammer:yammerCheckBox];
+#if 0
 	/*
 	 * other
 	 */
@@ -236,12 +230,12 @@
 	[settings setBool:([instapaperCheckBox state] == NSOnState) forKey:@"instapaperEnabled"];
 	[settings setObject:[instapaperUsernameTextField stringValue] forKey:@"instapaperUsername"];
 	[settings setObject:[instapaperPasswordTextField stringValue] forKey:@"instapaperPassword"];
-#if 0
+
 	// Yammer
 	[settings setBool:([yammerCheckBox state] == NSOnState) forKey:@"yammerEnabled"];
-	[settings setObject:[yammerUsernameTextField stringValue] forKey:@"yammerUsername"];
-	[settings setObject:[yammerPasswordTextField stringValue] forKey:@"yammerPassword"];
+	[settings setObject:[yammerNetworkTextField stringValue] forKey:@"yammerNetwork"];
 
+#if 0
 	// other
 	[settings setBool:([otherCheckBox state] == NSOnState) forKey:@"otherTumblogEnabled"];
 	[settings setObject:[otherURLTextField stringValue] forKey:@"otherTumblogSiteURL"];
@@ -298,8 +292,7 @@
 	if (sender == yammerCheckBox) {
 		NSInteger const state = [yammerCheckBox state];
 		BOOL const enabled = (state == NSOnState ? YES : NO);
-		[yammerUsernameTextField setEnabled:enabled];
-		[yammerPasswordTextField setEnabled:enabled];
+		[yammerNetworkTextField setEnabled:enabled];
 	}
 }
 

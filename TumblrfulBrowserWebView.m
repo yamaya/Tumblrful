@@ -24,7 +24,7 @@
 #import "TumblrPostAdaptor.h"
 #import "DeliciousPostAdaptor.h"
 #import "InstapaperPostAdaptor.h"
-//#import "YammerPostAdaptor.h"
+#import "YammerPostAdaptor.h"
 //#import "UmesuePostAdaptor.h"
 #import "DebugLog.h"
 #import "GoogleReaderDelivererContext.h"
@@ -65,7 +65,7 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 		//[PostAdaptorCollection add:[UmesuePostAdaptor class]];
 		[PostAdaptorCollection add:[DeliciousPostAdaptor class]];
 		[PostAdaptorCollection add:[InstapaperPostAdaptor class]];
-		//[PostAdaptorCollection add:[YammerPostAdaptor class]];
+		[PostAdaptorCollection add:[YammerPostAdaptor class]];
 
 		classes = [NSMutableArray arrayWithObjects:
 			  [GoogleReaderReblogDeliverer class]

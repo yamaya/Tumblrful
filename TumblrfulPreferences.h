@@ -28,8 +28,7 @@
 
 	IBOutlet NSButton * yammerCheckBox;
 	IBOutlet NSBox * yammerBox;
-	IBOutlet NSTextField * yammerUsernameTextField;
-	IBOutlet NSTextField * yammerPasswordTextField;
+	IBOutlet NSTextField * yammerNetworkTextField;
 
 	IBOutlet NSButton* otherCheckBox;
 	IBOutlet NSBox* otherBox;

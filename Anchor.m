@@ -5,6 +5,7 @@
  * @date 2008-03-07
  */
 #import "Anchor.h"
+#import "NSString+Tumblrful.h"
 #import "DebugLog.h"
 
 @interface Anchor ()
@@ -69,13 +70,14 @@
 
 + (NSDictionary *)componentsAnchorTag:(NSString *)html
 {
-	NSString * text = nil;
-	NSString * tag = nil;
 	NSString * result = [html copy];
 
 	NSScanner * scanner = [NSScanner scannerWithString:html];
 
 	while ([scanner isAtEnd] == NO) {
+		NSString * text = nil;
+		NSString * tag = nil;
+
 		[scanner scanUpToString:@"<" intoString:nil];
 		[scanner scanUpToString:@">" intoString:&text];
 
@@ -90,7 +92,10 @@
 		}
 
 		if ([tag isEqualToString:@"a"]) {
+			D(@"text=%@", text);
 			NSString * title = [result stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"%@>", text] withString:@""];
+			title = [title stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"</%@>", tag] withString:@""];
+			title = [title stringByTrimmingWhitespace];
 
 			NSRange range = [text rangeOfString:@"href"];
 			range.location += range.length;

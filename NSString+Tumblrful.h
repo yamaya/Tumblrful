@@ -38,4 +38,6 @@ extern NSString * EmptyString;
 - (NSString *)stripHTMLTags:(NSArray *)excludes;
 
 - (NSDictionary *)dictionaryWithKVPConnector:(NSString *)connector withSeparator:(NSString *)separator;
+
++ (NSString *)stringWithKVPDictionary:(NSDictionary *)dictionary withConnector:(NSString *)connector withSeparator:(NSString *)separator withEncoding:(NSStringEncoding)encoding;
 @end
