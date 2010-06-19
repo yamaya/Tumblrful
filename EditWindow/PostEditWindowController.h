@@ -12,7 +12,6 @@
 @class LinkViewController;
 @class PhotoViewController;
 @class VideoViewController;
-@class TumblrReblogExtractor;
 
 /**
  * Post editting window controller class

@@ -16,6 +16,12 @@
 	NSString * reblogKey_;
 }
 
+/// PostID for Reblog
+@property (nonatomic, retain) NSString * postID;
+
+/// Key for Reblog
+@property (nonatomic, retain) NSString * reblogKey;
+
 /**
  * Initialize object
  *	creates an object inside DelivererContext.
@@ -52,13 +58,5 @@
  */
 - (id)initWithContext:(DelivererContext *)context postID:(NSString *)postID;
 
-/**
- * Set PostID
- */
-- (void)setPostID:(NSString *)postId;
-
-/**
- * Set Reblog Key
- */
-- (void) setReblogKey:(NSString*)reblogKey;
++ (NSDictionary *)reblogTokensFromIFrame:(DOMHTMLDocument *)document;
 @end

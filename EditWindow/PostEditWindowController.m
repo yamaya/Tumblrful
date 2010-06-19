@@ -64,6 +64,8 @@
 
 - (void)openSheet:(NSWindow *)window
 {
+	D_METHOD;
+
 	[self loadNibSafety];
 
 	[self setContentsViewWithPostType:postType_ display:NO];
@@ -89,6 +91,8 @@
 
 - (void)setContentsViewWithPostType:(PostType)postType display:(BOOL)display
 {
+	D_METHOD;
+
 	NSMutableDictionary * contents = [NSMutableDictionary dictionary];
 
 	Anchor * anchor = nil;
@@ -200,7 +204,18 @@
 		contentsView = [indicator autorelease];
 
 		extractor = [[TumblrReblogExtractor alloc] initWithDelegate:self];
-		[extractor startWithPostID:[reblogContents objectForKey:@"pid"] withReblogKey:[reblogContents objectForKey:@"rk"]];
+		{
+			NSString * postID = [reblogContents objectForKey:@"pid"];
+			NSString * reblogKey = [reblogContents objectForKey:@"rk"];
+			SEL selector = @selector(startWithPostID:withReblogKey:);
+			NSMethodSignature * signature = [extractor.class instanceMethodSignatureForSelector:selector];
+			NSInvocation * invocation = [NSInvocation invocationWithMethodSignature:signature];
+			[invocation setTarget:extractor];
+			[invocation setSelector:selector];
+			[invocation setArgument:&postID atIndex:2];
+			[invocation setArgument:&reblogKey atIndex:3];
+			[NSTimer scheduledTimerWithTimeInterval:0.3 invocation:invocation repeats:NO];
+		}
 		break;
 	default:
 		NSAssert(0, @"unimplemented yet");

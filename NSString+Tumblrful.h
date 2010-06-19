@@ -40,4 +40,8 @@ extern NSString * EmptyString;
 - (NSDictionary *)dictionaryWithKVPConnector:(NSString *)connector withSeparator:(NSString *)separator;
 
 + (NSString *)stringWithKVPDictionary:(NSDictionary *)dictionary withConnector:(NSString *)connector withSeparator:(NSString *)separator withEncoding:(NSStringEncoding)encoding;
+
+- (BOOL)isCaseInsensitiveEqualToString:(NSString *)s;
+
+- (NSString *)stringByUnescapingFromHTML;
 @end

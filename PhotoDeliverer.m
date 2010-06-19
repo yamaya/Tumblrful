@@ -10,15 +10,15 @@
 
 static NSString * TYPE = @"Photo";
 
-#pragma mark -
 @interface PhotoDeliverer ()
 - (NSString *)selectedString;
 @end
 
-#pragma mark -
 @implementation PhotoDeliverer
 + (id<Deliverer>)create:(DOMHTMLDocument *)document element:(NSDictionary *)clickedElement
 {
+	D0([clickedElement description]);
+
 	PhotoDeliverer * deliverer = nil;
 
 	id imageURL = [clickedElement objectForKey:WebElementImageURLKey];

@@ -8,6 +8,7 @@
 #import "PostType.h"
 
 @class TumblrReblogExtractor;
+@class WebView;
 
 /**
  * TumblrReblogExtractorDelegate protocol declaration
@@ -24,20 +25,20 @@
 @interface TumblrReblogExtractor : NSObject
 {
 	NSObject<TumblrReblogExtractorDelegate> * delegate_;
-	NSMutableData * data_;
 	NSString * postID_;
 	NSString * reblogKey_;
 	NSString * endpoint_;
+	WebView * webView_;
 }
 
 /// URL for endpoint to post
-@property (nonatomic, readonly) NSString * endpoint;
+@property (nonatomic, retain) NSString * endpoint;
 
 /// Post ID
-@property (nonatomic, readonly) NSString * postID;
+@property (nonatomic, retain) NSString * postID;
 
 /// Reblog key
-@property (nonatomic, readonly) NSString * reblogKey;
+@property (nonatomic, retain) NSString * reblogKey;
 
 /**
  * Initialize object

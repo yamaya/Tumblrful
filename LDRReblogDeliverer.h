@@ -6,10 +6,17 @@
  */
 #import "ReblogDeliverer.h"
 
+@class ReblogKeyDelegate;
+@class WebView;
+
 /**
  * Tumblr post in the Livedoor Reader to reblog
  */
 @interface LDRReblogDeliverer : ReblogDeliverer
+{
+	ReblogKeyDelegate * delegate_;
+	WebView * webView_;
+}
 
 /**
  * return ".tumblr.com"

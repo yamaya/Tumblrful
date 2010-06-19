@@ -122,7 +122,6 @@ static NSString * ENDPOINT_FORMAT = @"https://www.yammer.com/%@/messages/new";
 	[self callbackOnMainThread:@selector(failedWithError:) withObject:error];
 }
 
-
 - (void)webView:(WebView *)sender didCommitLoadForFrame:(WebFrame *)frame
 {
 #pragma unused (sender, frame)
@@ -251,6 +250,7 @@ static NSString * ENDPOINT_FORMAT = @"https://www.yammer.com/%@/messages/new";
 	D(@"response.URL=%@", [[[dataSource response] URL] absoluteString]);
 #endif
 	if (releasable_) {
+		releasable_ = NO;
 		D0(@"autoreleased!");
 		[self autorelease];
 	}
@@ -262,6 +262,7 @@ static NSString * ENDPOINT_FORMAT = @"https://www.yammer.com/%@/messages/new";
 	D0([error description]);
 	[self callbackOnMainThread:@selector(failedWithError:) withObject:error];
 	if (releasable_) {
+		releasable_ = NO;
 		D0(@"autoreleased!");
 		[self autorelease];
 	}

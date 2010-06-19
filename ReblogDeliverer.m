@@ -7,17 +7,17 @@
 // /System/Library/Frameworks/WebKit.framework/Headers/DOMHTMLIFrameElement.h
 #import "ReblogDeliverer.h"
 #import "DelivererRules.h"
+#import "NSString+Tumblrful.h"
 #import "GrowlSupport.h"
 #import "DebugLog.h"
 
 static NSString * TYPE = @"Reblog";
 
-@interface ReblogDeliverer ()
-+ (NSDictionary *)reblogTokensFromIFrame:(DOMHTMLDocument *)document;
-@end
-
 #pragma mark -
 @implementation ReblogDeliverer
+
+@synthesize postID = postID_;
+@synthesize reblogKey = reblogKey_;
 
 + (id<Deliverer>)create:(DOMHTMLDocument *)document element:(NSDictionary *)clickedElement
 {
@@ -95,62 +95,30 @@ static NSString * TYPE = @"Reblog";
 
 + (NSDictionary *)reblogTokensFromIFrame:(DOMHTMLDocument *)document
 {
-	static NSString* IFRAME_ID = @"tumblr_controls";
+	static NSString * XPath = @"//iframe[@id='tumblr_controls']";
 
-	D(@"document=%@", SafetyDescription(document));
+	DOMXPathResult * result = [document evaluate:XPath contextNode:document resolver:nil type:DOM_ANY_TYPE inResult:nil];
 
-	// document content から iframe を探す
-	DOMElement * element = [document getElementById:IFRAME_ID];
-	D(@"element=%@", SafetyDescription(element));
-	if (element == nil) {
-		return nil;
-	}
-
-	NSMutableDictionary * tokens = nil;
-	DOMHTMLIFrameElement * iframe = (DOMHTMLIFrameElement *)element;
-	/*
-	 * <iframe
-	 *	src="http://www.tumblr.com/dashboard/iframe?src=http://suwaowalog.tumblr.com/post/31541959&pid=31541959&rk=2e9uZXxz"
-	 *	id="tumblr_controls">
-	 * </iframe>
-	 */
-	NSString * src = [[iframe src] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-	D(@"iframe src=%@", src);
-	NSRange range = [src rangeOfString:@"&pid="];
-	if (range.location != NSNotFound) {
-		NSString * segmentString = [src substringFromIndex:range.location + 1];
-		D(@"segmentString=%@", segmentString);
-		NSArray * segments = [segmentString componentsSeparatedByString:@"&"];
-		NSEnumerator * enumerator = [segments objectEnumerator];
-		NSString * segment;
-		tokens = [[[NSMutableDictionary alloc] init] autorelease];
-		while ((segment = [enumerator nextObject]) != nil) {
-			range = [segment rangeOfString:@"pid="];
-			if (range.location != NSNotFound) { // post id
-				[tokens setObject:[segment substringFromIndex:range.location + range.length] forKey:@"pid"];
-				continue;
-			}
-			range = [segment rangeOfString:@"rk="];
-			if (range.location != NSNotFound) { // rk
-				[tokens setObject:[segment substringFromIndex:range.location + range.length] forKey:@"rk"];
-				continue;
-			}
+	if (result != nil && ![result invalidIteratorState]) {
+		DOMHTMLIFrameElement * iframe = (DOMHTMLIFrameElement *)[result iterateNext];
+		NSString * src = [[iframe getAttribute:@"src"] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+		if (src != nil) {
+			D(@"src=%@", src);
+			NSURL * u = [NSURL URLWithString:src];
+			NSDictionary * tokens = [[u query] dictionaryWithKVPConnector:@"=" withSeparator:@"&"];
+			D(@"tokens=%@", [tokens description]);
+			return tokens;
 		}
-		D(@"tokens=%@", [tokens description]);
+		else {
+			D0([iframe description]);
+			D0([iframe innerHTML]);
+			D0([iframe outerHTML]);
+		}
 	}
-	return tokens;
-}
-
-- (void)setPostID:(NSString *)postID
-{
-	[postID_ release];
-	postID_ = [postID retain];
-}
-
-- (void)setReblogKey:(NSString *)reblogKey
-{
-	[reblogKey_ release];
-	reblogKey_ = [reblogKey retain];
+	else {
+		D0([result description]);
+	}
+	return nil;
 }
 
 #pragma mark -

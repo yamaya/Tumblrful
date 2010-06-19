@@ -8,29 +8,25 @@
 #import "LDRReblogDeliverer.h"
 #import "LDRDelivererContext.h"
 #import "TumblrfulConstants.h"
-#import "DebugLog.h"
+#import "NSString+Tumblrful.h"
 #import <WebKit/WebKit.h>
-#import <Foundation/NSXMLDocument.h>
+#import "DebugLog.h"
 #import <objc/objc-runtime.h>
 
 static NSString * TUMBLR_DOMAIN = @".tumblr.com";
 static NSString * TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 
-#pragma mark -
-/**
- * Reblog Key を得るための NSURLConnection で使う Delegateクラス.
- */
+/// Reblog Key を得るための NSURLConnection で使う Delegateクラス.
 @interface ReblogKeyDelegate : NSObject
 {
 	NSString * endpoint_;
 	NSMutableData * data_;
 	LDRReblogDeliverer * deliverer_;
 }
+
 - (id)initWithEndpoint:(NSString *)endpoint deliverer:(LDRReblogDeliverer *)deliverer;
-- (void)dealloc;
 @end
 
-#pragma mark -
 @implementation LDRReblogDeliverer
 
 + (NSString *)sitePostfix
@@ -87,21 +83,34 @@ static NSString * TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 	return deliverer;
 }
 
+- (void)dealloc
+{
+	[webView_ release], webView_ = nil;
+	[delegate_ release], delegate_ = nil;
+	[super dealloc];
+}
+
 - (void)action:(id)sender
 {
-#pragma unused (sender)
 	@try {
 		// ReblogKeyDelegateから(その通信後に)呼び出された場合
 		if (object_getClass(sender) == [ReblogKeyDelegate class]) {
 			[super action:sender];
 		}
+		// メニューから呼び出された場合
 		else {
-			// メニューから呼び出された場合
 			NSString * endpoint = context_.documentURL;
+
+			delegate_ = [[ReblogKeyDelegate alloc] initWithEndpoint:endpoint deliverer:self];
+
 			NSURLRequest * request = [NSURLRequest requestWithURL:[NSURL URLWithString:endpoint]];
-			ReblogKeyDelegate * delegate = [[ReblogKeyDelegate alloc] initWithEndpoint:endpoint deliverer:self];
-			NSURLConnection * connection;
-			connection = [NSURLConnection connectionWithRequest:request delegate:delegate];
+
+			webView_ = [[WebView alloc] initWithFrame:NSZeroRect frameName:nil groupName:nil];
+			[webView_ setHidden:YES];
+			[webView_ setDrawsBackground:NO];
+			[webView_ setShouldUpdateWhileOffscreen:NO];
+			[webView_ setFrameLoadDelegate:delegate_];
+			[[webView_ mainFrame] loadRequest:request];
 		}
 	}
 	@catch (NSException * e) {
@@ -131,101 +140,64 @@ static NSString * TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 	[super dealloc];
 }
 
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
-{
-#pragma unused (connection)
-	NSHTTPURLResponse * httpResponse = (NSHTTPURLResponse *)response;
+#pragma mark -
+#pragma mark WebFrameLoadDelegate Methods
 
-	if ([httpResponse statusCode] == 200) {
-		data_ = [[NSMutableData data] retain];
-	}
+- (void)webView:(WebView *)sender didFailProvisionalLoadWithError:(NSError *)error forFrame:(WebFrame *)frame
+{
+	D(@"mainFrame=%d", ([sender mainFrame] == frame));
+	if ([sender mainFrame] != frame) return;
+
+	D0([error description]);
+	[self performSelectorOnMainThread:@selector(delegateDidFailExtractMethod:) withObject:error waitUntilDone:YES];
+	[self autorelease];
 }
 
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
+/// フレームデータ読み込みの完了
+- (void)webView:(WebView *)sender didFinishLoadForFrame:(WebFrame *)frame
 {
-#pragma unused (connection)
-	if (data_ != nil) [data_ appendData:data];
-}
+	D(@"mainFrame=%d", ([sender mainFrame] == frame));
+	if ([sender mainFrame] != frame) return;
 
-/**
- * connectionDidFinishLoading デリゲートメソッド.
- *	@param connection NSURLConnection オブジェクト
- *
- *	caramel*tumblr はへんてこなHTMLらしく nodesForXPath で iframeがとれない。
- *	よって Reblogできない。NSXMLDocument じゃなくて NSString にして、文字列
- *	を検索した方がHit率高そう。
- *	しかし ReblogDeliverer は上手くいくんだよなぁ。WebKit の方ががんばってく
- *	れるということなんだろう。DOMHTMLDocument を使いたいのだけれど NSDataから
- *	の生成方法がわからないよ。
- */
-- (void)connectionDidFinishLoading:(NSURLConnection*)connection
-{
-#pragma unused (connection)
-	D_METHOD;
+	DOMHTMLDocument * htmlDoc = (DOMHTMLDocument *)[frame DOMDocument];
+	if (![htmlDoc isKindOfClass:[DOMHTMLDocument class]]) return;
 
 	@try {
-		if (data_ == nil) return;
+		NSDictionary * tokens = [ReblogDeliverer reblogTokensFromIFrame:htmlDoc];
+		if (tokens != nil) {
+			[deliverer_ setPostID:[tokens objectForKey:@"pid"]];
+			[deliverer_ setReblogKey:[tokens objectForKey:@"rk"]];
 
-		// DOMにする
-		NSError * error = nil;
-		NSXMLDocument * xmlDoc = [[[NSXMLDocument alloc] initWithData:data_ options:NSXMLDocumentTidyHTML error:&error] autorelease];
-		D0([error description]);
-
-		if (xmlDoc != nil) {
-			error = nil;
-			NSArray * elements = [[xmlDoc rootElement] nodesForXPath:@"//iframe[@id=\"tumblr_controls\"]" error:&error];
-			D0([error description]);
-			if (elements != nil && [elements count] > 0) {
-				NSXMLElement * element = [elements objectAtIndex:0];
-				NSString * src = [[[element attributeForName:@"src"] stringValue] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-				NSRange range = [src rangeOfString:@"&pid="];
-				NSString * s = [src substringFromIndex:range.location + 1];
-				D0([s description]);
-
-				NSArray * segments = [s componentsSeparatedByString:@"&"];
-				NSEnumerator* enumerator = [segments objectEnumerator];
-				while ((s = [enumerator nextObject]) != nil) {
-					D0([s description]);
-					range = [s rangeOfString:@"pid="];
-					if (range.location != NSNotFound) {
-						[deliverer_ setPostID:[s substringFromIndex:range.location + range.length]];
-						continue;
-					}
-					range = [s rangeOfString:@"rk="];
-					if (range.location != NSNotFound) {
-						[deliverer_ setReblogKey:[s substringFromIndex:range.location + range.length]];
-						continue;
-					}
-				}
+			D(@"pid=%@, rk=%@", deliverer_.postID, deliverer_.reblogKey);
+			if (deliverer_.postID != nil && deliverer_.reblogKey != nil) {
+				// メニューから呼び出されたのと同じ事をする
+				[deliverer_ performSelector:@selector(action:) withObject:self];
 			}
 			else {
-				NSString * message = @"Not found tumblr_controls iframe.";
-				D0(message);
-				NSException * e = [NSException exceptionWithName:TUMBLRFUL_EXCEPTION_NAME reason:message userInfo:nil];
-				[deliverer_ performSelector:@selector(failedWithException:) withObject:e];
-				return;
+				[NSException raise:TUMBLRFUL_EXCEPTION_NAME format:@"tumblr_controls iframe found, but not found 'pid' or 'rk'"];
 			}
 		}
-
-		// メニューから呼び出されたのと同じ事をする
-		[deliverer_ performSelector:@selector(action:) withObject:self];
+		else {
+			[NSException raise:TUMBLRFUL_EXCEPTION_NAME format:@"Not found tumblr_controls iframe."];
+		}
 	}
 	@catch (NSException * e) {
 		D0([e description]);
 		[deliverer_ performSelector:@selector(failedWithException:) withObject:e];
 	}
 	@finally {
-		[self release];
+		[self autorelease];
 	}
 }
 
-- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
+- (void)webView:(WebView *)sender didFailLoadWithError:(NSError *)error forFrame:(WebFrame *)frame
 {
-#pragma unused (connection)
+	if ([sender mainFrame] != frame) return;
+
 	D0([error description]);
+	[self performSelectorOnMainThread:@selector(delegateDidFailExtractMethod:) withObject:error waitUntilDone:YES];
 
-	[deliverer_ performSelector:@selector(failedWithError:) withObject:error];
-
-	[self release];
+	[self autorelease];
 }
+
 @end // ReblogKeyDelegate

@@ -48,6 +48,13 @@
 	return deliverer;
 }
 
+- (id)initWithDocument:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement
+{
+	if ((self = [super initWithDocument:document target:targetElement]) != nil) {
+	}
+	return self;
+}
+
 - (NSString *)titleForMenuItem
 {
 	return [NSString stringWithFormat:@"%@ - Flickr", [super titleForMenuItem]];
