@@ -37,7 +37,6 @@ static NSString * TYPE = @"Reblog";
 	if ((self = [super initWithDocument:document target:targetElement]) != nil) {
 		if (postID != nil) postID_ = [postID retain];
 		if (reblogKey != nil) reblogKey_ = [reblogKey retain];
-		D(@"postID:%@", postID_);
 	}
 	return self;
 }
@@ -52,7 +51,6 @@ static NSString * TYPE = @"Reblog";
 	if ((self = [super initWithContext:context]) != nil) {
 		if (postID != nil) postID_ = [postID retain];
 		if (reblogKey != nil) reblogKey_ = [reblogKey retain];
-		D(@"postID:%@", postID_);
 	}
 	return self;
 }

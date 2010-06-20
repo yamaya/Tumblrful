@@ -149,8 +149,7 @@ static NSString * TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 	if ([sender mainFrame] != frame) return;
 
 	D0([error description]);
-	[self performSelectorOnMainThread:@selector(delegateDidFailExtractMethod:) withObject:error waitUntilDone:YES];
-	[self autorelease];
+	[deliverer_ failedWithError:error];
 }
 
 /// フレームデータ読み込みの完了
@@ -185,9 +184,6 @@ static NSString * TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 		D0([e description]);
 		[deliverer_ performSelector:@selector(failedWithException:) withObject:e];
 	}
-	@finally {
-		[self autorelease];
-	}
 }
 
 - (void)webView:(WebView *)sender didFailLoadWithError:(NSError *)error forFrame:(WebFrame *)frame
@@ -195,9 +191,7 @@ static NSString * TUMBLR_DATA_URI = @"htpp://data.tumblr.com/";
 	if ([sender mainFrame] != frame) return;
 
 	D0([error description]);
-	[self performSelectorOnMainThread:@selector(delegateDidFailExtractMethod:) withObject:error waitUntilDone:YES];
-
-	[self autorelease];
+	[self performSelectorOnMainThread:@selector(failedWithError:) withObject:error waitUntilDone:YES];
 }
 
 @end // ReblogKeyDelegate
