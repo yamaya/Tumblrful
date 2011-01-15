@@ -1,11 +1,10 @@
 /**
  * @file LinkDeliverer.m
- * @brief LinkDeliverer implementation
+ * @brief LinkDeliverer class implementation
  * @author Masayuki YAMAYA
  * @date 2008-03-03
  */
 #import "LinkDeliverer.h"
-#import "Anchor.h"
 #import "DebugLog.h"
 
 static NSString* TYPE = @"Link";
@@ -13,11 +12,7 @@ static NSString* TYPE = @"Link";
 @implementation LinkDeliverer
 + (id<Deliverer>)create:(DOMHTMLDocument*)document element:(NSDictionary*)clickedElement
 {
-	LinkDeliverer * deliverer = [[LinkDeliverer alloc] initWithDocument:document target:clickedElement];
-	if (deliverer == nil) {
-		D(@"Could not alloc+init %@Deliverer.", TYPE);
-	}
-	return deliverer;
+	return [[LinkDeliverer alloc] initWithDocument:document target:clickedElement];
 }
 
 - (id)initWithDocument:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement

@@ -9,7 +9,6 @@
 @interface PhotoDeliverer : DelivererBase
 {
 	NSDictionary * clickedElement_;
-	BOOL covered_;
 }
 
 /**

@@ -27,7 +27,6 @@ static NSString * TYPE = @"Quote";
 	NSString * selection = nil;
 
 	id selected = [clickedElement objectForKey:WebElementIsSelectedKey];
-	D(@"selected: %@", SafetyDescription(selected));
 
 	if (selected != nil && CFBooleanGetValue((CFBooleanRef)selected)) {
 		WebFrame * frame = [clickedElement objectForKey:WebElementFrameKey];
@@ -35,7 +34,6 @@ static NSString * TYPE = @"Quote";
 		if ([view respondsToSelector:@selector(selectedString)]) {
 			selection = [view performSelector:@selector(selectedString)];
 		}
-		D0(selection);
 	}
 
 	if (selection != nil && [selection length] != 0) {

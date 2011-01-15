@@ -23,9 +23,25 @@
 	return @"delicious";
 }
 
-+ (BOOL)enableForMenuItem
++ (BOOL)enableForMenuItem:(NSString *)postType
 {
-	return [DeliciousPost enabled];
+	static NSArray * enablePostTypes = nil;
+
+	if ([DeliciousPost enabled]) {
+		if (enablePostTypes == nil) {
+			enablePostTypes = [NSArray arrayWithObjects:
+				  [NSString stringWithPostType:LinkPostType]
+				, [NSString stringWithPostType:QuotePostType]
+				, [NSString stringWithPostType:PhotoPostType]
+				, [NSString stringWithPostType:VideoPostType]
+				, nil];
+			[enablePostTypes retain];
+		}
+
+		postType = [postType capitalizedString];
+		return [enablePostTypes indexOfObject:postType] != NSNotFound;
+	}
+	return NO;
 }
 
 - (void)postLink:(Anchor *)anchor description:(NSString *)description
@@ -61,9 +77,9 @@
 	[self postLink:[Anchor anchorWithHTML:source] description:quote];
 }
 
-- (void)postPhoto:(NSString *)source caption:(NSString *)caption throughURL:(NSString *)throughURL
+- (void)postPhoto:(NSString *)source caption:(NSString *)caption throughURL:(NSString *)throughURL image:(NSImage *)image
 {
-#pragma unused (source, caption, throughURL)
+#pragma unused (source, throughURL, image)
 	[self postLink:[Anchor anchorWithHTML:caption] description:[caption stripHTMLTags:nil]];
 }
 

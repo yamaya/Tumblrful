@@ -21,8 +21,9 @@
 	return @"Umesue";
 }
 
-+ (BOOL)enableForMenuItem
++ (BOOL)enableForMenuItem:(NSString *)postType
 {
+#pragma unused (postType)
 	return [UmesuePost isEnabled];
 }
 
@@ -40,11 +41,11 @@
 	[self postWithType:@"QuotePost" withParams:[NSDictionary dictionaryWithObjectsAndKeys:quote, @"quote", source, @"source", nil]];
 }
 
-- (void)postPhoto:(NSString *)source caption:(NSString *)caption throughURL:(NSString *)throughURL
+- (void)postPhoto:(NSString *)source caption:(NSString *)caption throughURL:(NSString *)throughURL image:(NSImage *)image
 {
 	if (![UmesuePost isEnabled]) return;
 
-	[self postWithType:@"PhotoPost" withParams:[NSDictionary dictionaryWithObjectsAndKeys:source, @"image", caption, @"caption", throughURL, @"link", nil]];
+	[self postWithType:@"PhotoPost" withParams:[NSDictionary dictionaryWithObjectsAndKeys:source, @"image", caption, @"caption", throughURL, @"link", image, @"data", nil]];
 }
 
 - (void)postVideo:(Anchor *)anchor embed:(NSString *)embed caption:(NSString *)caption

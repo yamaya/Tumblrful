@@ -58,5 +58,10 @@
  */
 - (id)initWithContext:(DelivererContext *)context postID:(NSString *)postID;
 
+/**
+ * Tokens of Reblog from iframe.
+ *	@param[in] document	DOMHTMLDocument object of Tumblr page.
+ *	@return Dictionary that contains the tokens.
+ */
 + (NSDictionary *)reblogTokensFromIFrame:(DOMHTMLDocument *)document;
 @end

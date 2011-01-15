@@ -40,9 +40,7 @@
 
 - (NSURLRequest *)createRequest:(NSString *)url params:(NSDictionary *)params;
 
-#ifdef SUPPORT_MULTIPART_PORT
-- (NSURLRequest *)createRequestForMultipart:(NSDictionary *)params withData:(NSData *)data;
-#endif
+- (NSURLRequest *)createRequest:(NSString *)url params:(NSDictionary *)params withData:(NSData *)data;
 
 /**
  * post to Tumblr.

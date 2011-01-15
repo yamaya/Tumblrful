@@ -33,18 +33,12 @@ static NSString * VIMEO_HOSTNAME = @"vimeo.com";
 
 + (id<Deliverer>)create:(DOMHTMLDocument *)document element:(NSDictionary *)clickedElement
 {
-	D(@"clickedElement:%@", [clickedElement description]);
-
 	VimeoVideoDeliverer * deliverer = nil;
-	id node = [clickedElement objectForKey:WebElementDOMNodeKey];
-	if (node != nil) {
-		D(@"DOMNode:%@", [node description]);
-
+	if ([clickedElement objectForKey:WebElementDOMNodeKey] != nil) {
 		// check URL's host
 		NSURL* url = [NSURL URLWithString:[[document URL] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
 		if ([[url host] hasSuffix:VIMEO_HOSTNAME]) {
 			NSInteger no = [[[url path] substringFromIndex:1] integerValue];
-			D(@"no = %d", no);
 			if (no != 0) {
 				deliverer = [[VimeoVideoDeliverer alloc] initWithDocument:document target:clickedElement];
 				if (deliverer == nil) {
@@ -180,7 +174,7 @@ static NSString * VIMEO_HOSTNAME = @"vimeo.com";
 	return xmlDoc;
 }
 
-- (NSString *)embedTagWithXML:(NSXMLDocument*)xmlDoc withVideoID:(NSString *)videoID
+- (NSString *)embedTagWithXML:(NSXMLDocument *)xmlDoc withVideoID:(NSString *)videoID
 {
 	NSString * width = @"500";
 	NSString * height = @"500";

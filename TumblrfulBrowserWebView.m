@@ -18,6 +18,7 @@
 #import "VideoDeliverer.h"
 #import "VimeoVideoDeliverer.h"
 #import "SlideShareVideoDeliverer.h"
+#import "CaptureDeliverer.h"
 #import "TumblrPost.h"
 #import "GrowlSupport.h"
 #import "PostAdaptorCollection.h"
@@ -26,33 +27,78 @@
 #import "InstapaperPostAdaptor.h"
 #import "YammerPostAdaptor.h"
 //#import "UmesuePostAdaptor.h"
-#import "DebugLog.h"
 #import "GoogleReaderDelivererContext.h"
 #import "LDRDelivererContext.h"
 #import "DelivererRules.h"
+#import "NSObject+Supersequent.h"
+#import "TumblrfulWebHTMLView.h"
+#import "DebugLog.h"
 #import <WebKit/DOMHTML.h>
 
-/* POST先のサービスを識別するマスク値 */
+static BOOL captureEnabled_ = NO;
+static DOMHTMLElement * selectedElement_ = nil;
+
+@interface ColoredView : NSView
+{
+	NSColor * color_;
+	NSTrackingArea * trackingArea_;
+}
+-(void)setColor:(NSColor *)color;
+@end
+
+@implementation ColoredView
+- (id)initWithFrame:(NSRect)frame
+{
+	if ((self = [super initWithFrame:frame]) != nil) {
+		color_ = [NSColor windowBackgroundColor]; //初期の色は、Windowの背景色
+
+		trackingArea_ = [[NSTrackingArea alloc] initWithRect:[self bounds] options:(NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved | NSTrackingActiveInKeyWindow) owner:self userInfo:nil];
+		[self addTrackingArea:trackingArea_];
+		[trackingArea_ release];
+	}
+	return self;
+}
+
+- (void)dealloc
+{
+	[self removeTrackingArea:trackingArea_];
+	trackingArea_ = nil;
+	[super dealloc];
+}
+
+- (void)drawRect:(NSRect)rect
+{
+	[color_ set];
+	NSRectFill(rect);
+}
+
+
+-(void)setColor:(NSColor *)color
+{
+	color_ = color;
+	[self display];
+}
+
+- (NSView *)hitTest:(NSPoint)point
+{
+#pragma unused (point)
+	return nil;
+}
+@end
+
+// POST先のサービスを識別するマスク値
 static const NSUInteger POST_MASK_NONE = 0x0;
 static const NSUInteger POST_MASK_TUMBLR = 0x1;
-static const NSUInteger POST_MASK_UMESUE = 0x2;
-static const NSUInteger POST_MASK_DELICIOUS = 0x4;
-static const NSUInteger POST_MASK_ALL = 0x7;
+static const NSUInteger POST_MASK_DELICIOUS = 0x2;
+static const NSUInteger POST_MASK_ALL = 0x3;
 
 @implementation WebView (TumblrfulBrowserWebView)
-/*!
-    @method webView:contextMenuItemsForElement:defaultMenuItems:
-    @abstract Returns the menu items to display in an element's contextual menu.
-    @param sender The WebView sending the delegate method.
-    @param element A dictionary representation of the clicked element.
-    @param defaultMenuItems An array of default NSMenuItems to include in all contextual menus.
-    @result An array of NSMenuItems to include in the contextual menu.
-*/
-- (NSArray*) webView_SwizzledByTumblrful:(WebView*)sender contextMenuItemsForElement:(NSDictionary*)element defaultMenuItems:(NSArray*)defaultMenuItems;
+
+- (NSArray *)webView_SwizzledByTumblrful:(WebView *)sender contextMenuItemsForElement:(NSDictionary *)element defaultMenuItems:(NSArray *)defaultMenuItems;
 {
 	// オリジナルのメソッドを呼ぶ
-	NSArray* original =  [self webView_SwizzledByTumblrful:sender contextMenuItemsForElement:element defaultMenuItems:defaultMenuItems];
-	return [self buildMenu:[original mutableCopy] element:element]; // add Tumblrful to original menu
+	NSArray * originals =  [self webView_SwizzledByTumblrful:sender contextMenuItemsForElement:element defaultMenuItems:defaultMenuItems];
+	return [self buildMenu:[originals mutableCopy] element:element]; // add Tumblrful to originals menu
 }
 
 - (NSArray *)sharedDelivererClasses
@@ -79,6 +125,7 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 			, [SlideShareVideoDeliverer class]
 			, [VideoDeliverer class]
 			, [LinkDeliverer class]
+			, [CaptureDeliverer class]
 			, nil];
 		[classes retain]; // must
 	}
@@ -93,27 +140,31 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 	return (mail != nil) && ([mail length] > 0) && (pass != nil) && ([pass length] > 0);
 }
 
-- (NSArray *)buildMenu:(NSMutableArray *)menu element:(NSDictionary *)element
+- (NSArray *)buildMenu:(NSMutableArray *)menus element:(NSDictionary *)clickedElement
 {
 	// アカウントが未設定ならメニューを追加しない
 	if (![self validateAccount]) {
 		[GrowlSupport notifyWithTitle:@"Tumblrful" description:@"Email or Password not entered."];
-		return menu;
+		return menus;
 	}
 
+	NSMutableArray * additionalMenus = [NSMutableArray array];
 	NSMenu * subMenu = [[[NSMenu alloc] initWithTitle:@"Editting Post"] autorelease];
-
+	BOOL preferredExist = NO;
 	Class delivererClass;
 	NSEnumerator * classEnumerator = [[self sharedDelivererClasses] objectEnumerator];
 	while ((delivererClass = [classEnumerator nextObject]) != nil) {
-		DelivererBase * deliverer = (DelivererBase *)[delivererClass create:(DOMHTMLDocument *)[self mainFrameDocument] element:element];
+		DelivererBase * deliverer = (DelivererBase *)[delivererClass create:(DOMHTMLDocument *)[self mainFrameDocument] element:clickedElement];
 		if (deliverer != nil) {
-			NSUInteger i = 0;
+			deliverer.webView = self;
 			NSMenuItem * menuItem;
 			NSArray * menuItems = [deliverer createMenuItems];	// autoreleased
 			NSEnumerator * menuEnumerator = [menuItems objectEnumerator];
 			while ((menuItem = [menuEnumerator nextObject]) != nil) {
-				[menu insertObject:menuItem atIndex:i++];
+				if (!preferredExist) {
+					[additionalMenus addObject:menuItem];
+					preferredExist = YES;
+				}
 
 				// サブメニューにダイアログで編集するためのメニューを追加しておく
 				menuItem = [menuItem copy];
@@ -127,20 +178,28 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 				}
 			}
 
-			// ダイアログを表示してポストするためのサブメニューを作る
-			menuItem = [[[NSMenuItem alloc] initWithTitle:@"Share..." action:nil keyEquivalent:@""] autorelease];
-			[menuItem setSubmenu:subMenu];
-			[menu insertObject:menuItem atIndex:i++];
-
-			// セパレータを追加して返す
-			[menu insertObject:[NSMenuItem separatorItem] atIndex:i];
-			return menu;
 		}
 	}
 
-	// error handling
-	[GrowlSupport notifyWithTitle:@"Tumblrful" description:@"Error - Could not detect type of post"];
-	return menu;
+	if ([additionalMenus count] > 0) {
+		NSUInteger i = 0;
+		for (NSMenuItem * menuItem in additionalMenus) {
+			[menus insertObject:menuItem atIndex:i++];
+		}
+
+		// ダイアログを表示してポストするためのサブメニューを作る
+		NSMenuItem * menuItem = [[[NSMenuItem alloc] initWithTitle:@"Share..." action:nil keyEquivalent:@""] autorelease];
+		[menuItem setSubmenu:subMenu];
+		[menus insertObject:menuItem atIndex:i++];
+
+		// セパレータを追加する
+		[menus insertObject:[NSMenuItem separatorItem] atIndex:i];
+	}
+	else {
+		[GrowlSupport notifyWithTitle:@"Tumblrful" description:@"Error - Could not detect type of post"];
+	}
+
+	return menus;
 }
 
 /**
@@ -149,7 +208,7 @@ static const NSUInteger POST_MASK_ALL = 0x7;
  * @param [in] document 評価対象となる DOMドキュメント
  * @param [in] endpoint ポスト先を示すビット値
  */
-- (BOOL)invokeAction:(DOMHTMLElement*)target document:(DOMHTMLDocument*)document endpoint:(NSUInteger)endpoint
+- (BOOL)invokeAction:(DOMHTMLElement *)target document:(DOMHTMLDocument *)document endpoint:(NSUInteger)endpoint
 {
 	if (target == nil) {
 		return NO;
@@ -161,12 +220,9 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 
 	@try {
 		// 対象要素が Imageなら WebElementImageURLKey で ImageのソースURLを抽出する
-		NSMutableDictionary* elements = [NSMutableDictionary dictionaryWithObjectsAndKeys:
-			  target
-			, WebElementDOMNodeKey
-			, nil];
+		NSMutableDictionary * elements = [NSMutableDictionary dictionaryWithObjectsAndKeys:target, WebElementDOMNodeKey, nil];
 		if ([target isKindOfClass:[DOMHTMLImageElement class]]) {
-			[elements setObject:[(DOMHTMLImageElement*)target src] forKey:WebElementImageURLKey];
+			[elements setObject:[(DOMHTMLImageElement *)target src] forKey:WebElementImageURLKey];
 		}
 
 		for (Class delivererClass in [[self sharedDelivererClasses] objectEnumerator]) {
@@ -177,15 +233,12 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 
 			// Deliverer が Photo か Reblog の場合のみキー入力によるポストを有効にするものとする
 			// Quote はセレクションが出来ないと不可だし、Link は使用頻度が低いので
-			DelivererBase* deliverer = (DelivererBase*) maybeDeliver;
+			DelivererBase * deliverer = (DelivererBase *)maybeDeliver;
 			if ([deliverer respondsToSelector:sel] && ([deliverer isKindOfClass:photoClass] || [deliverer isKindOfClass:reblogClass])) {
 				NSBeep();
 
 				// セレクタに渡す引数を作成して実行する
-				NSArray* param = [NSArray arrayWithObjects:
-					  self
-					, [NSNumber numberWithUnsignedInteger:endpoint]
-					, nil];
+				NSArray * param = [NSArray arrayWithObjects:self, [NSNumber numberWithUnsignedInteger:endpoint], nil];
 				[deliverer performSelectorOnMainThread:sel withObject:param waitUntilDone:YES];
 
 				[deliverer release];
@@ -193,7 +246,7 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 			}
 		}
 	}
-	@catch (NSException* e) {
+	@catch (NSException * e) {
 		D0([e description]);
 	}
 
@@ -205,7 +258,7 @@ static const NSUInteger POST_MASK_ALL = 0x7;
  * @param [in] event NSEvent object for Event.
  * @return ビット値
  */
-- (NSUInteger) endpointByKeyPress:(NSEvent*)event
+- (NSUInteger)endpointByKeyPress:(NSEvent *)event
 {
 	NSUInteger endpoint = POST_MASK_NONE;
 
@@ -215,11 +268,7 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 		NSString* c = [event charactersIgnoringModifiers];
 		if ([c isEqualToString:@"t"]) {
 			// Tumblr にポストしたら無条件に Umesue にもポストする
-			endpoint = POST_MASK_TUMBLR | POST_MASK_UMESUE;
-		}
-		else if ([c isEqualToString:@"u"]) {
-			// Umesue はそれだけ
-			endpoint = POST_MASK_UMESUE;
+			endpoint = POST_MASK_TUMBLR;
 		}
 		else if ([c isEqualToString:@"d"]) {
 			// delicious もそれだけ
@@ -230,18 +279,20 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 	return endpoint;
 }
 
-/**
- * @brief performKeyEquivalent
- *	このメソッドが呼ばれるのはjavascriptで食われていないキーの時だけみたい。
- *	このメソッドはとりあえずで作ったのでクラスの責務を逸脱しているし、コンテ
- *	キストメニューとの統一も考えてない。が、使い心地が良いのでそのままにして
- *	ある。
- *	メソッド長いし。
- * @param event NSEvent object for Event.
- * @return イベントに応答した場合 YES。
- */
 - (BOOL)performKeyEquivalent_SwizzledByTumblrful:(NSEvent *)event
 {
+#if 1
+	if ([event type] == NSKeyDown) {
+		if ([event keyCode] == 0x1b) {
+			[WebHTMLView clearMouseDownInvocation];
+		}
+	}
+#else
+	if (captureEnabled_ && selectedElement_ != nil) {
+		[self performSelector:@selector(imageCaptureOfDOMElement)];
+		return YES;
+	}
+#endif
 	// キー入力に対応するエンドポイントを得る。
 	NSUInteger endpoint = [self endpointByKeyPress:event];
 	if ((endpoint & POST_MASK_ALL) == 0) {
@@ -276,5 +327,134 @@ static const NSUInteger POST_MASK_ALL = 0x7;
 		processed = [self performKeyEquivalent_SwizzledByTumblrful:event];
 	}
 	return processed;
+}
+
+- (NSView *)sharedSelectionView
+{
+	static ColoredView * view = nil;
+
+	if (view == nil) {
+		view = [[ColoredView alloc] initWithFrame:NSZeroRect];
+		[view setHidden:YES];
+		[view setAlphaValue:0.5];
+		[view setColor:[NSColor redColor]];
+		[self addSubview:view];
+	}
+	return view;
+}
+
+- (void)setCaptureEnabledByTumblrful:(NSNumber *)enabled
+{
+	captureEnabled_ = [enabled boolValue];
+	D(@"captureEnabled_=%d", captureEnabled_);
+
+	SEL selector = @selector(imageCaptureOfDOMElement);
+	NSMethodSignature * signature = [self.class instanceMethodSignatureForSelector:selector];
+	NSInvocation * invocation = [NSInvocation invocationWithMethodSignature:signature];
+	[invocation setTarget:self];
+	[invocation setSelector:selector];
+	[WebHTMLView setMouseDownInvocation:invocation];
+}
+
+- (DOMHTMLElement *)deepElementAtPoint:(NSPoint)point withOrigin:(DOMHTMLElement *)parentNode
+{
+	DOMNodeList * children = parentNode.childNodes;
+	if (children != nil) {
+		unsigned int const N = children.length;
+		for (unsigned int i = 0; i < N; i++) {
+			DOMHTMLElement * child = (DOMHTMLElement *)[children item:i];
+			NSRect const boundingBox = [child boundingBox];
+			if (NSPointInRect(point, boundingBox)) {
+				return [self deepElementAtPoint:point withOrigin:child];
+			}
+		}
+	}
+	return parentNode;
+}
+
+// このメソッドが呼ばれた時の firstResponderは WebHTMLViewになっている。
+- (void)mouseMoved_SwizzledByTumblrful:(NSEvent *)event
+{
+	@try {
+		if (!captureEnabled_) return;
+
+		//NSResponder * firstResponder = [[self window] firstResponder];
+		//D0([firstResponder description]);
+
+		NSPoint const pt0 = [self convertPoint:[event locationInWindow] fromView:nil];
+
+		NSDictionary * elements = [self elementAtPoint:pt0];
+		//D0([elements description]);
+		if (elements == nil) return;
+
+		DOMHTMLElement * element = [elements objectForKey:WebElementDOMNodeKey];
+		if (element == nil) return;
+
+		NSView * docView = [[[[element ownerDocument] webFrame] frameView] documentView];
+
+		NSPoint const pt1 = [self convertPoint:pt0 toView:docView];
+		element = [self deepElementAtPoint:pt1 withOrigin:element];
+		//D(@"deepElementAtPoint result=%@", [element description]);
+		if (element == nil) return;
+
+		if (selectedElement_ != element) {
+			selectedElement_ = [element retain];	// should be retain
+			D0([element description]);
+
+			NSRect boundingBox = [selectedElement_ boundingBox];
+			boundingBox = [self convertRect:boundingBox fromView:docView];
+			NSView * view = [self sharedSelectionView];
+			if (!NSEqualRects([view frame], boundingBox)) {
+				[view setFrame:boundingBox];
+				[view setHidden:NO];
+			}
+		}
+	}
+	@catch (NSException * e) {
+		D0([e description]);
+		[WebHTMLView clearMouseDownInvocation];
+	}
+	@finally {
+		invokeSupersequent(event);
+		//[self mouseMoved_SwizzledByTumblrful:event];
+	}
+}
+
+- (void)imageCaptureOfDOMElement
+{
+	D_METHOD;
+
+	if (!(captureEnabled_ && selectedElement_ != nil)) return;
+
+	captureEnabled_ = NO;
+
+	// hide selection view
+	NSView * view = [self sharedSelectionView];
+	[view setHidden:YES];
+
+	DOMHTMLDocument * document = (DOMHTMLDocument *)[selectedElement_ ownerDocument];
+
+	NSRect const boxRect = [selectedElement_ boundingBox];
+	NSView * docView = [[[document webFrame] frameView] documentView];
+	NSRect const captureRect = [self convertRect:boxRect fromView:docView];
+	NSBitmapImageRep * imageRep = [self bitmapImageRepForCachingDisplayInRect:captureRect];
+	[self cacheDisplayInRect:captureRect toBitmapImageRep:imageRep];
+
+	NSImage * image = [[[NSImage alloc] initWithSize:captureRect.size] autorelease];
+	[image addRepresentation:imageRep];
+	D0([image description]);
+
+	NSDictionary * info = [NSDictionary dictionaryWithObjectsAndKeys:selectedElement_, WebElementDOMNodeKey, image, WebElementImageKey, nil];
+	PhotoDeliverer * deliverer = (PhotoDeliverer *)[PhotoDeliverer create:document element:info];
+	if (deliverer != nil) {
+		// FIXME ここ、ぐだぐだー
+		NSUInteger const tag = 0x1 | MENUITEM_TAG_NEED_EDIT;
+		NSArray * params = [NSArray arrayWithObjects:deliverer, [NSNumber numberWithUnsignedInteger:tag], nil];
+		deliverer.editEnabled = YES;
+		[deliverer actionWithMask:params];
+	}
+
+	[selectedElement_ release], selectedElement_ = nil;
+	NSBeep();
 }
 @end

@@ -101,7 +101,8 @@ static NSString * TYPE = @"Video";
 - (NSDictionary *)videoContents
 {
 	static NSString * XPathForTitle = @"//div[@id='watch-headline']/h1[@id='watch-headline-title']";
-	static NSString * XPathForURL = @"//input[@class='watch-actions-share-input']";
+//	static NSString * XPathForURL = @"//input[@class='watch-actions-share-input']";
+	static NSString * XPathForURL = @"//input[@name='video_id']";
 	static NSString * XPathForUserName = @"//div[@id='watch-headline-user-info']/a[@id='watch-username']";
 
 	DOMNode * clickedNode = [clickedElement_ objectForKey:WebElementDOMNodeKey];
@@ -142,7 +143,7 @@ static NSString * TYPE = @"Video";
 		for (node = [result iterateNext]; node != nil; node = [result iterateNext]) {
 			D(@"node(title): class=%@ name=%@ type=%d text=%@", [node className], [node nodeName], [node nodeType], [node textContent]);
 			DOMElement* element = (DOMElement*)node;
-			url = [element getAttribute:@"value"];
+			url = [NSString stringWithFormat:@"http://www.youtube.com/watch?v=%@", [element getAttribute:@"value"]];
 			break;
 		}
 	}

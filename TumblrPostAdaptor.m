@@ -7,6 +7,7 @@
 #import "TumblrPostAdaptor.h"
 #import "TumblrPost.h"
 #import "DebugLog.h"
+#import <AppKit/NSBitmapImageRep.h>
 
 #pragma mark -
 @interface TumblrPostAdaptor ()
@@ -23,12 +24,24 @@
 
 - (void)postQuote:(NSString *)quote source:(NSString *)source;
 {
-	[self postWithType:@"quote" withParams:[NSMutableDictionary dictionaryWithObjectsAndKeys:quote, @"quote", source, @"source", nil]];
+	[self postWithType:@"quote" withParams:[NSDictionary dictionaryWithObjectsAndKeys:quote, @"quote", source, @"source", nil]];
 }
 
-- (void)postPhoto:(NSString *)source caption:(NSString *)caption throughURL:(NSString *)throughURL
+- (void)postPhoto:(NSString *)source caption:(NSString *)caption throughURL:(NSString *)throughURL image:(NSImage *)image
 {
-	[self postWithType:@"photo" withParams:[NSMutableDictionary dictionaryWithObjectsAndKeys:source, @"source", caption, @"caption", throughURL, @"click-through-url", nil]];
+	NSMutableDictionary * params = [NSMutableDictionary dictionaryWithObjectsAndKeys:caption, @"caption", throughURL, @"click-through-url", nil];
+	if (source != nil && [source length] > 0) {
+		[params setObject:source forKey:@"source"];
+	}
+	else {
+		NSBitmapImageRep * imageRep = [NSBitmapImageRep imageRepWithData:[image TIFFRepresentation]];
+		NSDictionary * properties = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithFloat:1.0f], NSImageCompressionFactor, nil];
+		NSData * data = [imageRep representationUsingType:NSJPEGFileType properties:properties];
+		[params setObject:data forKey:@"data"];
+	}
+	D0([params description]);
+
+	[self postWithType:@"photo" withParams:params];
 }
 
 - (void)postVideo:(NSString *)embed caption:(NSString*)caption
@@ -39,7 +52,7 @@
 - (void)postEntry:(NSDictionary *)params
 {
 	if (self.extractEnabled)
-		[self postWithType:@"reblog" withParams:[NSMutableDictionary dictionaryWithObjectsAndKeys:[params objectForKey:@"pid"], @"pid", [params objectForKey:@"rk"], @"rk", nil]];
+		[self postWithType:@"reblog" withParams:[NSDictionary dictionaryWithObjectsAndKeys:[params objectForKey:@"pid"], @"pid", [params objectForKey:@"rk"], @"rk", nil]];
 	else
 		[self postWithType:@"reblog" withParams:params];
 }
@@ -98,12 +111,7 @@
 			NSNumber * twitter = [self.options objectForKey:@"twitter"];
 			D(@"twitter=%@", [twitter description]);
 			if (twitter != nil && [twitter boolValue]) {
-				if ([type isEqualToString:@"reblog"]) {
-					[requestParams setObject:@"checked" forKey:@"send_to_twitter"];
-				}
-				else {
-					[requestParams setObject:@"auto" forKey:@"send-to-twitter"];
-				}
+				[requestParams setObject:@"checked" forKey:@"send_to_twitter"];
 			}
 		}
 

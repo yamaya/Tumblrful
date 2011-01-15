@@ -17,12 +17,11 @@ static NSString * TYPE = @"Photo";
 @implementation PhotoDeliverer
 + (id<Deliverer>)create:(DOMHTMLDocument *)document element:(NSDictionary *)clickedElement
 {
-	D0([clickedElement description]);
-
 	PhotoDeliverer * deliverer = nil;
 
 	id imageURL = [clickedElement objectForKey:WebElementImageURLKey];
-	if (imageURL != nil) {
+	id imageData = [clickedElement objectForKey:WebElementImageKey];
+	if (imageURL != nil || imageData != nil) {
 		deliverer = [[PhotoDeliverer alloc] initWithDocument:document target:clickedElement];
 		if (deliverer == nil) {
 			D(@"Could not alloc+init %@Deliverer.", TYPE);
@@ -82,7 +81,11 @@ static NSString * TYPE = @"Photo";
 - (NSDictionary *)photoContents
 {
 	// 画像のソースURL
-	NSString * source = [[clickedElement_ objectForKey:WebElementImageURLKey] absoluteString];
+	NSString * source = @"";
+	NSURL * u = [clickedElement_ objectForKey:WebElementImageURLKey];
+	if (u != nil) {
+		source = [u absoluteString];
+	}
 
 	// キャプション - セレクションがあればそれを blockquoteで囲って追加する
 	NSString * caption = context_.anchorToDocument;

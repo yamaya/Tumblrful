@@ -11,5 +11,5 @@
  * 'sharedInstance' class method
  *	@return the single static instance of the plugin object
  */
-+ (Tumblrful*) sharedInstance;
++ (Tumblrful *)sharedInstance;
 @end

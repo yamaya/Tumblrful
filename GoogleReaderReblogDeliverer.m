@@ -32,14 +32,14 @@
 		DOMHTMLImageElement * img = (DOMHTMLImageElement *)node;
 		range = [[img src] rangeOfString:[self dataSiteURL]];
 		if (!(range.location == 0 && range.length >= [[self dataSiteURL] length])) {
-			D(@"GoogleReaderReblogDeliverer: type is Photo but On %@", [self dataSiteURL]);
+			D(@"type is Photo but On %@", [self dataSiteURL]);
 			return nil;
 		}
 	}
 	else {
 		range = [[url host] rangeOfString:[self sitePostfix]];
 		if (!(range.location > 0 && range.length == [[self sitePostfix] length])) {
-			D(@"GoogleReaderReblogDeliverer: Not in %@", [self sitePostfix]);
+			D(@"Not in %@", [self sitePostfix]);
 			return nil;
 		}
 	}

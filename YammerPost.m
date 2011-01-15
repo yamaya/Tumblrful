@@ -154,12 +154,13 @@ static NSString * ENDPOINT_FORMAT = @"https://www.yammer.com/%@/messages/new";
 
 	DOMHTMLCollection * forms = htmlDoc.forms;
 	unsigned int const formCount = forms.length;
+	D(@"formCount=%u", formCount);
 	for (unsigned int i = 0; i < formCount; ++i) {
 		DOMHTMLFormElement * form = (DOMHTMLFormElement *)[forms item:i];
 		D(@"form.name=%@ method=%@ target=%@ id=%@", form.name, form.method, form.target, [form getAttribute:@"id"]);
 
 		if ([[form getAttribute:@"id"] isEqualToString:@"main-message-form"]) {
-			DOMNodeList * buttons = [form getElementsByClassName:@"message-form-submit"];
+			DOMNodeList * buttons = [form getElementsByClassName:@"message-form-submit submit-main-message action-btn new-btn"];
 			unsigned int const buttonCount = buttons.length;
 			D(@"buttons=%u", buttonCount);
 			for (unsigned int j = 0; j < buttonCount; ++j) {
@@ -173,6 +174,7 @@ static NSString * ENDPOINT_FORMAT = @"https://www.yammer.com/%@/messages/new";
 	}
 
 	NSString * message = @"Not found form or button elment";
+	D0(message);
 	NSException * e = [NSException exceptionWithName:TUMBLRFUL_EXCEPTION_NAME reason:message userInfo:nil];
 	[self callbackOnMainThread:@selector(failedWithException:) withObject:e];
 }

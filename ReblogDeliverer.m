@@ -35,8 +35,8 @@ static NSString * TYPE = @"Reblog";
 - (id)initWithDocument:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement postID:(NSString *)postID reblogKey:(NSString *)reblogKey
 {
 	if ((self = [super initWithDocument:document target:targetElement]) != nil) {
-		if (postID != nil) postID_ = [postID retain];
-		if (reblogKey != nil) reblogKey_ = [reblogKey retain];
+		if (postID != nil) self.postID = postID;
+		if (reblogKey != nil) self.reblogKey = reblogKey;
 	}
 	return self;
 }
@@ -49,8 +49,8 @@ static NSString * TYPE = @"Reblog";
 - (id)initWithContext:(DelivererContext *)context postID:(NSString *)postID reblogKey:(NSString *)reblogKey
 {
 	if ((self = [super initWithContext:context]) != nil) {
-		if (postID != nil) postID_ = [postID retain];
-		if (reblogKey != nil) reblogKey_ = [reblogKey retain];
+		if (postID != nil) self.postID = postID;
+		if (reblogKey != nil) self.reblogKey = reblogKey;
 	}
 	return self;
 }
@@ -101,17 +101,17 @@ static NSString * TYPE = @"Reblog";
 		DOMHTMLIFrameElement * iframe = (DOMHTMLIFrameElement *)[result iterateNext];
 		NSString * src = [[iframe getAttribute:@"src"] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 		if (src != nil) {
-			D(@"src=%@", src);
+			//D(@"src=%@", src);
 			NSURL * u = [NSURL URLWithString:src];
 			NSDictionary * tokens = [[u query] dictionaryWithKVPConnector:@"=" withSeparator:@"&"];
-			D(@"tokens=%@", [tokens description]);
+			//D(@"tokens=%@", [tokens description]);
 			return tokens;
 		}
-		else {
-			D0([iframe description]);
-			D0([iframe innerHTML]);
-			D0([iframe outerHTML]);
-		}
+		//else {
+		//	D0([iframe description]);
+		//	D0([iframe innerHTML]);
+		//	D0([iframe outerHTML]);
+		//}
 	}
 	else {
 		D0([result description]);

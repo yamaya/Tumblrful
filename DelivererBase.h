@@ -19,7 +19,12 @@
 	DelivererContext * context_;
 	NSUInteger filterMask_;
 	BOOL needEdit_;
+	WebView * webView_;
 }
+
+@property (nonatomic, retain) WebView * webView;
+
+@property (nonatomic, assign) BOOL editEnabled;
 
 /**
  * Initialize object

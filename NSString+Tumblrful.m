@@ -103,7 +103,7 @@ static NSString * REPLACE_CHARS[] = {
 	scanner = [NSScanner scannerWithString:self];
 
 	while ([scanner isAtEnd] == NO) {
-		[scanner scanUpToString:@"<" intoString:NULL];
+		[scanner scanUpToString:@"<" intoString:nil];
 		[scanner scanUpToString:@">" intoString:&text];
 
 		if ([text rangeOfString:@"</"].location != NSNotFound) {

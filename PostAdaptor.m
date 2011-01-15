@@ -20,8 +20,9 @@
 	return nil;
 }
 
-+ (BOOL)enableForMenuItem
++ (BOOL)enableForMenuItem:(NSString *)postType
 {
+#pragma unused (postType)
 	return YES;
 }
 
@@ -71,9 +72,9 @@
 	[self doesNotRecognizeSelector:_cmd];
 }
 
-- (void)postPhoto:(NSString *)source caption:(NSString *)caption throughURL:(NSString *)throughURL
+- (void)postPhoto:(NSString *)source caption:(NSString *)caption throughURL:(NSString *)throughURL image:(NSImage *)image
 {
-#pragma unused (source, caption, throughURL)
+#pragma unused (source, caption, throughURL, image)
 	[self doesNotRecognizeSelector:_cmd];
 }
 
@@ -99,7 +100,7 @@ SEL selectorOf(PostType postType)
 	case RegularPostType:		break;
 	case LinkPostType:			return @selector(postLink:description:);
 	case QuotePostType:			return @selector(postQuote:source:);
-	case PhotoPostType:			return @selector(postPhoto:caption:throughURL:);
+	case PhotoPostType:			return @selector(postPhoto:caption:throughURL:image:);
 	case ConversationPostType:	break;
 	case VideoPostType:			return @selector(postVideo:caption:);
 	case AudioPostType:			break;

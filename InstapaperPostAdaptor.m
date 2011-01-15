@@ -16,9 +16,23 @@
 	return @"Instapaper";
 }
 
-+ (BOOL)enableForMenuItem
++ (BOOL)enableForMenuItem:(NSString *)postType
 {
-	return [InstapaperPost enabled];
+	static NSArray * enablePostTypes = nil;
+
+	if ([InstapaperPost enabled]) {
+		if (enablePostTypes == nil) {
+			enablePostTypes = [NSArray arrayWithObjects:
+				  [NSString stringWithPostType:LinkPostType]
+				, [NSString stringWithPostType:QuotePostType]
+				, nil];
+			[enablePostTypes retain];
+		}
+
+		postType = [postType capitalizedString];
+		return [enablePostTypes indexOfObject:postType] != NSNotFound;
+	}
+	return NO;
 }
 
 - (void)postLink:(Anchor *)anchor description:(NSString *)description
@@ -49,10 +63,10 @@
 	[self postLink:[Anchor anchorWithHTML:source] description:quote];
 }
 
-- (void)postPhoto:(NSString *)source caption:(NSString *)caption throughURL:(NSString *)throughURL
+- (void)postPhoto:(NSString *)source caption:(NSString *)caption throughURL:(NSString *)throughURL image:(NSImage *)image
 {
-#pragma unused (source, caption, throughURL)
-	[self postLink:[Anchor anchorWithHTML:caption] description:[caption stripHTMLTags:nil]];
+#pragma unused (source, caption, throughURL, image)
+	// do-nothing
 }
 
 - (void)postVideo:(NSString *)embed caption:(NSString*)caption

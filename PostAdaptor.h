@@ -54,7 +54,7 @@
  * enable for Contextual menu item
  *	@return enable is YES
  */
-+ (BOOL)enableForMenuItem;
++ (BOOL)enableForMenuItem:(NSString *)postType;
 
 /**
  * Callback when successed post.
@@ -94,7 +94,7 @@
  *	@param[in] caption	caption
  *	@param[in] throughURL	click-through URL
  */
-- (void)postPhoto:(NSString *)source caption:(NSString *)caption throughURL:(NSString *)throughURL;
+- (void)postPhoto:(NSString *)source caption:(NSString *)caption throughURL:(NSString *)throughURL image:(NSImage *)image;
 
 /**
  * post "Video" contents

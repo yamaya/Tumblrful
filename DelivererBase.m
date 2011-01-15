@@ -27,6 +27,10 @@
 @end
 
 @implementation DelivererBase
+
+@synthesize webView = webView_;
+@synthesize editEnabled = needEdit_;
+
 + (id<Deliverer>)create:(DOMHTMLDocument *)document element:(NSDictionary *)clickedElement
 {
 #pragma unused (document, clickedElement)
@@ -69,7 +73,8 @@
 
 - (void)dealloc
 {
-	[context_ release];
+	[context_ release], context_ = nil;
+	[webView_ release], webView_ = nil;
 
 	[super dealloc];
 }
@@ -104,7 +109,7 @@
 
 - (void)invoke:(NSInvocation *)invocation withType:(PostType)type withImage:(NSImage *)image
 {
-	D_METHOD;
+	D(@"needEdit=%d", needEdit_);
 
 	if (needEdit_) {
 		PostEditWindowController * controller = [[PostEditWindowController alloc] initWithPostType:type withInvocation:invocation];
@@ -193,10 +198,11 @@
 	while ((adaptorClass = [enumerator nextObject]) != nil) {
 		if ((1 << i) & filterMask_) {	// do filter
 			PostAdaptor * adaptor = [[[adaptorClass alloc] initWithCallback:self] autorelease];
-			NSInvocation * invocation = [self typedInvocation:@selector(postPhoto:caption:throughURL:) withAdaptor:adaptor];
+			NSInvocation * invocation = [self typedInvocation:@selector(postPhoto:caption:throughURL:image:) withAdaptor:adaptor];
 			[invocation setArgument:&source atIndex:2];
 			[invocation setArgument:&caption atIndex:3];
 			[invocation setArgument:&url atIndex:4];
+			[invocation setArgument:&image atIndex:5];
 			[invocation retainArguments];
 			[self invoke:invocation withType:PhotoPostType withImage:image];
 		}
@@ -290,18 +296,18 @@
 
 - (NSArray *)createMenuItems
 {
-	NSMutableArray * items = [[[NSMutableArray alloc] init] autorelease];
+	NSMutableArray * items = [NSMutableArray array];
 	NSUInteger i = 0;
 	NSUInteger mask = 1;
 
-	NSEnumerator* enumerator = [PostAdaptorCollection enumerator];
+	NSEnumerator * enumerator = [PostAdaptorCollection enumerator];
 	Class adaptorClass;
 	while ((adaptorClass = [enumerator nextObject]) != nil) {
-		if ([adaptorClass enableForMenuItem]) {
+		if ([adaptorClass enableForMenuItem:[self postType]]) {
 			NSMenuItem * menuItem = [self createMenuItem];
-			NSString* suffix = [adaptorClass titleForMenuItem];
+			NSString * suffix = [adaptorClass titleForMenuItem];
 			if (suffix != nil) {
-				NSString* title = [menuItem title];
+				NSString * title = [menuItem title];
 				[menuItem setTitle:[NSString stringWithFormat:@"%@ to %@", title, suffix]];
 			}
 			D(@"%@'s mask: 0x%x", [adaptorClass className], mask);
@@ -369,7 +375,7 @@
 		return;
 	}
 
-	NSMenuItem * menuItem = (NSMenuItem*)sender;
+	NSMenuItem * menuItem = (NSMenuItem *)sender;
 	NSInteger tag = [menuItem tag];
 	D(@"tag: 0x%x", tag);
 

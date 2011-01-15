@@ -19,14 +19,11 @@ static NSString * SLIDESHARE_HOSTNAME = @"slideshare.net";
 
 + (id<Deliverer>)create:(DOMHTMLDocument *)document element:(NSDictionary *)clickedElement
 {
-	D(@"clickedElement:%@", [clickedElement description]);
-
 	id node = [clickedElement objectForKey:WebElementDOMNodeKey];
 	if (node == nil) {
 		return nil;
 	}
-
-	D(@"DOMNode:%@", [node description]);
+	//D(@"DOMNode:%@", [node description]);
 
 	// check URL's host
 	NSURL* url = [NSURL URLWithString:[[document URL] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];

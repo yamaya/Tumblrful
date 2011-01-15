@@ -71,7 +71,7 @@
 	NSString * value;
 
 	DOMNode * node = [[self class] entryNodeWithDocument:document target:targetElement];
-	D0([node description]);
+	//D0([node description]);
 	if (node != nil) {
 		value = [self titleWithNode:node];
 		if (value != nil) [properties setObject:value forKey:@"title"];
@@ -90,18 +90,17 @@
 + (DOMNode *)entryNodeWithDocument:(DOMHTMLDocument *)document target:(NSDictionary*)targetElement
 {
 	NSString * xpath = [self entryNodeExpression];
-	D0(xpath);
 
 	DOMNode * targetNode = [targetElement objectForKey:WebElementDOMNodeKey];
 	if (targetNode == nil) return nil;
 
 	DOMXPathResult * result = [document evaluate:xpath contextNode:targetNode resolver:nil type:DOM_ANY_TYPE inResult:nil];
 
-	[self dump:result];
+	//[self dump:result];
 
 	if (result != nil && ![result invalidIteratorState]) {
 		for (DOMNode * node = [result iterateNext]; node != nil; node = [result iterateNext]) {
-			D(@"%@ id=%@", [node description], [((DOMHTMLDivElement*)node) idName]);
+			//D(@"%@ id=%@", [node description], [((DOMHTMLDivElement*)node) idName]);
 			return node; // 先頭のDOMノードでOK(1ノードしか選択していないハズ)
 		}
 	}
@@ -142,7 +141,7 @@
 	@try {
 		DOMXPathResult * result = [self evaluateToDocument:expression contextNode:targetNode type:DOM_STRING_TYPE inResult:nil];
 
-		[[self class] dump:result];
+		//[[self class] dump:result];
 
 		if (result != nil && [result resultType] == DOM_STRING_TYPE) {
 			return [result stringValue];

@@ -24,6 +24,7 @@
 - (void)resizeWindowOnSpotWithRect:(NSRect)aRect display:(BOOL)display animate:(BOOL)animate;
 - (void)updateInvocationForReblog;
 - (NSImage *)imageWithURL:(NSString *)imageURL;
+- (NSString *)stringWithAppendingParagraph:(NSString *)s;
 @end
 
 @implementation PostEditWindowController
@@ -169,22 +170,21 @@
 		URL = [contents objectForKey:@"URL"];
 		title = [contents objectForKey:@"title"];
 		description = [contents objectForKey:@"description"];
-		D(@"URL:%@", URL);
-		D(@"title:%@", title);
-		D(@"description:%@", description);
+		description = [self stringWithAppendingParagraph:description];
 		[linkViewController_ setContentsWithTitle:title URL:URL description:description];
 		contentsView = [linkViewController_ view];
 		break;
 	case QuotePostType:
 		quote = [contents objectForKey:@"quote"];
 		source = [contents objectForKey:@"source"];
-		D(@"quote:%@", quote);
+		source = [self stringWithAppendingParagraph:source];
 		[quoteViewController_ setContentsWithText:quote source:source];
 		contentsView = [quoteViewController_ view];
 		break;
 	case PhotoPostType:
 		source = [contents objectForKey:@"source"];
 		caption = [contents objectForKey:@"caption"];
+		caption = [self stringWithAppendingParagraph:caption];
 		throughURL = [contents objectForKey:@"throughURL"];
 		[photoViewController_ setContentsWithImageURL:source image:image_ caption:caption throughURL:throughURL];
 		contentsView = [photoViewController_ view];
@@ -192,6 +192,7 @@
 	case VideoPostType:	
 		embed = [contents objectForKey:@"embed"];
 		caption = [contents objectForKey:@"caption"];
+		caption = [self stringWithAppendingParagraph:caption];
 		[videoViewController_ setContentsWithEmbed:embed caption:caption];
 		contentsView = [videoViewController_ view];
 		break;
@@ -436,25 +437,34 @@
 
 	NSMutableDictionary * newContents = [NSMutableDictionary dictionary];
 	NSString * message = nil;
+	NSString * caption = nil;
 
 	switch (postType) {
 	case LinkPostType:
 		[newContents setObject:[contents objectForKey:@"post[one]"] forKey:@"URL"];
 		[newContents setObject:[contents objectForKey:@"post[two]"] forKey:@"title"];
-		[newContents setObject:[contents objectForKey:@"post[three]"] forKey:@"description"];
+		caption = [contents objectForKey:@"post[three]"];
+		caption = [self stringWithAppendingParagraph:caption];
+		[newContents setObject:caption forKey:@"description"];
 		break;
 	case QuotePostType:
 		[newContents setObject:[contents objectForKey:@"post[one]"] forKey:@"quote"];
-		[newContents setObject:[contents objectForKey:@"post[two]"] forKey:@"source"];
+		caption = [contents objectForKey:@"post[two]"];
+		caption = [self stringWithAppendingParagraph:caption];
+		[newContents setObject:caption forKey:@"source"];
 		break;
 	case PhotoPostType:
-		[newContents setObject:[contents objectForKey:@"post[two]"] forKey:@"caption"];
+		caption = [contents objectForKey:@"post[two]"];
+		caption = [self stringWithAppendingParagraph:caption];
+		[newContents setObject:caption forKey:@"caption"];
 		[newContents setObject:[contents objectForKey:@"post[three]"] forKey:@"throughURL"];
 		self.image = [self imageWithURL:[contents objectForKey:@"img-src"]];
 		break;
 	case VideoPostType:	
 		[newContents setObject:[contents objectForKey:@"post[one]"] forKey:@"embed"];
-		[newContents setObject:[contents objectForKey:@"post[two]"] forKey:@"caption"];
+		caption = [contents objectForKey:@"post[two]"];
+		caption = [self stringWithAppendingParagraph:caption];
+		[newContents setObject:caption forKey:@"caption"];
 		break;
 	default:
 		message = @"unimplemented yet";
@@ -501,5 +511,15 @@
 	if (error != nil || data == nil) return nil;
 
 	return [[[NSImage alloc] initWithData:data] autorelease];
+}
+
+- (NSString *)stringWithAppendingParagraph:(NSString *)s
+{
+	if (s == nil) s = @"";
+
+	if (postType_ == ReblogPostType) {
+		return [NSString stringWithFormat:@"%@<p></p>", s];
+	}
+	return s;
 }
 @end

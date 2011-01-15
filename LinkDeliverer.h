@@ -1,6 +1,6 @@
 /**
  * @file LinkDeliverer.h
- * @brief LinkDeliverer declaration
+ * @brief LinkDeliverer class declaration
  * @author Masayuki YAMAYA
  * @date 2008-03-03
  */

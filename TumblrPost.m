@@ -126,7 +126,7 @@ static float TIMEOUT = 60.0f;
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
 #pragma unused (connection)
-	NSHTTPURLResponse * httpResponse = (NSHTTPURLResponse *)response; /* この cast は正しい */
+	NSHTTPURLResponse * httpResponse = (NSHTTPURLResponse *)response;
 
 	NSInteger const httpStatus = [httpResponse statusCode];
 	if (httpStatus != 201 && httpStatus != 200) {
@@ -167,44 +167,40 @@ static float TIMEOUT = 60.0f;
 	[self release];
 }
 
-#ifdef SUPPORT_MULTIPART_PORT
--(NSURLRequest *)createRequestForMultipart:(NSDictionary *)params withData:(NSData *)data
+- (NSURLRequest *)createRequest:(NSString *)url params:(NSDictionary *)params withData:(NSData *)data
 {
-	static NSString * HEADER_BOUNDARY = @"0xKhTmLbOuNdArY";
-
-	// create the URL POST Request to tumblr
-	NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:TUMBLRFUL_TUMBLR_WRITE_URL]];
-
-	[request setHTTPMethod:@"POST"];
-
-	// add the header to request
-	[request addValue:[NSString stringWithFormat:@"multipart/form-data; boundary=%@", HEADER_BOUNDARY] forHTTPHeaderField: @"Content-Type"];
+	static NSString * BOUNDARY = @"0xKhTmLbOuNdArY";
 
 	// create the body
 	NSMutableData * body = [NSMutableData data];
-	[body appendData:[[NSString stringWithFormat:@"--%@\r\n", HEADER_BOUNDARY] dataUsingEncoding:NSUTF8StringEncoding]];
-
 	// add key-values from the NSDictionary object
 	NSEnumerator * enumerator = [params keyEnumerator];
 	NSString * key;
+	NSString * value;
 	while ((key = [enumerator nextObject]) != nil) {
-		[body appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"\r\n\r\n", key] dataUsingEncoding:NSUTF8StringEncoding]];
-		[body appendData:[[NSString stringWithFormat:@"%@", [params objectForKey:key]] dataUsingEncoding:NSUTF8StringEncoding]];
-		[body appendData:[[NSString stringWithFormat:@"\r\n--%@\r\n", HEADER_BOUNDARY] dataUsingEncoding:NSUTF8StringEncoding]];
+		value = [params objectForKey:key];
+		[body appendData:[[NSString stringWithFormat:@"--%@\n", BOUNDARY] dataUsingEncoding:NSUTF8StringEncoding]];
+		[body appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"\n\n", key] dataUsingEncoding:NSUTF8StringEncoding]];
+		[body appendData:[[NSString stringWithFormat:@"%@", value] dataUsingEncoding:NSUTF8StringEncoding]];
+		[body appendData:[[NSString stringWithString:@"\n"] dataUsingEncoding:NSUTF8StringEncoding]];
 	}
 
-	// add data field and file data
-	[body appendData:[[NSString stringWithString:@"Content-Disposition: form-data; name=\"data\"\r\n"] dataUsingEncoding:NSUTF8StringEncoding]];
-	[body appendData:[[NSString stringWithString:@"Content-Type: application/octet-stream\r\n\r\n"] dataUsingEncoding:NSUTF8StringEncoding]];
-	[body appendData:[NSData dataWithData:data]];
-	[body appendData:[[NSString stringWithFormat:@"\r\n--%@--\r\n", HEADER_BOUNDARY] dataUsingEncoding:NSUTF8StringEncoding]];
+	// add data field and file data(jpeg only)
+	[body appendData:[[NSString stringWithFormat:@"--%@\n", BOUNDARY] dataUsingEncoding:NSUTF8StringEncoding]];
+	[body appendData:[[NSString stringWithString:@"Content-Disposition: form-data; name=\"data\"\n"] dataUsingEncoding:NSUTF8StringEncoding]];
+	[body appendData:[[NSString stringWithString:@"Content-Type: image/jpeg\n\n"] dataUsingEncoding:NSUTF8StringEncoding]];
+	[body appendData:data];
+	[body appendData:[[NSString stringWithString:@"\n"] dataUsingEncoding:NSUTF8StringEncoding]];
+	[body appendData:[[NSString stringWithFormat:@"\n--%@--\n", BOUNDARY] dataUsingEncoding:NSUTF8StringEncoding]];
 
-	// add the body to the post
+	// create the POST request. and add the body to the post
+	NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:url] cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:TIMEOUT];
+	[request setHTTPMethod:@"POST"];
+	[request addValue:[NSString stringWithFormat:@"multipart/form-data; boundary=%@", BOUNDARY] forHTTPHeaderField: @"Content-Type"];
 	[request setHTTPBody:body];
 
 	return request;
 }
-#endif // SUPPORT_MULTIPART_PORT
 
 #pragma mark -
 #pragma mark Private Methods
@@ -214,7 +210,20 @@ static float TIMEOUT = 60.0f;
 	D0(endpointURL);
 	D0([params description]);
 
-	NSURLRequest * request = [self createRequest:endpointURL params:params];	// request は connection に指定した時点で reatin upする
+	BOOL const useMultipart = ([[params objectForKey:@"type"] isEqualToString:@"photo"] && [params objectForKey:@"data"] != nil);
+	D(@"useMultipart=%d", useMultipart);
+
+	NSURLRequest * request;
+	if (useMultipart) {
+		NSMutableDictionary * p = [NSMutableDictionary dictionaryWithDictionary:params];
+		NSData * data = [[p objectForKey:@"data"] retain];
+		[p removeObjectForKey:@"data"];
+		request = [self createRequest:endpointURL params:p withData:data];	// request は connection に指定した時点で reatin upする
+		[data release];
+	}
+	else {
+		request = [self createRequest:endpointURL params:params];	// request は connection に指定した時点で reatin upする
+	}
 	NSURLConnection * connection = [NSURLConnection connectionWithRequest:request delegate:self];	// autoreleased
 	if (connection == nil) {
 		[self callbackOnMainThread:@selector(failedWithError:) withObject:nil];
