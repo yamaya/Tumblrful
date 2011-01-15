@@ -6,7 +6,7 @@
 #import "DebugLog.h"
 
 static NSString * INSTAPAPER_HOSTNAME = @"www.instapaper.com";
-static NSString * INSTAPAPER_PATH = @"/text";
+static NSString * INSTAPAPER_PATH = @"/go";
 
 @interface InstapaperDelivererContext ()
 + (BOOL)siteMatchWithURL:(NSString *)URL;
@@ -35,6 +35,7 @@ static NSString * INSTAPAPER_PATH = @"/text";
 - (NSString *)documentURL
 {
 	if (URL_ == nil) {
+#if 0
 		// Instapaperの "Text"ページでは URLパラメーターにオリジナルサイトのURLが埋め込まれているのでそれを取り出す
 		NSURL * url = [NSURL URLWithString:[self.document URL]];
 		D(@"host=%@ path=%2 query=%2", [url host], [url path], [url query]);
@@ -47,10 +48,17 @@ static NSString * INSTAPAPER_PATH = @"/text";
 				break;
 			}
 		}
+#else
+		static NSString * const kExpression = @"//div[@class='bar top']/a/@href";
+		DOMXPathResult * result = [self evaluateToDocument:kExpression contextNode:self.document type:DOM_STRING_TYPE inResult:nil];
+		D(@"result=%@", result);
+		URL_ = result.stringValue;
+#endif
 		if (URL_ == nil) {
 			URL_ = self.documentURL;
 		}
 	}
+	D(@"URL_=%@", URL_);
 	return URL_;
 }
 

@@ -3,13 +3,11 @@
 all:
 	xcodebuild -activetarget -configuration Debug
 	install_name_tool -change "@executable_path/../Frameworks/Growl.framework/Versions/A/Growl" "@loader_path/../Frameworks/Growl.framework/Versions/A/Growl" build/Debug/Tumblrful.bundle/Contents/MacOS/Tumblrful
-#	install_name_tool -change "@executable_path/../Frameworks/OAuthConsumer.framework/Versions/A/OAuthConsumer" "@loader_path/../Frameworks/OAuthConsumer.framework/Versions/A/OAuthConsumer" build/Debug/Tumblrful.bundle/Contents/MacOS/Tumblrful
 	cp -r build/Debug/Tumblrful.bundle ~/Library/Application\ Support/SIMBL/Plugins
 
 release:
 	xcodebuild -activetarget -configuration Release
 	install_name_tool -change "@executable_path/../Frameworks/Growl.framework/Versions/A/Growl" "@loader_path/../Frameworks/Growl.framework/Versions/A/Growl" build/Release/Tumblrful.bundle/Contents/MacOS/Tumblrful
-#	install_name_tool -change "@executable_path/../Frameworks/OAuthConsumer.framework/Versions/A/OAuthConsumer" "@loader_path/../Frameworks/OAuthConsumer.framework/Versions/A/OAuthConsumer" build/Release/Tumblrful.bundle/Contents/MacOS/Tumblrful
 	cp -r build/Release/Tumblrful.bundle ~/Library/Application\ Support/SIMBL/Plugins/
 	rm -f Release/Tumblrful.bundle.zip
 	cd build/Release && zip -r Tumblrful.bundle.zip Tumblrful.bundle
