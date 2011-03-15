@@ -1,5 +1,8 @@
 tags
 .DS_Store
-build/**/*
-Tumblrful.xcodeproj/goron.pbxuser
-Tumblrful.xcodeproj/goron.perspectivev3
+build
+*.pbxuser
+*.perspectivev3
+*.mode2v3
+*.xcworkspace
+xcuserdata
