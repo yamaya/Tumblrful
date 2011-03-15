@@ -6,7 +6,8 @@
 #import "DebugLog.h"
 
 static NSString * INSTAPAPER_HOSTNAME = @"www.instapaper.com";
-static NSString * INSTAPAPER_PATH = @"/go";
+static NSString * INSTAPAPER_PATH = @"/text";
+static NSString * INSTAPAPER_PATH2 = @"/go";
 
 @interface InstapaperDelivererContext ()
 + (BOOL)siteMatchWithURL:(NSString *)URL;
@@ -22,7 +23,9 @@ static NSString * INSTAPAPER_PATH = @"/go";
 + (BOOL)siteMatchWithURL:(NSString *)URL
 {
 	NSURL * u = [NSURL URLWithString:URL];
-	return u != nil && [[u host] isEqualToString:INSTAPAPER_HOSTNAME] && [[u path] hasPrefix:INSTAPAPER_PATH];
+	return u != nil &&
+			[[u host] isEqualToString:INSTAPAPER_HOSTNAME] &&
+			([[u path] hasPrefix:INSTAPAPER_PATH] || [[u path] hasPrefix:INSTAPAPER_PATH2]);
 }
 
 - (id)initWithDocument:(DOMHTMLDocument *)document target:(NSDictionary *)targetElement
@@ -35,7 +38,6 @@ static NSString * INSTAPAPER_PATH = @"/go";
 - (NSString *)documentURL
 {
 	if (URL_ == nil) {
-#if 0
 		// Instapaperの "Text"ページでは URLパラメーターにオリジナルサイトのURLが埋め込まれているのでそれを取り出す
 		NSURL * url = [NSURL URLWithString:[self.document URL]];
 		D(@"host=%@ path=%2 query=%2", [url host], [url path], [url query]);
@@ -48,12 +50,13 @@ static NSString * INSTAPAPER_PATH = @"/go";
 				break;
 			}
 		}
-#else
-		static NSString * const kExpression = @"//div[@class='bar top']/a/@href";
-		DOMXPathResult * result = [self evaluateToDocument:kExpression contextNode:self.document type:DOM_STRING_TYPE inResult:nil];
-		D(@"result=%@", result);
-		URL_ = result.stringValue;
-#endif
+		// なんだよ、URLパラメータにしたりしなかったり、わけわからん
+		if (URL_ == nil) {
+			static NSString * const kExpression = @"//div[@class='bar top']/a/@href";
+			DOMXPathResult * result = [self evaluateToDocument:kExpression contextNode:self.document type:DOM_STRING_TYPE inResult:nil];
+			D(@"result=%@", result);
+			URL_ = result.stringValue;
+		}
 		if (URL_ == nil) {
 			URL_ = self.documentURL;
 		}

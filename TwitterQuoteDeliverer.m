@@ -74,7 +74,7 @@ static NSString * TWITTER_HOSTNAME = @"twitter.com";
 
 - (NSDictionary *)quoteContents
 {
-	static NSString * XPathForQuote = @"(//span[@class=\"entry-content\"])[1]";
+	static NSString * XPathForQuote = @"//div[contains(@class,'tweet-text')]";
 
 	DOMXPathResult * result = nil;
 	NSString * quote = nil;

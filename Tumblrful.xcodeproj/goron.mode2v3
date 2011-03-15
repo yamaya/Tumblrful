@@ -294,7 +294,7 @@
 										</array>
 									</array>
 									<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
-									<string>{{0, 0}, {429, 333}}</string>
+									<string>{{0, 1}, {429, 333}}</string>
 								</dict>
 								<key>PBXTopSmartGroupGIDs</key>
 								<array/>
@@ -453,8 +453,8 @@
 			</array>
 			<key>TableOfContents</key>
 			<array>
-				<string>542E420512E1FE770066A2F9</string>
-				<string>542E420612E1FE770066A2F9</string>
+				<string>54A6F1D512E2BF0F00918553</string>
+				<string>54A6F1D612E2BF0F00918553</string>
 				<string>1C9437FD063B20B00039CFAC</string>
 				<string>1C9437FE063B20B00039CFAC</string>
 				<string>1C9437FF063B20B00039CFAC</string>
@@ -474,7 +474,7 @@
 	<key>StatusbarIsVisible</key>
 	<true/>
 	<key>TimeStamp</key>
-	<real>316802660.89090401</real>
+	<real>316850197.09369099</real>
 	<key>ToolbarConfigUserDefaultsMinorVersion</key>
 	<string>2</string>
 	<key>ToolbarDisplayMode</key>
@@ -491,8 +491,6 @@
 	<integer>0</integer>
 	<key>WindowOrderList</key>
 	<array>
-		<string>542E424612E203F30066A2F9</string>
-		<string>1C530D57069F1CE1000CFCEE</string>
 		<string>1C530D52069F1CE1000CFCEE</string>
 		<string>/Users/goron/Development/Xcode/Tumblrful/Tumblrful.xcodeproj</string>
 	</array>
@@ -713,7 +711,7 @@
 			<key>TableOfContents</key>
 			<array>
 				<string>1C530D52069F1CE1000CFCEE</string>
-				<string>542E420712E1FE770066A2F9</string>
+				<string>54A6F1D712E2BF0F00918553</string>
 				<string>1CD0528F0623707200166675</string>
 				<string>XCMainBuildResultsModuleGUID</string>
 			</array>
