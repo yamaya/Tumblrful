@@ -284,7 +284,10 @@ static const NSUInteger POST_MASK_ALL = 0x3;
 #if 1
 	if ([event type] == NSKeyDown) {
 		if ([event keyCode] == 0x1b) {
+			[selectedElement_ release], selectedElement_ = nil;
+			[[self sharedSelectionView] setHidden:YES];
 			[WebHTMLView clearMouseDownInvocation];
+			captureEnabled_ = NO;
 		}
 	}
 #else
@@ -332,12 +335,14 @@ static const NSUInteger POST_MASK_ALL = 0x3;
 - (NSView *)sharedSelectionView
 {
 	static ColoredView * view = nil;
-
 	if (view == nil) {
 		view = [[ColoredView alloc] initWithFrame:NSZeroRect];
-		[view setHidden:YES];
 		[view setAlphaValue:0.5];
 		[view setColor:[NSColor redColor]];
+	}
+	if (![self isDescendantOf:view]) {
+		[view setFrame:NSZeroRect];
+		[view setHidden:YES];
 		[self addSubview:view];
 	}
 	return view;
@@ -398,6 +403,7 @@ static const NSUInteger POST_MASK_ALL = 0x3;
 		if (element == nil) return;
 
 		if (selectedElement_ != element) {
+			[selectedElement_ release];
 			selectedElement_ = [element retain];	// should be retain
 			D0([element description]);
 
@@ -406,8 +412,8 @@ static const NSUInteger POST_MASK_ALL = 0x3;
 			NSView * view = [self sharedSelectionView];
 			if (!NSEqualRects([view frame], boundingBox)) {
 				[view setFrame:boundingBox];
-				[view setHidden:NO];
 			}
+			[view setHidden:NO];
 		}
 	}
 	@catch (NSException * e) {
