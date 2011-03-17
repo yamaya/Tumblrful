@@ -141,7 +141,7 @@ static NSString * VIMEO_HOSTNAME = @"vimeo.com";
 
 	NSEnumerator * enumrator = [params keyEnumerator];
 	NSString * key = nil;
-	NSMutableString * urlAsString = [NSMutableString stringWithString:@"http://vimeo.com/api/rest?"];
+	NSMutableString * urlAsString = [NSMutableString stringWithString:@"http://vimeo.com/api/rest/v2?"];
 	while ((key = [enumrator nextObject]) != nil) {
 		[urlAsString appendFormat:@"%@=%@&", key, [params objectForKey:key]];
 	}
@@ -224,7 +224,7 @@ static NSString * VIMEO_HOSTNAME = @"vimeo.com";
 
 	nodes = [xmlDoc nodesForXPath:@"rsp/video/owner" error:&error];
 	node = [nodes objectAtIndex:0];
-	NSString * userAnchor = [NSString stringWithFormat:@"<a href=\"http://www.vimeo.com/%@\">%@</a>", [[node attributeForName:@"username"] stringValue], [[node attributeForName:@"fullname"] stringValue]];
+	NSString * userAnchor = [NSString stringWithFormat:@"<a href=\"%@\">%@</a>", [[node attributeForName:@"profileurl"] stringValue], [[node attributeForName:@"realname"] stringValue]];
 
 	NSString * caption = [NSString stringWithFormat:@"%@ (via %@)", videoAnchor, userAnchor];
 	D(@"caption=%@", caption);
