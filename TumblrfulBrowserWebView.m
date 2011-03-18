@@ -26,7 +26,6 @@
 #import "DeliciousPostAdaptor.h"
 #import "InstapaperPostAdaptor.h"
 #import "YammerPostAdaptor.h"
-//#import "UmesuePostAdaptor.h"
 #import "GoogleReaderDelivererContext.h"
 #import "LDRDelivererContext.h"
 #import "DelivererRules.h"
@@ -281,54 +280,45 @@ static const NSUInteger POST_MASK_ALL = 0x3;
 
 - (BOOL)performKeyEquivalent_SwizzledByTumblrful:(NSEvent *)event
 {
-#if 1
-	if ([event type] == NSKeyDown) {
-		if ([event keyCode] == 0x1b) {
-			[selectedElement_ release], selectedElement_ = nil;
-			[[self sharedSelectionView] setHidden:YES];
-			[WebHTMLView clearMouseDownInvocation];
-			captureEnabled_ = NO;
-		}
+	// ESCキーの場合 captureをキャンセル
+	if ([event type] == NSKeyDown && [event keyCode] == 0x1b) {
+		[selectedElement_ release], selectedElement_ = nil;
+		[[self sharedSelectionView] setHidden:YES];
+		[WebHTMLView clearMouseDownInvocation];
+		captureEnabled_ = NO;
 	}
-#else
-	if (captureEnabled_ && selectedElement_ != nil) {
-		[self performSelector:@selector(imageCaptureOfDOMElement)];
-		return YES;
-	}
-#endif
+
 	// キー入力に対応するエンドポイントを得る。
+	// 無ければオリジナルのメソッドを呼び出して終わり
 	NSUInteger endpoint = [self endpointByKeyPress:event];
 	if ((endpoint & POST_MASK_ALL) == 0) {
-		// 無ければオリジナルのメソッドを呼び出して終わり
 		return [self performKeyEquivalent_SwizzledByTumblrful:event];
 	}
 
 	// このビューに関する HTMLドキュメントの URL を得る
+	// 無ければオリジナルのメソッドを呼び出して終わり
 	DOMHTMLDocument * document = (DOMHTMLDocument *)[self mainFrameDocument];
 	if (document == nil) {
-		// 無ければオリジナルのメソッドを呼び出して終わり
 		return [self performKeyEquivalent_SwizzledByTumblrful:event];
 	}
 
+	// 処理すべき HTMLドキュメントかどうかを判定させる
+	// アクションを実行を試みる
+	// 実行できたら処理終了
+	// 無ければオリジナルのメソッドを呼び出す
 	BOOL processed = NO;
-
-	NSArray * contextClasses = [NSArray arrayWithObjects:[GoogleReaderDelivererContext class], [LDRDelivererContext class], nil];
-	for (Class contextClass in contextClasses) {
-		// 処理すべき HTMLドキュメントかどうかを判定させる
-		DOMHTMLElement * element = [contextClass matchForAutoDetection:document windowScriptObject:[self windowScriptObject]];
-
-		// アクションを実行を試みる
+	NSArray * ccs = [NSArray arrayWithObjects:[GoogleReaderDelivererContext class], [LDRDelivererContext class], nil];
+	for (Class cc in ccs) {
+		DOMHTMLElement * element = [cc matchForAutoDetection:document windowScriptObject:[self windowScriptObject]];
 		processed = [self invokeAction:element document:document endpoint:endpoint];
-
-		// 実行できたら処理終了
 		if (processed) {
 			break;
 		}
 	}
 	if (!processed) {
-		// 無ければ親オブジェクトに委譲して終わり
 		processed = [self performKeyEquivalent_SwizzledByTumblrful:event];
 	}
+
 	return processed;
 }
 
@@ -380,40 +370,29 @@ static const NSUInteger POST_MASK_ALL = 0x3;
 // このメソッドが呼ばれた時の firstResponderは WebHTMLViewになっている。
 - (void)mouseMoved_SwizzledByTumblrful:(NSEvent *)event
 {
+	if (!captureEnabled_) return;
 	@try {
-		if (!captureEnabled_) return;
-
-		//NSResponder * firstResponder = [[self window] firstResponder];
-		//D0([firstResponder description]);
-
 		NSPoint const pt0 = [self convertPoint:[event locationInWindow] fromView:nil];
-
-		NSDictionary * elements = [self elementAtPoint:pt0];
-		//D0([elements description]);
-		if (elements == nil) return;
-
-		DOMHTMLElement * element = [elements objectForKey:WebElementDOMNodeKey];
-		if (element == nil) return;
-
-		NSView * docView = [[[[element ownerDocument] webFrame] frameView] documentView];
-
-		NSPoint const pt1 = [self convertPoint:pt0 toView:docView];
-		element = [self deepElementAtPoint:pt1 withOrigin:element];
-		//D(@"deepElementAtPoint result=%@", [element description]);
-		if (element == nil) return;
-
-		if (selectedElement_ != element) {
-			[selectedElement_ release];
-			selectedElement_ = [element retain];	// should be retain
-			D0([element description]);
-
-			NSRect boundingBox = [selectedElement_ boundingBox];
-			boundingBox = [self convertRect:boundingBox fromView:docView];
-			NSView * view = [self sharedSelectionView];
-			if (!NSEqualRects([view frame], boundingBox)) {
-				[view setFrame:boundingBox];
+		NSDictionary * elementInfo = [self elementAtPoint:pt0];
+		if (elementInfo != nil) {
+			DOMHTMLElement * element = [elementInfo objectForKey:WebElementDOMNodeKey];
+			if (element != nil) {
+				NSView * docView = [[[[element ownerDocument] webFrame] frameView] documentView];
+				NSPoint const pt1 = [self convertPoint:pt0 toView:docView];
+				element = [self deepElementAtPoint:pt1 withOrigin:element];
+				if (element != nil) {
+					if (selectedElement_ != element) {
+						[selectedElement_ release];
+						selectedElement_ = [element retain];
+						NSRect box = [self convertRect:[selectedElement_ boundingBox] fromView:docView];
+						NSView * view = [self sharedSelectionView];
+						if (!NSEqualRects([view frame], box)) {
+							[view setFrame:box];
+						}
+						[view setHidden:NO];
+					}
+				}
 			}
-			[view setHidden:NO];
 		}
 	}
 	@catch (NSException * e) {
@@ -422,42 +401,40 @@ static const NSUInteger POST_MASK_ALL = 0x3;
 	}
 	@finally {
 		invokeSupersequent(event);
-		//[self mouseMoved_SwizzledByTumblrful:event];
 	}
 }
 
 - (void)imageCaptureOfDOMElement
 {
-	D_METHOD;
-
 	if (!(captureEnabled_ && selectedElement_ != nil)) return;
 
 	captureEnabled_ = NO;
-
-	// hide selection view
-	NSView * view = [self sharedSelectionView];
-	[view setHidden:YES];
+	[[self sharedSelectionView] setHidden:YES];
 
 	DOMHTMLDocument * document = (DOMHTMLDocument *)[selectedElement_ ownerDocument];
 
-	NSRect const boxRect = [selectedElement_ boundingBox];
-	NSView * docView = [[[document webFrame] frameView] documentView];
-	NSRect const captureRect = [self convertRect:boxRect fromView:docView];
-	NSBitmapImageRep * imageRep = [self bitmapImageRepForCachingDisplayInRect:captureRect];
-	[self cacheDisplayInRect:captureRect toBitmapImageRep:imageRep];
-
-	NSImage * image = [[[NSImage alloc] initWithSize:captureRect.size] autorelease];
+	NSRect const boundingBox =
+		[self convertRect:[selectedElement_ boundingBox]
+				 fromView:[[[document webFrame] frameView] documentView]];
+	NSBitmapImageRep * imageRep = [self bitmapImageRepForCachingDisplayInRect:boundingBox];
+	[self cacheDisplayInRect:boundingBox toBitmapImageRep:imageRep];
+	NSImage * image = [[[NSImage alloc] initWithSize:boundingBox.size] autorelease];
 	[image addRepresentation:imageRep];
-	D0([image description]);
 
-	NSDictionary * info = [NSDictionary dictionaryWithObjectsAndKeys:selectedElement_, WebElementDOMNodeKey, image, WebElementImageKey, nil];
+	NSDictionary * info = [NSDictionary dictionaryWithObjectsAndKeys:
+		selectedElement_, WebElementDOMNodeKey,
+		image, WebElementImageKey,
+		nil];
 	PhotoDeliverer * deliverer = (PhotoDeliverer *)[PhotoDeliverer create:document element:info];
 	if (deliverer != nil) {
 		// FIXME ここ、ぐだぐだー
 		NSUInteger const tag = 0x1 | MENUITEM_TAG_NEED_EDIT;
-		NSArray * params = [NSArray arrayWithObjects:deliverer, [NSNumber numberWithUnsignedInteger:tag], nil];
 		deliverer.editEnabled = YES;
-		[deliverer actionWithMask:params];
+		[deliverer actionWithMask:
+			[NSArray arrayWithObjects:
+				deliverer,
+				[NSNumber numberWithUnsignedInteger:tag],
+				nil]];
 	}
 
 	[selectedElement_ release], selectedElement_ = nil;
