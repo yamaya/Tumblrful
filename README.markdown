@@ -1,3 +1,8 @@
+# Caution! this product is deprecated.
+
+This plugin do *not* use Safari 6.x.
+Do *not* also support [Easy SIMBL](https://github.com/norio-nomura/EasySIMBL/).
+
 # What is this?
 
 Tumblrful is Safari [SIMBL](http://www.culater.net/software/SIMBL/SIMBL.php) Plugin for [Tumblr](www.tumblr.com).
